@@ -198,7 +198,7 @@ export default function GeneratePage() {
                   : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
               )}
             >
-              <Image className="h-4 w-4" /> Aperçu Visuel
+              <Image className="h-4 w-4" aria-hidden="true" /> Aperçu Visuel
             </button>
           </div>
 

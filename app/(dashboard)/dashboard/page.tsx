@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { Plus, Video, Clock, TrendingUp, Play, MoreHorizontal } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
+import { Card, CardContent, CardTitle, CardDescription } from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
 
 type VideoStatus = "completed" | "processing" | "failed" | "queued";
