@@ -7,10 +7,17 @@ import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Separator } from "@/src/components/ui/separator";
+import { useSignIn } from "@/src/hooks/use-sign-in";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { loading, error, signInWithEmail, signInWithGoogle } = useSignIn();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signInWithEmail(email, password);
+  };
 
   return (
     <Card className="w-full max-w-sm mx-4">
@@ -20,7 +27,7 @@ export default function LoginPage() {
         <CardDescription>Connectez-vous à votre compte Sketch Pilot</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button variant="outline" className="w-full gap-2">
+        <Button variant="outline" className="w-full gap-2" onClick={signInWithGoogle} disabled={loading}>
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -48,38 +55,47 @@ export default function LoginPage() {
           <Separator className="flex-1" />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="vous@exemple.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Link href="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
-              Mot de passe oublié ?
-            </Link>
+        {error && (
+          <div className="space-y-2 text-sm bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-3 rounded">
+            <p className="font-medium text-red-900 dark:text-red-100">{error.message}</p>
+            {error.details && <p className="text-red-800 dark:text-red-200 text-xs">{error.details}</p>}
           </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <Button className="w-full">Se connecter</Button>
+        )}
 
-        <div className="text-center">
-          <Link href="/otp" className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 underline underline-offset-4">
-            Connexion par lien magique
-          </Link>
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="vous@exemple.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Link href="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
+                Mot de passe oublié ?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          <Button className="w-full" type="submit" disabled={loading}>
+            {loading ? "Connexion en cours..." : "Se connecter"}
+          </Button>
+        </form>
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-zinc-500">
