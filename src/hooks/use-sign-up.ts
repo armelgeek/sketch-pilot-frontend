@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signUp } from "@/src/lib/auth-client";
+import { signUp, authClient } from "@/src/lib/auth-client";
 import { handleError, type AppError } from "@/src/lib/error-handler";
 
 interface UseSignUpOptions {
@@ -13,6 +13,8 @@ interface SignUpData {
   email: string;
   password: string;
   name: string;
+  planId?: string;
+  billingInterval?: "month" | "year";
 }
 
 export function useSignUp(options: UseSignUpOptions = {}) {
@@ -52,10 +54,37 @@ export function useSignUp(options: UseSignUpOptions = {}) {
             name: data.name,
           },
           {
-            onSuccess: () => {
+            onSuccess: async () => {
               setError(null);
               onSuccess?.();
-              router.push(redirectTo);
+              
+              // Si un plan est sélectionné (et ce n'est pas le plan gratuit), rediriger vers Stripe
+              if (data.planId && data.planId !== "plan_free") {
+                try {
+                  const priceId = data.billingInterval === "year" 
+                    ? "price_pro_year" // À adapter selon le plan
+                    : "price_pro_month";
+                  
+                  const { error: upgradeError } = await authClient.subscription.upgrade({
+                    plan: data.planId,
+                    annual: data.billingInterval === "year",
+                    successUrl: `${window.location.origin}/dashboard`,
+                    cancelUrl: `${window.location.origin}/register`,
+                    disableRedirect: false,
+                  });
+
+                  if (upgradeError) {
+                    console.error("Subscription upgrade error:", upgradeError);
+                    router.push(redirectTo);
+                  }
+                } catch (err) {
+                  console.error("Error initiating subscription:", err);
+                  router.push(redirectTo);
+                }
+              } else {
+                // Plan gratuit ou pas de plan sélectionné
+                router.push(redirectTo);
+              }
             },
             onError: (ctx) => {
               const appError: AppError = {

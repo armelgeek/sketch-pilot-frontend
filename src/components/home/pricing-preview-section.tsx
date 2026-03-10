@@ -1,49 +1,45 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
-import { usePricingPlans } from "@/src/hooks/use-pricing-plans";
+import { STRIPE_PLANS } from "@/src/lib/stripe-plans";
+import { useSubscription } from "@/src/hooks/use-subscription";
+import { useSession } from "@/src/lib/auth-client";
 
 interface PricingPreviewSectionProps {
   isAuthenticated?: boolean;
 }
 
 export function PricingPreviewSection({ isAuthenticated }: PricingPreviewSectionProps) {
-  const { plans, loading, error, fetchPlans } = usePricingPlans();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { upgradePlan, loading } = useSubscription();
+  const [error, setError] = useState<string | null>(null);
+  const displayPlans = STRIPE_PLANS;
 
-  useEffect(() => {
-    fetchPlans();
-  }, []);
+  const handleSubscribe = async (planId: string) => {
+    setError(null);
+    
+    if (!session?.user) {
+      router.push("/login");
+      return;
+    }
 
-  if (loading) {
-    return (
-      <section className="bg-white dark:bg-zinc-900 border-y border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-zinc-500 dark:text-zinc-400">Chargement des tarifs...</p>
-          </div>
-        </div>
-      </section>
-    );
+    try {
+      await upgradePlan(planId, "month");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Subscription failed");
+    }
+  };
+
+  if (displayPlans.length === 0) {
+    return null;
   }
-
-  if (error) {
-    return (
-      <section className="bg-white dark:bg-zinc-900 border-y border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-red-500">Erreur lors du chargement des tarifs</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const displayPlans = plans.length > 0 ? plans : [];
 
   return (
     <section className="bg-white dark:bg-zinc-900 border-y border-zinc-200 dark:border-zinc-800">
@@ -65,8 +61,8 @@ export function PricingPreviewSection({ isAuthenticated }: PricingPreviewSection
               <CardHeader className="pb-2">
                 <CardTitle>{plan.name}</CardTitle>
                 <div className="text-3xl font-extrabold mt-1">
-                  ${plan.price}
-                  <span className="text-sm font-normal text-zinc-500">{plan.billingPeriod || "/mois"}</span>
+                  ${plan.monthlyPrice}
+                  <span className="text-sm font-normal text-zinc-500">/mois</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -78,14 +74,16 @@ export function PricingPreviewSection({ isAuthenticated }: PricingPreviewSection
                     </li>
                   ))}
                 </ul>
+                {error && (
+                  <p className="text-sm text-red-500 mb-2">{error}</p>
+                )}
                 <Button
                   className="w-full"
                   variant={plan.highlighted ? "default" : "outline"}
-                  asChild
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={loading}
                 >
-                  <Link href={isAuthenticated ? "/generate" : "/pricing"}>
-                    {isAuthenticated ? "Créer maintenant" : "Commencer"}
-                  </Link>
+                  {loading ? "Traitement..." : "Commencer"}
                 </Button>
               </CardContent>
             </Card>
