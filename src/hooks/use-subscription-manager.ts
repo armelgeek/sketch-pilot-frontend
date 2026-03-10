@@ -21,12 +21,10 @@ export function useSubscriptionManager() {
   const [isLoading, setIsLoading] = useState(false);
   const hasLoadedRef = useRef(false);
 
-  // Charger les plans
+  // Charger les plans au montage
   useEffect(() => {
-    if (!plans.length && !subscription.loading) {
-      fetchPlans();
-    }
-  }, [plans.length, fetchPlans, subscription.loading]);
+    fetchPlans();
+  }, [fetchPlans]);
 
   // Charger le statut d'abonnement
   useEffect(() => {

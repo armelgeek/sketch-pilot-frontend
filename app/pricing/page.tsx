@@ -12,9 +12,25 @@ import { Footer } from "@/src/components/layout/footer";
 
 const plans = [
   {
-    name: "Creator",
-    monthlyPrice: 49,
-    annualPrice: 39,
+    name: "Free",
+    monthlyPrice: 0,
+    annualPrice: 0,
+    credits: 0,
+    highlighted: false,
+    features: [
+      "Essai gratuit",
+      "Vidéos jusqu'à 5 min",
+      "1 style visuel",
+      "Export SD 480p",
+      "Support communauté",
+      "1 utilisateur",
+    ],
+    missing: ["API Access", "Marque blanche", "Support prioritaire"],
+  },
+  {
+    name: "Starter",
+    monthlyPrice: 9.99,
+    annualPrice: 99.99,
     credits: 500,
     highlighted: false,
     features: [
@@ -28,9 +44,9 @@ const plans = [
     missing: ["API Access", "Marque blanche", "Support prioritaire"],
   },
   {
-    name: "Professional",
-    monthlyPrice: 149,
-    annualPrice: 119,
+    name: "Pro",
+    monthlyPrice: 29.99,
+    annualPrice: 299.99,
     credits: 2000,
     highlighted: true,
     features: [
@@ -45,9 +61,9 @@ const plans = [
     missing: ["Marque blanche"],
   },
   {
-    name: "Business",
-    monthlyPrice: 399,
-    annualPrice: 319,
+    name: "Enterprise",
+    monthlyPrice: 99.99,
+    annualPrice: 999.99,
     credits: 8000,
     highlighted: false,
     features: [
@@ -130,7 +146,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {plans.map((plan) => {
             const price = annual ? plan.annualPrice : plan.monthlyPrice;
             return (
@@ -147,11 +163,11 @@ export default function PricingPage() {
                   <CardTitle>{plan.name}</CardTitle>
                   <CardDescription>{plan.credits.toLocaleString()} crédits / mois</CardDescription>
                   <div className="mt-3">
-                    <span className="text-4xl font-extrabold">${price}</span>
+                    <span className="text-4xl font-extrabold">${price.toFixed(2)}</span>
                     <span className="text-zinc-500 text-sm">/mois</span>
-                    {annual && (
+                    {annual && plan.monthlyPrice > 0 && (
                       <p className="text-xs text-green-600 mt-0.5">
-                        Facturé ${price * 12}/an — économisez ${(plan.monthlyPrice - plan.annualPrice) * 12}
+                        Facturé ${(price * 12).toFixed(2)}/an
                       </p>
                     )}
                   </div>
@@ -170,29 +186,14 @@ export default function PricingPage() {
                     variant={plan.highlighted ? "default" : "outline"}
                     asChild
                   >
-                    <Link href="/register">Commencer l&apos;essai gratuit</Link>
+                    <Link href={plan.name === "Free" ? "/register" : "/register"}>
+                      {plan.name === "Free" ? "Commencer gratuitement" : "Commencer l'essai"}
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
             );
           })}
-        </div>
-
-        {/* Enterprise */}
-        <div className="mt-16 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold mb-2">Entreprise</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-lg mx-auto">
-            Vous avez des besoins spécifiques ? Volume important, intégrations sur mesure,
-            déploiement on-premise ? Discutons-en.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-zinc-600 dark:text-zinc-400 mb-8">
-            {["Crédits personnalisés", "SSO / SAML", "Déploiement on-premise", "SLA sur mesure", "Formation incluse"].map((f) => (
-              <span key={f} className="flex items-center gap-1.5">
-                <Check className="h-4 w-4 text-green-600" /> {f}
-              </span>
-            ))}
-          </div>
-          <Button variant="outline" size="lg">Contacter notre équipe commerciale</Button>
         </div>
 
         {/* FAQ */}

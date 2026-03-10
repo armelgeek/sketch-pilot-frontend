@@ -1,5 +1,25 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  priceMonthly: number;
+  priceYearly: number;
+  displayedYearly: number;
+  displayedMonthly: number;
+  displayedYearlyBar: number;
+  currency: string;
+  stripeIds: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlansResponse {
+  success: boolean;
+  data: SubscriptionPlan[];
+}
+
 export const subscriptionApi = {
   // Get current subscription
   getCurrentSubscription: async () => {
@@ -23,7 +43,7 @@ export const subscriptionApi = {
 
   // Get pricing plans
   getPlans: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/subscription/plans`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/subscription-plans`, {
       headers: { "Content-Type": "application/json" }
     });
     if (!response.ok) throw new Error("Failed to fetch plans");
