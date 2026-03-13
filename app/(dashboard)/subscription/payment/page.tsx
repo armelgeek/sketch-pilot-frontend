@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { subscriptionApi } from "@/src/services/subscription-api";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
@@ -29,8 +28,14 @@ export default function PaymentPage() {
   const loadPaymentMethods = async () => {
     setIsLoading(true);
     try {
-      const data = await subscriptionApi.getPaymentMethods();
-      setPaymentMethods(data.data || []);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/payment-methods`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to load payment methods");
+      const result = await response.json();
+      setPaymentMethods(result.data || []);
     } catch (err) {
       console.error("Failed to load payment methods:", err);
     } finally {
@@ -40,10 +45,16 @@ export default function PaymentPage() {
 
   const handleAddPaymentMethod = async () => {
     try {
-      const data = await subscriptionApi.addPaymentMethod();
-      // Rediriger vers Stripe
-      if (data.data?.setupUrl) {
-        window.location.href = data.data.setupUrl;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/payment-methods/setup`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to add payment method");
+      const result = await response.json();
+      if (result.data?.setupUrl) {
+        window.location.href = result.data.setupUrl;
       }
     } catch (err) {
       console.error("Failed to add payment method:", err);
@@ -56,7 +67,13 @@ export default function PaymentPage() {
     }
 
     try {
-      await subscriptionApi.removePaymentMethod(id);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/payment-methods/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to remove payment method");
       setPaymentMethods(paymentMethods.filter((m) => m.id !== id));
     } catch (err) {
       console.error("Failed to remove payment method:", err);
@@ -65,7 +82,13 @@ export default function PaymentPage() {
 
   const handleSetDefault = async (id: string) => {
     try {
-      await subscriptionApi.setDefaultPaymentMethod(id);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/payment-methods/${id}/default`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to set default payment method");
       await loadPaymentMethods();
     } catch (err) {
       console.error("Failed to set default payment method:", err);

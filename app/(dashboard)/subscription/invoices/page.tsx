@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { subscriptionApi } from "@/src/services/subscription-api";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
@@ -31,7 +30,13 @@ export default function InvoicesPage() {
   const loadInvoices = async () => {
     setIsLoading(true);
     try {
-      const result = await subscriptionApi.getInvoices();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/invoices`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to load invoices");
+      const result = await response.json();
       if (result?.data) {
         setInvoices(result.data);
       }

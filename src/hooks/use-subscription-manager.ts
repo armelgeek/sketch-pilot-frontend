@@ -2,22 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/src/lib/auth-client";
 import { usePricingPlans } from "@/src/hooks/use-pricing-plans";
 import { useSubscription } from "@/src/hooks/use-subscription";
+import { useCreditStore } from "./use-credit-store";
 
 export interface SubscriptionStatus {
-  status: "active" | "canceled" | "trialing" | "past_due" | "incomplete" | null;
+  status: "active" | "canceled" | "trialing" | "past_due" | "incomplete" | "unpaid" | "incomplete_expired" | "paused" | null;
   planName: string | null;
   periodEnd: string | null;
   autoRenew: boolean;
   remainingCredits: number;
   totalCredits: number;
+  usedCredits: number;
+  extraCredits: number;
 }
 
 export function useSubscriptionManager() {
   const { data: session } = useSession();
   const { fetchPlans, plans } = usePricingPlans();
   const subscription = useSubscription();
-  
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+
+  const { status: subscriptionStatus, setStatus: setSubscriptionStatus } = useCreditStore();
   const [isLoading, setIsLoading] = useState(false);
   const hasLoadedRef = useRef(false);
 
@@ -30,26 +33,70 @@ export function useSubscriptionManager() {
   useEffect(() => {
     if (session?.user && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      
+
       const loadSubscriptionStatus = async () => {
         setIsLoading(true);
-        const current = await subscription.getCurrentSubscription();
-        if (current) {
-          setSubscriptionStatus({
-            status: current.status,
-            planName: current.planName,
-            periodEnd: current.periodEnd,
-            autoRenew: !current.isCanceled,
-            remainingCredits: current.remainingCredits,
-            totalCredits: current.totalCredits
-          });
+        try {
+          const [currentSub, creditInfo] = await Promise.all([
+            subscription.getCurrentSubscription(),
+            subscription.getCredits()
+          ]);
+
+          if (currentSub || creditInfo) {
+            const typedSub = currentSub as any;
+            setSubscriptionStatus({
+              status: (typedSub?.status as any) || "active",
+              planName: creditInfo?.plan || typedSub?.plan || "Free",
+              periodEnd: typedSub?.periodEnd ? new Date(typedSub.periodEnd).toISOString() : (creditInfo?.resetDate || null),
+              autoRenew: typedSub ? !typedSub.cancelAtPeriodEnd : true,
+              remainingCredits: creditInfo?.totalAvailable ?? 0,
+              totalCredits: creditInfo?.videosMonthlyLimit ?? 0,
+              usedCredits: creditInfo?.videosThisMonth ?? 0,
+              extraCredits: creditInfo?.extraCredits ?? 0
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load subscription status:", err);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       };
 
       loadSubscriptionStatus();
     }
   }, [session?.user, subscription]);
+
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [currentSub, creditInfo] = await Promise.all([
+        subscription.getCurrentSubscription(),
+        subscription.getCredits()
+      ]);
+
+      if (currentSub || creditInfo) {
+        const typedSub = currentSub as any;
+        const newStatus: SubscriptionStatus = {
+          status: (typedSub?.status as any) || "active",
+          planName: creditInfo?.plan || typedSub?.plan || "Free",
+          periodEnd: typedSub?.periodEnd ? new Date(typedSub.periodEnd).toISOString() : (creditInfo?.resetDate || null),
+          autoRenew: typedSub ? !typedSub.cancelAtPeriodEnd : true,
+          remainingCredits: creditInfo?.totalAvailable ?? 0,
+          totalCredits: creditInfo?.videosMonthlyLimit ?? 0,
+          usedCredits: creditInfo?.videosThisMonth ?? 0,
+          extraCredits: creditInfo?.extraCredits ?? 0
+        };
+        setSubscriptionStatus(newStatus);
+        return newStatus;
+      }
+      return null;
+    } catch (err) {
+      console.error("Refresh failed:", err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [subscription]);
 
   const handleUpgrade = useCallback(async (planId: string, interval: "month" | "year") => {
     try {
@@ -64,38 +111,12 @@ export function useSubscriptionManager() {
     try {
       await subscription.cancelSubscription(false);
       // Recharger le statut après annulation
-      const current = await subscription.getCurrentSubscription();
-      if (current) {
-        setSubscriptionStatus({
-          status: current.status,
-          planName: current.planName,
-          periodEnd: current.periodEnd,
-          autoRenew: !current.isCanceled,
-          remainingCredits: current.remainingCredits,
-          totalCredits: current.totalCredits
-        });
-      }
+      await refresh();
     } catch (err) {
       console.error("Cancellation failed:", err);
       throw err;
     }
-  }, [subscription]);
-
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    const current = await subscription.getCurrentSubscription();
-    if (current) {
-      setSubscriptionStatus({
-        status: current.status,
-        planName: current.planName,
-        periodEnd: current.periodEnd,
-        autoRenew: !current.isCanceled,
-        remainingCredits: current.remainingCredits,
-        totalCredits: current.totalCredits
-      });
-    }
-    setIsLoading(false);
-  }, [subscription]);
+  }, [subscription, refresh]);
 
   return {
     plan: plans,
@@ -104,6 +125,7 @@ export function useSubscriptionManager() {
     error: subscription.error,
     handleUpgrade,
     handleCancel,
+    buyCreditPack: subscription.buyCreditPack,
     refresh
   };
 }

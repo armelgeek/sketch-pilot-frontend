@@ -12,9 +12,9 @@ import { Loader2, AlertCircle } from "lucide-react";
 export function PricingSelector() {
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const { 
-    loading, 
-    error, 
+  const {
+    loading,
+    error,
     subscriptions,
     upgrade,
     getActiveSubscription,
@@ -28,14 +28,14 @@ export function PricingSelector() {
     clearError();
   }, [interval]);
 
-  const handleSelectPlan = async (planName: string) => {
-    setSelectedPlan(planName);
+  const handleSelectPlan = async (planId: string) => {
+    setSelectedPlan(planId);
     clearError();
     try {
       await upgrade({
-        plan: planName,
+        plan: planId,
         annual: interval === "year",
-        successUrl: `${window.location.origin}/dashboard/subscription/success`,
+        successUrl: `${window.location.origin}/subscription/success`,
         cancelUrl: `${window.location.origin}/pricing`,
         disableRedirect: false,
       });
@@ -84,7 +84,7 @@ export function PricingSelector() {
               <div>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">Renouvellement</p>
                 <p className="font-semibold">
-                  {activeSubscription.periodEnd 
+                  {activeSubscription.periodEnd
                     ? new Date(activeSubscription.periodEnd).toLocaleDateString('fr-FR')
                     : "N/A"}
                 </p>
@@ -166,15 +166,15 @@ export function PricingSelector() {
                 </ul>
 
                 <Button
-                  onClick={() => handleSelectPlan(plan.name)}
-                  disabled={loading || isActive || selectedPlan === plan.name}
+                  onClick={() => handleSelectPlan(plan.id)}
+                  disabled={loading || isActive || selectedPlan === plan.id}
                   variant={plan.highlighted ? "default" : "outline"}
                   className="w-full"
                 >
-                  {(loading || selectedPlan === plan.name) && (
+                  {(loading || selectedPlan === plan.id) && (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   )}
-                  {isActive ? "Plan actuel" : loading && selectedPlan === plan.name ? "Traitement..." : "Choisir"}
+                  {isActive ? "Plan actuel" : (loading && selectedPlan === plan.id) ? "Traitement..." : "Choisir"}
                 </Button>
               </CardContent>
             </Card>

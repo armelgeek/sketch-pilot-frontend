@@ -9,9 +9,9 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { STRIPE_PLANS } from "@/src/lib/stripe-plans";
 
 export function SubscriptionManager() {
-  const { 
-    loading, 
-    error, 
+  const {
+    loading,
+    error,
     subscriptions,
     upgrade,
     switchPlan,
@@ -34,8 +34,8 @@ export function SubscriptionManager() {
     try {
       await upgrade({
         plan: planName,
-        successUrl: `${window.location.origin}/dashboard/subscription/success`,
-        cancelUrl: `${window.location.origin}/dashboard/subscription`,
+        successUrl: `${window.location.origin}/subscription/success`,
+        cancelUrl: `${window.location.origin}/subscription`,
       });
     } catch (err) {
       console.error("Upgrade failed:", err);
@@ -51,8 +51,8 @@ export function SubscriptionManager() {
     try {
       await switchPlan(newPlanName, {
         subscriptionId: activeSubscription.id,
-        successUrl: `${window.location.origin}/dashboard/subscription`,
-        cancelUrl: `${window.location.origin}/dashboard/subscription`,
+        successUrl: `${window.location.origin}/subscription`,
+        cancelUrl: `${window.location.origin}/subscription`,
       });
     } catch (err) {
       console.error("Switch plan failed:", err);
@@ -72,7 +72,7 @@ export function SubscriptionManager() {
     try {
       await cancel({
         subscriptionId: activeSubscription.id,
-        returnUrl: `${window.location.origin}/dashboard/subscription`,
+        returnUrl: `${window.location.origin}/subscription`,
       });
       await list();
     } catch (err) {
@@ -99,7 +99,7 @@ export function SubscriptionManager() {
   const handleBillingPortal = async () => {
     try {
       await billingPortal({
-        returnUrl: `${window.location.origin}/dashboard/subscription`,
+        returnUrl: `${window.location.origin}/subscription`,
       });
     } catch (err) {
       console.error("Billing portal failed:", err);

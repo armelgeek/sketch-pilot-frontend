@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { subscriptionApi } from "@/src/services/subscription-api";
+import { authClient } from "@/src/lib/auth-client";
 
 export interface PricingPlan {
   id: string;
@@ -29,8 +29,10 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const data = await subscriptionApi.getCurrentSubscription();
-      return data.data;
+      const { data, error } = await authClient.subscription.list();
+      if (error) throw new Error(error.message);
+      const active = data?.find(sub => sub.status === "active" || sub.status === "trialing");
+      return active || null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error fetching subscription";
       setError(message);
@@ -44,8 +46,10 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const data = await subscriptionApi.getUsage();
-      return data.data;
+      const { data, error } = await authClient.subscription.list();
+      if (error) throw new Error(error.message);
+      const active = data?.find(sub => sub.status === "active" || sub.status === "trialing");
+      return active?.limits || null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error fetching usage";
       setError(message);
@@ -60,14 +64,16 @@ export function useSubscription() {
       setLoading(true);
       setError(null);
       try {
-        const data = await subscriptionApi.upgrade(planId, billingInterval);
-        
-        // Rediriger vers Stripe checkout si session créée
-        if (data.data?.stripeSessionUrl) {
-          router.push(data.data.stripeSessionUrl);
-        }
-        
-        return data.data;
+        const { data, error } = await authClient.subscription.upgrade({
+          plan: planId,
+          annual: billingInterval === "year",
+          successUrl: `${window.location.origin}/subscription`,
+          cancelUrl: `${window.location.origin}/pricing`
+        });
+
+        if (error) throw new Error(error.message);
+
+        return data;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Upgrade failed";
         setError(message);
@@ -83,7 +89,10 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const data = await subscriptionApi.cancel(immediate);
+      const { data, error } = await authClient.subscription.cancel({
+        returnUrl: `${window.location.origin}/subscription`
+      });
+      if (error) throw new Error(error.message);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Cancellation failed";
@@ -98,7 +107,13 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const data = await subscriptionApi.getInvoices();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/invoices`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to fetch invoices");
+      const data = await response.json();
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error fetching invoices";
@@ -109,11 +124,68 @@ export function useSubscription() {
     }
   }, []);
 
+  const getCredits = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/credits`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to fetch credits");
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error fetching credits";
+      setError(message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const buyCreditPack = useCallback(async (packId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/credits/checkout`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packId,
+          successUrl: `${window.location.origin}/subscription?success=true&packId=${packId}`,
+          cancelUrl: `${window.location.origin}/subscription?canceled=true`
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to initiate purchase");
+      }
+
+      const { checkoutUrl } = await response.json();
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Purchase failed";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
     getCurrentSubscription,
     getUsage,
+    getCredits,
+    buyCreditPack,
     upgradePlan,
     cancelSubscription,
     getInvoices

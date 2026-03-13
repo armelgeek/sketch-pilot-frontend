@@ -8,13 +8,12 @@ import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Separator } from "@/src/components/ui/separator";
 import { useSignUp } from "@/src/hooks/use-sign-up";
-import { PlanSelector } from "@/src/components/auth/plan-selector";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
-  const [selectedPlan, setSelectedPlan] = useState<string>("plan_free");
-  const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
-  const { loading, error, signUpWithEmail, signUpWithGoogle } = useSignUp();
+  const { loading, error, signUpWithEmail, signUpWithGoogle } = useSignUp({
+    redirectTo: "/pricing"
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -25,8 +24,6 @@ export default function RegisterPage() {
       email: form.email,
       password: form.password,
       name: `${form.firstName} ${form.lastName}`,
-      planId: selectedPlan,
-      billingInterval,
     });
   };
 
@@ -74,14 +71,6 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Plan Selection */}
-          <PlanSelector 
-            selectedPlanId={selectedPlan}
-            onSelectPlan={setSelectedPlan}
-            billingInterval={billingInterval}
-            onIntervalChange={setBillingInterval}
-          />
-
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="firstName">Prénom</Label>

@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { subscriptionApi } from "@/src/services/subscription-api";
 import type { PricingPlan } from "./use-subscription";
 
 export function usePricingPlans() {
@@ -11,7 +10,12 @@ export function usePricingPlans() {
     setLoading(true);
     setError(null);
     try {
-      const data = await subscriptionApi.getPlans();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/v1/subscription-plans`, {
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error("Failed to fetch plans");
+      const data = await response.json();
       setPlans(data.data || []);
       return data.data;
     } catch (err) {

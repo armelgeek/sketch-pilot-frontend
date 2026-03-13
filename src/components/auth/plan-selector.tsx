@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { Card } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { STRIPE_PLANS } from "@/src/lib/stripe-plans";
@@ -22,7 +21,7 @@ export function PlanSelector({
   return (
     <div className="space-y-6 mb-6">
       <div>
-        <label className="text-sm font-medium mb-3 block">Choisissez un plan d'abonnement</label>
+        <label className="text-sm font-medium mb-3 block">{"Choisissez un plan d'abonnement"}</label>
         
         {/* Billing Interval Toggle */}
         <div className="flex gap-2 mb-4">

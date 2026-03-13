@@ -1,83 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/src/components/ui/accordion";
-import { Navbar } from "@/src/components/layout/navbar";
+import { NavbarPublic } from "@/src/components/layout/navbar";
 import { Footer } from "@/src/components/layout/footer";
-
-const plans = [
-  {
-    name: "Free",
-    monthlyPrice: 0,
-    annualPrice: 0,
-    credits: 0,
-    highlighted: false,
-    features: [
-      "Essai gratuit",
-      "Vidéos jusqu'à 5 min",
-      "1 style visuel",
-      "Export SD 480p",
-      "Support communauté",
-      "1 utilisateur",
-    ],
-    missing: ["API Access", "Marque blanche", "Support prioritaire"],
-  },
-  {
-    name: "Starter",
-    monthlyPrice: 9.99,
-    annualPrice: 99.99,
-    credits: 500,
-    highlighted: false,
-    features: [
-      "500 crédits / mois",
-      "Vidéos jusqu'à 10 min",
-      "3 styles visuels",
-      "Export HD 1080p",
-      "Support email",
-      "1 utilisateur",
-    ],
-    missing: ["API Access", "Marque blanche", "Support prioritaire"],
-  },
-  {
-    name: "Pro",
-    monthlyPrice: 29.99,
-    annualPrice: 299.99,
-    credits: 2000,
-    highlighted: true,
-    features: [
-      "2 000 crédits / mois",
-      "Vidéos illimitées",
-      "12 styles visuels",
-      "Export 4K",
-      "Personnages personnalisés",
-      "Support prioritaire",
-      "3 utilisateurs",
-    ],
-    missing: ["Marque blanche"],
-  },
-  {
-    name: "Enterprise",
-    monthlyPrice: 99.99,
-    annualPrice: 999.99,
-    credits: 8000,
-    highlighted: false,
-    features: [
-      "8 000 crédits / mois",
-      "Accès API complet",
-      "Marque blanche",
-      "Rendu prioritaire",
-      "Manager de compte dédié",
-      "SLA garanti 99.9%",
-      "Utilisateurs illimités",
-    ],
-    missing: [],
-  },
-];
+import { STRIPE_PLANS } from "@/src/lib/stripe-plans";
+import { useSubscription } from "@/src/hooks/use-subscription";
+import { useSession } from "@/src/lib/auth-client";
 
 const faqs = [
   {
@@ -103,11 +37,35 @@ const faqs = [
 ];
 
 export default function PricingPage() {
-  const [annual, setAnnual] = useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { upgradePlan, loading } = useSubscription();
+  const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
+  const [error, setError] = useState<string | null>(null);
+  const displayPlans = STRIPE_PLANS;
+
+  const handleSubscribe = async (planId: string) => {
+    setError(null);
+    
+    if (!session?.user) {
+      router.push("/register");
+      return;
+    }
+
+    try {
+      await upgradePlan(planId, billingInterval);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Subscription failed");
+    }
+  };
+
+  if (displayPlans.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
-      <Navbar />
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
+      <NavbarPublic />
 
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Header */}
@@ -120,9 +78,9 @@ export default function PricingPage() {
           {/* Monthly/Annual toggle */}
           <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-zinc-200 dark:border-zinc-800 p-1 bg-white dark:bg-zinc-900">
             <button
-              onClick={() => setAnnual(false)}
+              onClick={() => setBillingInterval("month")}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                !annual
+                billingInterval === "month"
                   ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
               }`}
@@ -130,15 +88,15 @@ export default function PricingPage() {
               Mensuel
             </button>
             <button
-              onClick={() => setAnnual(true)}
+              onClick={() => setBillingInterval("year")}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                annual
+                billingInterval === "year"
                   ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
               }`}
             >
               Annuel
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${annual ? "bg-green-500 text-white" : "bg-green-100 text-green-700"}`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${billingInterval === "year" ? "bg-green-500 text-white" : "bg-green-100 text-green-700"}`}>
                 -20%
               </span>
             </button>
@@ -146,49 +104,45 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {plans.map((plan) => {
-            const price = annual ? plan.annualPrice : plan.monthlyPrice;
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {displayPlans.map((plan) => {
+            const price = billingInterval === "year" ? plan.annualPrice : plan.monthlyPrice;
             return (
               <Card
-                key={plan.name}
+                key={plan.id}
                 className={plan.highlighted ? "ring-2 ring-zinc-900 dark:ring-zinc-50 relative" : ""}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <Badge>Le plus populaire</Badge>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge>Populaire</Badge>
                   </div>
                 )}
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.credits.toLocaleString()} crédits / mois</CardDescription>
-                  <div className="mt-3">
-                    <span className="text-4xl font-extrabold">${price.toFixed(2)}</span>
-                    <span className="text-zinc-500 text-sm">/mois</span>
-                    {annual && plan.monthlyPrice > 0 && (
-                      <p className="text-xs text-green-600 mt-0.5">
-                        Facturé ${(price * 12).toFixed(2)}/an
-                      </p>
-                    )}
+                  <div className="text-3xl font-extrabold mt-1">
+                    ${price}
+                    <span className="text-sm font-normal text-zinc-500">/mois</span>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {plan.features.map((f) => (
+                <CardContent>
+                  <ul className="space-y-2 mb-6">
+                    {plan.features?.map((f: string) => (
                       <li key={f} className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-green-600 shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
+                  {error && (
+                    <p className="text-sm text-red-500 mb-2">{error}</p>
+                  )}
                   <Button
                     className="w-full"
                     variant={plan.highlighted ? "default" : "outline"}
-                    asChild
+                    onClick={() => handleSubscribe(plan.id)}
+                    disabled={loading}
                   >
-                    <Link href={plan.name === "Free" ? "/register" : "/register"}>
-                      {plan.name === "Free" ? "Commencer gratuitement" : "Commencer l'essai"}
-                    </Link>
+                    {loading ? "Traitement..." : "Commencer"}
                   </Button>
                 </CardContent>
               </Card>
