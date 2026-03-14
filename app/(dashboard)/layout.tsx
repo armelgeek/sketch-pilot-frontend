@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "@/src/lib/auth-client";
 import { Navbar } from "@/src/components/layout/navbar";
+import { cn } from "@/src/lib/utils";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, isPending } = useSession();
 
   useEffect(() => {
@@ -27,10 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return null;
   }
 
+  const isAdminRoute = pathname?.startsWith("/admin");
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <Navbar />
-      <main>{children}</main>
+      {!isAdminRoute && <Navbar />}
+      <main className={cn(!isAdminRoute && "pt-20")}>{children}</main>
     </div>
   );
 }

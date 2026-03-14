@@ -1,4 +1,4 @@
-const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
+export const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
 
 export class BaseService<T> {
     protected endpoint: string;
@@ -8,9 +8,19 @@ export class BaseService<T> {
     }
 
     protected async apiFetch<R = T>(path: string, options?: RequestInit): Promise<R> {
+        const headers: Record<string, string> = {};
+
+        // Don't set Content-Type for FormData, browser will set it with boundary
+        if (!(options?.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+
         const res = await fetch(`${BASE_URL}${path}`, {
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                ...headers,
+                ...(options?.headers as any),
+            },
             ...options,
         });
         if (!res.ok) {

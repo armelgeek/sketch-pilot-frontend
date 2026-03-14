@@ -1,0 +1,36 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ModelForm } from "@/src/app/admin/components/model-form";
+import { useAdminActions } from "@/src/app/admin/hooks/use-admin-actions";
+
+export default function NewModelPage() {
+    const router = useRouter();
+    const { createModel } = useAdminActions();
+
+    const handleSave = async (data: any, file?: File) => {
+        try {
+            const formData = new FormData();
+            formData.append("name", data.name);
+            formData.append("isStandard", String(data.isStandard));
+            if (file) {
+                formData.append("image", file);
+            }
+
+            await createModel(formData);
+            router.push("/admin/models");
+        } catch (error) {
+            console.error("Failed to create model:", error);
+        }
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto py-10 px-6 pb-32">
+            <ModelForm
+                title="Créer un Modèle"
+                onSubmit={handleSave}
+                onCancel={() => router.push("/admin/models")}
+            />
+        </div>
+    );
+}
