@@ -203,7 +203,7 @@ export class AdminService extends BaseService<any> {
     // --- Models ---
     async listModels(): Promise<any[]> {
         // Character models use a slightly different structure in the API results
-        const res = await this.apiFetch<any>("/v1/charactermodels/standard");
+        const res = await this.apiFetch<any>("/v1/character-models");
         return res.data;
     }
 
