@@ -7,7 +7,7 @@ import { DEFAULT_SPEC } from "@/src/app/admin/constants";
 
 export default function NewPromptPage() {
     const router = useRouter();
-    const { createPrompt } = useAdminActions();
+    const { createPrompt, isPending } = useAdminActions();
 
     const handleSave = async (data: any) => {
         try {
@@ -23,6 +23,7 @@ export default function NewPromptPage() {
             <PromptForm
                 title="Nouveau Prompt Système"
                 initialData={DEFAULT_SPEC}
+                isLoading={isPending}
                 onSubmit={handleSave}
                 onCancel={() => router.push("/admin/prompts")}
             />

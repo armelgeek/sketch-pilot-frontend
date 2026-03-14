@@ -6,7 +6,7 @@ import { useAdminActions } from "@/src/app/admin/hooks/use-admin-actions";
 
 export default function NewModelPage() {
     const router = useRouter();
-    const { createModel } = useAdminActions();
+    const { createModel, isPending } = useAdminActions();
 
     const handleSave = async (data: any, file?: File) => {
         try {
@@ -29,6 +29,7 @@ export default function NewModelPage() {
             <ModelForm
                 title="Créer un Modèle"
                 onSubmit={handleSave}
+                isLoading={isPending}
                 onCancel={() => router.push("/admin/models")}
             />
         </div>

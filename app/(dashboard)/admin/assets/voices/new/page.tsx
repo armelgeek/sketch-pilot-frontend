@@ -6,7 +6,7 @@ import { useAdminActions } from "@/src/app/admin/hooks/use-admin-actions";
 
 export default function NewVoicePage() {
     const router = useRouter();
-    const { createVoice, uploadAsset } = useAdminActions();
+    const { createVoice, uploadAsset, isPending } = useAdminActions();
 
     const handleSave = async (data: any, file?: File) => {
         try {
@@ -26,6 +26,7 @@ export default function NewVoicePage() {
             <VoiceForm
                 title="Ajouter une Voix"
                 onSubmit={handleSave}
+                isLoading={isPending}
                 onCancel={() => router.push("/admin/assets?tab=voices")}
             />
         </div>

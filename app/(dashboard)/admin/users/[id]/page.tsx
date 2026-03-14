@@ -15,7 +15,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { data: user, isLoading } = useAdminUser(id);
-    const { updateUser, banUser, unbanUser, adjustCredits } = useAdminActions();
+    const { updateUser, banUser, unbanUser, adjustCredits, isPending } = useAdminActions();
 
     const handleSave = async (data: any) => {
         try {
@@ -88,6 +88,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                 onCancel={() => router.push("/admin/users")}
                 onAdjustCredits={handleAdjustCredits}
                 onStatusChange={handleStatusChange}
+                isLoading={isPending}
             />
         </div>
     );

@@ -43,7 +43,7 @@ export default function AdminVideosPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("");
     const { data: videosRes, isLoading } = useAdminVideos({ page, limit: 12, search, status: statusFilter });
-    const { deleteVideo } = useAdminActions();
+    const { deleteVideo, isPending } = useAdminActions();
 
     const [videoToDelete, setVideoToDelete] = useState<any>(null);
 
@@ -243,6 +243,7 @@ export default function AdminVideosPage() {
                 open={!!videoToDelete}
                 onOpenChange={(open) => !open && setVideoToDelete(null)}
                 onConfirm={handleDelete}
+                isLoading={isPending}
                 title="Supprimer la Vidéo"
                 description={`Êtes-vous sûr de vouloir supprimer la vidéo "${videoToDelete?.topic}" ? Cette action est irréversible.`}
                 confirmText="Supprimer la vidéo"

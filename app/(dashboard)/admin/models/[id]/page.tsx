@@ -15,7 +15,7 @@ export default function EditModelPage({ params }: EditModelPageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { data: models, isLoading } = useAdminModels();
-    const { updateModel } = useAdminActions();
+    const { updateModel, isPending } = useAdminActions();
 
     const model = models?.find((m: any) => m.id === id);
 
@@ -61,6 +61,7 @@ export default function EditModelPage({ params }: EditModelPageProps) {
             <ModelForm
                 title="Modifier le Modèle"
                 initialData={model}
+                isLoading={isPending}
                 onSubmit={handleSave}
                 onCancel={() => router.push("/admin/models")}
             />

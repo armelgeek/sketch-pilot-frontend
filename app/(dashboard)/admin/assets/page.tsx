@@ -34,7 +34,7 @@ export default function AdminAssetsPage() {
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") || "voices";
 
-    const { deleteVoice, deleteMusic } = useAdminActions();
+    const { deleteVoice, deleteMusic, isPending } = useAdminActions();
 
     const [activeTab, setActiveTab] = useState(initialTab);
     const [search, setSearch] = useState("");
@@ -301,6 +301,7 @@ export default function AdminAssetsPage() {
                     await deleteVoice(voiceToDelete.id);
                     setVoiceToDelete(null);
                 }}
+                isLoading={isPending}
                 title="Supprimer la Voix"
                 description={`Êtes-vous sûr de vouloir supprimer la voix "${voiceToDelete?.name}" ? Cette action est irréversible.`}
                 confirmText="Supprimer"
@@ -314,6 +315,7 @@ export default function AdminAssetsPage() {
                     await deleteMusic(musicToDelete.id);
                     setMusicToDelete(null);
                 }}
+                isLoading={isPending}
                 title="Supprimer la Musique"
                 description={`Êtes-vous sûr de vouloir supprimer la musique "${musicToDelete?.name}" ? Cette action est irréversible.`}
                 confirmText="Supprimer"

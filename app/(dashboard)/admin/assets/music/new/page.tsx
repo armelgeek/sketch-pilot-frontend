@@ -6,7 +6,7 @@ import { useAdminActions } from "@/src/app/admin/hooks/use-admin-actions";
 
 export default function NewMusicPage() {
     const router = useRouter();
-    const { createMusic, uploadAsset } = useAdminActions();
+    const { createMusic, uploadAsset, isPending } = useAdminActions();
 
     const handleSave = async (data: any, file?: File) => {
         try {
@@ -26,6 +26,7 @@ export default function NewMusicPage() {
             <MusicForm
                 title="Ajouter une Musique"
                 onSubmit={handleSave}
+                isLoading={isPending}
                 onCancel={() => router.push("/admin/assets?tab=music")}
             />
         </div>

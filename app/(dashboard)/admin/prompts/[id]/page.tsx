@@ -14,7 +14,7 @@ interface EditPromptPageProps {
 export default function EditPromptPage({ params }: EditPromptPageProps) {
     const { id } = use(params);
     const router = useRouter();
-    const { updatePrompt } = useAdminActions();
+    const { updatePrompt, isPending } = useAdminActions();
     const { data: promptsRes, isLoading } = useAdminPrompts({});
 
     // In a real scenario, we might want a useAdminPrompt(id) hook, 
@@ -62,6 +62,7 @@ export default function EditPromptPage({ params }: EditPromptPageProps) {
             <PromptForm
                 title="Modifier le Prompt"
                 initialData={prompt}
+                isLoading={isPending}
                 onSubmit={handleSave}
                 onCancel={() => router.push("/admin/prompts")}
             />

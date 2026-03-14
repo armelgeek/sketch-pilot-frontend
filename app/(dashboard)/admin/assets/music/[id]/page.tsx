@@ -15,7 +15,7 @@ export default function EditMusicPage({ params }: EditMusicPageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { data: musicTracks, isLoading } = useAdminMusic();
-    const { updateMusic, uploadAsset } = useAdminActions();
+    const { updateMusic, uploadAsset, isPending } = useAdminActions();
 
     const track = musicTracks?.find((m: any) => m.id === id);
 
@@ -64,6 +64,7 @@ export default function EditMusicPage({ params }: EditMusicPageProps) {
             <MusicForm
                 title="Modifier la Musique"
                 initialData={track}
+                isLoading={isPending}
                 onSubmit={handleSave}
                 onCancel={() => router.push("/admin/assets?tab=music")}
             />

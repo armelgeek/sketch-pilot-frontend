@@ -35,7 +35,7 @@ export default function AdminPromptsPage() {
     const [search, setSearch] = useState("");
     const { data: promptsRes, isLoading } = useAdminPrompts({ search });
     const prompts = promptsRes?.data || [];
-    const { deletePrompt } = useAdminActions();
+    const { deletePrompt, isPending } = useAdminActions();
 
     // Deletion state
     const [promptToDelete, setPromptToDelete] = useState<any>(null);
@@ -169,6 +169,7 @@ export default function AdminPromptsPage() {
                         setPromptToDelete(null);
                     }
                 }}
+                isLoading={isPending}
             />
         </div>
     );

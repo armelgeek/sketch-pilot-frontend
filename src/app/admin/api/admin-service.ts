@@ -105,10 +105,8 @@ export class AdminService extends BaseService<any> {
 
     // --- Config / Assets ---
     async listVoices(): Promise<VoicePreset[]> {
-        const res = await this.apiFetch<any>("/v1/config/voices");
-        // voices is Record<string, VoicePreset[]>
-        const voices = Object.values(res.voices || {}).flat();
-        return voices as VoicePreset[];
+        const res = await this.apiFetch<any>(`${this.endpoint}/config/voices`);
+        return res.data;
     }
 
     async createVoice(data: Partial<VoicePreset>): Promise<VoicePreset> {
@@ -134,8 +132,8 @@ export class AdminService extends BaseService<any> {
     }
 
     async listMusic(): Promise<MusicTrack[]> {
-        const res = await this.apiFetch<any>("/v1/config/music");
-        return (res.music || []) as MusicTrack[];
+        const res = await this.apiFetch<any>(`${this.endpoint}/config/music`);
+        return res.data;
     }
 
     async createMusic(data: Partial<MusicTrack>): Promise<MusicTrack> {

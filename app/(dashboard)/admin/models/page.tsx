@@ -29,7 +29,7 @@ import { cn } from "@/src/lib/utils";
 export default function AdminModelsPage() {
     const router = useRouter();
     const { data: models, isLoading } = useAdminModels();
-    const { deleteModel } = useAdminActions();
+    const { deleteModel, isPending } = useAdminActions();
 
     const [modelToDelete, setModelToDelete] = useState<any>(null);
 
@@ -123,6 +123,7 @@ export default function AdminModelsPage() {
                     await deleteModel(modelToDelete.id);
                     setModelToDelete(null);
                 }}
+                isLoading={isPending}
                 title="Supprimer le Modèle"
                 description={`Êtes-vous sûr de vouloir supprimer le modèle "${modelToDelete?.name}" ? Cette action supprimera également l'image associée.`}
                 confirmText="Supprimer"

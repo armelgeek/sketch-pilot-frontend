@@ -15,7 +15,7 @@ export default function EditVoicePage({ params }: EditVoicePageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { data: voices, isLoading } = useAdminVoices();
-    const { updateVoice, uploadAsset } = useAdminActions();
+    const { updateVoice, uploadAsset, isPending } = useAdminActions();
 
     const voice = voices?.find((v: any) => v.id === id);
 
@@ -64,6 +64,7 @@ export default function EditVoicePage({ params }: EditVoicePageProps) {
             <VoiceForm
                 title="Modifier la Voix"
                 initialData={voice}
+                isLoading={isPending}
                 onSubmit={handleSave}
                 onCancel={() => router.push("/admin/assets?tab=voices")}
             />
