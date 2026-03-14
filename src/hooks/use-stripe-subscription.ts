@@ -65,7 +65,7 @@ export function useStripeSubscription() {
         subscriptionId: options.subscriptionId,
         metadata: options.metadata,
         seats: options.seats,
-        locale: options.locale,
+        locale: options.locale as any, // Fix TS error: Type 'string | undefined' is not assignable to type 'Locale | undefined'
         successUrl: options.successUrl,
         cancelUrl: options.cancelUrl,
         returnUrl: options.returnUrl,
@@ -89,8 +89,8 @@ export function useStripeSubscription() {
   }, []);
 
   const switchPlan = useCallback(
-    async (newPlan: string, options?: { 
-      subscriptionId: string; 
+    async (newPlan: string, options?: {
+      subscriptionId: string;
       scheduleAtPeriodEnd?: boolean;
       successUrl: string;
       cancelUrl: string;
@@ -202,7 +202,7 @@ export function useStripeSubscription() {
       setError(null);
       try {
         const { data, error: portalError } = await authClient.subscription.billingPortal({
-          locale: options.locale,
+          locale: options.locale as any, // Fix TS error: Type 'string | undefined' is not assignable to type 'Locale | undefined'
           referenceId: options.referenceId,
           returnUrl: options.returnUrl,
           disableRedirect: options.disableRedirect ?? false,

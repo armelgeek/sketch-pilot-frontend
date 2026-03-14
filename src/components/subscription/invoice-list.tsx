@@ -32,8 +32,8 @@ export function InvoiceList() {
         setIsLoading(true);
         setError(null);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-            const response = await fetch(`${apiUrl}/api/v1/invoices`, {
+            const baseURL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
+            const response = await fetch(`${baseURL}/v1/invoices`, {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" }
             });

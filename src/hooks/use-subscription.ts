@@ -107,8 +107,8 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/v1/invoices`, {
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
+      const response = await fetch(`${apiUrl}/v1/invoices`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" }
       });
@@ -128,8 +128,8 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/v1/credits`, {
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
+      const response = await fetch(`${apiUrl}/v1/credits`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" }
       });
@@ -149,8 +149,8 @@ export function useSubscription() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/v1/credits/checkout`, {
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
+      const response = await fetch(`${apiUrl}/v1/credits/checkout`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

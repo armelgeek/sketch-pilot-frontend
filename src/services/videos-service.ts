@@ -1,0 +1,116 @@
+import { BaseService } from "./base-service";
+
+export interface VideoScript {
+    title?: string;
+    description?: string;
+    scenes: any[];
+    totalDuration?: number;
+}
+
+export interface Video {
+    id: string;
+    topic: string;
+    status: "draft" | "queued" | "processing" | "scenes_generated" | "narration_generated" | "completed" | "failed" | "cancelled";
+    progress: number;
+    currentStep?: string;
+    jobId?: string;
+    videoUrl?: string;
+    thumbnailUrl?: string;
+    script?: VideoScript;
+    scenes?: any[];
+    options?: any;
+}
+
+export interface VideoGenerationOptions {
+    videoType?: 'explainer' | 'story' | 'tutorial' | 'promo' | string;
+    videoGenre?: 'educational' | 'fun' | 'business' | 'lifestyle' | string;
+    language?: string;
+    style?: 'sketch' | 'cartoon' | 'realistic' | 'minimal' | string;
+    maxDuration?: number;
+    aspectRatio?: '16:9' | '9:16' | '1:1';
+    kokoroVoicePreset?: string;
+    musicVolume?: number;
+    voiceVolume?: number;
+    backgroundMusic?: string;
+    [key: string]: any; // For any other options passed down
+}
+
+export interface ScriptGenerationResponse {
+    topic: string;
+    videoId: string;
+    script: VideoScript;
+    metadata: {
+        sceneCount: number;
+        estimatedDuration: number;
+        language: string;
+    };
+}
+
+export interface JobResponse {
+    jobId: string;
+    status: string;
+    estimatedDuration?: number;
+    creditsRequired?: number;
+    message?: string;
+    streamUrl?: string;
+    videoId?: string;
+}
+
+export class VideosService extends BaseService<Video> {
+    constructor() {
+        super("/v1/videos");
+    }
+
+    async getAll(): Promise<Video[]> {
+        const response = await this.apiFetch<{ data: Video[]; total: number; page: number; limit: number }>(
+            this.endpoint
+        );
+        return response.data;
+    }
+
+    async generate(topic: string, options: any = {}): Promise<ScriptGenerationResponse> {
+        return this.apiFetch<ScriptGenerationResponse>(`/v1/scripts/generate`, {
+            method: "POST",
+            body: JSON.stringify({ topic, options }),
+        });
+    }
+
+    async generateScenes(id: string): Promise<JobResponse> {
+        return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/generate-scenes`, {
+            method: "POST",
+        });
+    }
+
+    async repromptScene(id: string, index: number, newPrompt?: string): Promise<JobResponse> {
+        return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/scenes/${index}/reprompt`, {
+            method: "POST",
+            body: JSON.stringify({ newPrompt }),
+        });
+    }
+
+    async generateNarration(id: string): Promise<JobResponse> {
+        return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/narrate`, {
+            method: "POST",
+        });
+    }
+
+    async assemble(id: string): Promise<JobResponse> {
+        return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/assemble`, {
+            method: "POST",
+        });
+    }
+
+    async getJobStatus(jobId: string): Promise<any> {
+        return this.apiFetch<any>(`${this.endpoint}/jobs/${jobId}`);
+    }
+
+    async update(id: string, data: Partial<Video>): Promise<Video> {
+        const response = await this.apiFetch<{ success: boolean; video: Video }>(`${this.endpoint}/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        });
+        return response.video;
+    }
+}
+
+export const videosService = new VideosService();
