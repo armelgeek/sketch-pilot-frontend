@@ -14,13 +14,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (!isPending) {
             if (!session) {
                 router.push("/login");
-            } else if (!session.user.isAdmin) {
+            } else if (!session.user?.isAdmin) {
                 router.push("/dashboard");
             }
         }
     }, [session, isPending, router]);
 
-    if (isPending || !session || !session.user.isAdmin) {
+    if (isPending || !session?.user?.isAdmin) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
                 <div className="flex flex-col items-center gap-4">

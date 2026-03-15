@@ -47,7 +47,7 @@ export function NavbarPrivate() {
     return null;
   }
 
-  const userName = session.user.name || session.user.email || "User";
+  const userName = session?.user?.name || session?.user?.email || "User";
   const userInitials = userName
     .split(" ")
     .map((n) => n[0])
@@ -108,7 +108,7 @@ export function NavbarPrivate() {
             <DropdownMenuTrigger asChild>
               <button className="rounded-2xl focus:outline-none transition-all hover:ring-4 hover:ring-zinc-100 dark:hover:ring-zinc-900 active:scale-95">
                 <Avatar className="h-10 w-10 border-2 border-white dark:border-zinc-800 shadow-md">
-                  <AvatarImage src={session.user.image || ""} alt={userName} />
+                  <AvatarImage src={session?.user?.image || ""} alt={userName} />
                   <AvatarFallback className="bg-zinc-100 dark:bg-zinc-900 font-black text-[10px] text-zinc-600 dark:text-zinc-400">{userInitials}</AvatarFallback>
                 </Avatar>
               </button>
@@ -116,12 +116,12 @@ export function NavbarPrivate() {
             <DropdownMenuContent align="end" className="w-[280px] p-3 mt-4 rounded-[32px] border-zinc-200 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center gap-4 p-4 mb-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50">
                 <Avatar className="h-12 w-12 shadow-sm">
-                  <AvatarImage src={session.user.image || ""} alt={userName} />
+                  <AvatarImage src={session?.user?.image || ""} alt={userName} />
                   <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">{userInitials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <div className="text-sm font-black text-zinc-900 dark:text-zinc-50 truncate">{userName}</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate font-medium">{session.user.email}</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate font-medium">{session?.user?.email}</div>
                 </div>
               </div>
 
@@ -141,7 +141,7 @@ export function NavbarPrivate() {
                   <Link href="/settings">Paramètres du compte</Link>
                 </DropdownMenuItem>
 
-                {session.user.isAdmin && (
+                {session?.user?.isAdmin && (
                   <>
                     <DropdownMenuSeparator className="opacity-50" />
                     <DropdownMenuItem asChild className="rounded-xl h-11 px-4 cursor-pointer focus:bg-emerald-50 dark:focus:bg-emerald-950/20 focus:text-emerald-600 dark:focus:text-emerald-400 font-black text-sm text-emerald-600">
@@ -197,7 +197,7 @@ export function NavbarPrivate() {
                 <Link href="/profile" className="px-5 py-4 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 font-bold text-zinc-900 dark:text-zinc-50" onClick={() => setMobileOpen(false)}>
                   Gérer Profil
                 </Link>
-                {session.user.isAdmin && (
+                {session?.user?.isAdmin && (
                   <Link href="/admin" className="flex items-center justify-between px-5 py-4 rounded-2xl bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-black border border-emerald-500/10" onClick={() => setMobileOpen(false)}>
                     Administration <Shield className="h-5 w-5" />
                   </Link>

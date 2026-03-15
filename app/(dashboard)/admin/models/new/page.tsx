@@ -12,6 +12,11 @@ export default function NewModelPage() {
         try {
             const formData = new FormData();
             formData.append("name", data.name);
+            formData.append("gender", data.gender || "unknown");
+            formData.append("age", data.age || "unknown");
+            if (data.voiceId && data.voiceId !== "none") {
+                formData.append("voiceId", data.voiceId);
+            }
             formData.append("isStandard", String(data.isStandard));
             if (file) {
                 formData.append("image", file);

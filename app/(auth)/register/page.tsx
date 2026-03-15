@@ -24,6 +24,8 @@ export default function RegisterPage() {
       email: form.email,
       password: form.password,
       name: `${form.firstName} ${form.lastName}`,
+      firstName: form.firstName,
+      lastName: form.lastName,
     });
   };
 

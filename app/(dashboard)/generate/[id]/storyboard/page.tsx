@@ -29,8 +29,6 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
     // Dynamic States
     const [sceneEdits, setSceneEdits] = useState<Record<string, any>>({});
-    const [visualStyleOverride, setVisualStyleOverride] = useState<string>("sketch");
-    const [colorPalette, setColorPalette] = useState<string>("warm");
 
     const {
         progress: realProgress,
@@ -48,9 +46,6 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         videosService.getById(resolvedParams.id)
             .then(video => {
                 setActiveVideo(video);
-                if (video.options?.style) {
-                    setVisualStyleOverride(video.options.style);
-                }
                 // If video is still in terminal processing state, pick up the jobId to track progress
                 if ((video.status === "processing" || video.status === "queued") && video.jobId) {
                     setJobId(video.jobId);
@@ -286,7 +281,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                             </span>
                                                             {scene.imageUrl && <div className="h-2 w-2 rounded-full bg-emerald-500" />}
                                                         </div>
-                                                        <span className="block text-zinc-500 text-xs truncate font-medium">{sceneEdits[currentId]?.text ?? (scene.title || scene.content)}</span>
+                                                        <span className="block text-zinc-500 text-xs truncate font-medium">{sceneEdits[currentId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}</span>
                                                     </button>
                                                 );
                                             })}
@@ -295,29 +290,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                 </div>
                                 {/* Accordion */}
                                 <div className="lg:col-span-2">
-                                    {/* Style Overrides */}
-                                    <Card className="glass-pill border-none shadow-xl mb-4">
-                                        <CardContent className="p-4 grid grid-cols-2 gap-4">
-                                            <Select value={visualStyleOverride} onValueChange={setVisualStyleOverride}>
-                                                <SelectTrigger><SelectValue placeholder="Style visuel global" /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="sketch">Sketch</SelectItem>
-                                                    <SelectItem value="cartoon">Cartoon</SelectItem>
-                                                    <SelectItem value="minimal">Minimaliste</SelectItem>
-                                                    <SelectItem value="realistic">Réaliste</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Select value={colorPalette} onValueChange={setColorPalette}>
-                                                <SelectTrigger><SelectValue placeholder="Palette globale" /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="bw">Noir &amp; Blanc</SelectItem>
-                                                    <SelectItem value="warm">Chaleureuse</SelectItem>
-                                                    <SelectItem value="cool">Froide</SelectItem>
-                                                    <SelectItem value="vibrant">Vibrante</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </CardContent>
-                                    </Card>
+
 
                                     <Accordion type="single" collapsible value={selectedScene} onValueChange={setSelectedScene} className="space-y-4">
                                         {displayScenes.map((scene: any, i: number) => {
@@ -330,7 +303,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                 >
                                                     <AccordionTrigger className="hover:no-underline py-4">
                                                         <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left">
-                                                            Scène {i + 1} — <span className="text-zinc-500 font-medium break-words leading-tight pl-1">{sceneEdits[currentId]?.text?.substring(0, 40) ?? (scene.title || `Scène ${i + 1}`)}...</span>
+                                                            Scène {i + 1} — <span className="text-zinc-500 font-medium break-words leading-tight pl-1">{(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
                                                         </span>
                                                     </AccordionTrigger>
                                                     <AccordionContent className="pb-6">
@@ -338,8 +311,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                             <div className="space-y-1">
                                                                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Narration</label>
                                                                 <Textarea
-                                                                    value={sceneEdits[currentId]?.text ?? (scene.text || scene.content)}
-                                                                    onChange={(e) => updateScene(currentId, 'text', e.target.value)}
+                                                                    value={sceneEdits[currentId]?.narration ?? (scene.narration || scene.text || scene.content || "")}
+                                                                    onChange={(e) => updateScene(currentId, 'narration', e.target.value)}
                                                                     className="min-h-[80px] resize-none"
                                                                 />
                                                             </div>
@@ -352,30 +325,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                                     placeholder="Prompt utilisé pour générer le visuel..."
                                                                 />
                                                             </div>
-                                                            <div className="grid grid-cols-2 gap-3">
-                                                                <Select
-                                                                    value={sceneEdits[currentId]?.character ?? "narrator"}
-                                                                    onValueChange={(val) => updateScene(currentId, 'character', val)}
-                                                                >
-                                                                    <SelectTrigger><SelectValue placeholder="Personnage" /></SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="narrator">Narrateur</SelectItem>
-                                                                        <SelectItem value="char1">Personnage A</SelectItem>
-                                                                        <SelectItem value="char2">Personnage B</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <Select
-                                                                    value={sceneEdits[currentId]?.setting ?? "office"}
-                                                                    onValueChange={(val) => updateScene(currentId, 'setting', val)}
-                                                                >
-                                                                    <SelectTrigger><SelectValue placeholder="Décor" /></SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="office">Bureau</SelectItem>
-                                                                        <SelectItem value="classroom">Classe</SelectItem>
-                                                                        <SelectItem value="outdoors">Extérieur</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
+
                                                         </div>
                                                     </AccordionContent>
                                                 </AccordionItem>
@@ -460,7 +410,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
                                                 {/* Lower Third Caption preview */}
                                                 <div className="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur-md text-white text-sm md:text-base p-3 md:p-4 rounded-xl font-medium border border-white/10 text-center leading-relaxed shadow-xl">
-                                                    "{sceneEdits[selectedScene]?.text ?? activeScene?.text ?? activeScene?.content ?? "..."}"
+                                                    "{sceneEdits[selectedScene]?.narration ?? activeScene?.narration ?? activeScene?.text ?? activeScene?.content ?? "..."}"
                                                 </div>
                                             </div>
                                         );

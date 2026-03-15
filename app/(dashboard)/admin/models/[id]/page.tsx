@@ -21,8 +21,13 @@ export default function EditModelPage({ params }: EditModelPageProps) {
 
     const handleSave = async (data: any, file?: File) => {
         try {
+            const updateData = { ...data };
+            if (updateData.voiceId === "none") {
+                updateData.voiceId = null;
+            }
+
             // Update uses JSON with PATCH
-            await updateModel({ id, data: { ...data, image: file || undefined } });
+            await updateModel({ id, data: { ...updateData, image: file || undefined } });
             router.push("/admin/models");
         } catch (error) {
             console.error("Failed to update model:", error);

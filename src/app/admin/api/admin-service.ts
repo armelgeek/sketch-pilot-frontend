@@ -176,6 +176,23 @@ export class AdminService extends BaseService<any> {
         };
     }
 
+    async listPublicPrompts(params: { page?: number; limit?: number; search?: string }): Promise<{
+        data: any[];
+        total: number;
+    }> {
+        const query = new URLSearchParams();
+        if (params.page) query.append("page", params.page.toString());
+        if (params.limit) query.append("limit", params.limit.toString());
+        if (params.search) query.append("search", params.search);
+
+        // Public prompts are at /v1/prompts, not /v1/admin/prompts
+        const res = await this.apiFetch<any>(`/v1/prompts?${query.toString()}`);
+        return {
+            data: res.data,
+            total: res.total
+        };
+    }
+
     async createPrompt(data: any): Promise<any> {
         const res = await this.apiFetch<any>(`${this.endpoint}/prompts`, {
             method: "POST",

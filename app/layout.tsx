@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/src/components/providers";
+import { UtmCapturer } from "@/src/app/tracking";
 
 export const metadata: Metadata = {
   title: "Sketch Pilot — Whiteboard Animation Platform",
@@ -16,7 +17,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="antialiased font-sans">
-        <Providers>{children}</Providers>
+        <Providers>
+          <UtmCapturer />
+          {children}
+        </Providers>
       </body>
     </html>
   );

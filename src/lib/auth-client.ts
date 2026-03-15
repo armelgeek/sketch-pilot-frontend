@@ -15,6 +15,11 @@ export const authClient = createAuthClient({
         banned: { type: 'boolean' },
         firstname: { type: 'string' },
         lastname: { type: 'string' },
+        utmSource: { type: 'string' },
+        utmMedium: { type: 'string' },
+        utmCampaign: { type: 'string' },
+        utmTerm: { type: 'string' },
+        utmContent: { type: 'string' },
       }
     })
   ]

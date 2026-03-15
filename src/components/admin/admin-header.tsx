@@ -25,7 +25,7 @@ export function AdminHeader() {
 
     if (!session) return null;
 
-    const userName = session.user.name || session.user.email || "Admin";
+    const userName = session?.user?.name || session?.user?.email || "Admin";
     const userInitials = userName
         .split(" ")
         .map((n) => n[0])
@@ -93,7 +93,7 @@ export function AdminHeader() {
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none">
                             <Avatar className="h-10 w-10 border-2 border-emerald-500/20 shadow-sm">
-                                <AvatarImage src={session.user.image || ""} />
+                                <AvatarImage src={session?.user?.image || ""} />
                                 <AvatarFallback className="bg-emerald-50 text-emerald-700 font-bold text-xs">{userInitials}</AvatarFallback>
                             </Avatar>
                             <div className="hidden lg:flex flex-col items-start leading-tight">

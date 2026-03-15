@@ -1,9 +1,8 @@
 export const DEFAULT_SPEC = {
     name: 'Rebuild Narrative System',
     role: 'Personal Transformation Storytelling Director',
-    context: 'Cinematic director specialized in psychological storytelling using minimalist whiteboard stickman animation. The goal is to produce emotionally engaging scripts with strong pacing, clear psychological insight, and visually driven storytelling.',
+    context: 'Cinematic director specialized in psychological storytelling using minimalist whiteboard animation. The goal is to produce emotionally engaging scripts with strong pacing, clear psychological insight, and visually driven storytelling.',
     audienceDefault: 'General audience interested in psychology, human behavior and self improvement',
-    character: "Main character representation. DO NOT describe specific physical traits, clothing, or body shape. The character's visual identity will be entirely determined by a provided reference image. Just refer to them by their role or variant (e.g., 'king', 'professor').",
     task: 'Plan and write a complete YouTube video script based on the provided subject and target duration. The script must include narration, character actions, emotional states, visual composition and transitions.',
     goals: [
         'Create a powerful hook within the first 10 seconds',
@@ -13,7 +12,6 @@ export const DEFAULT_SPEC = {
         'Deliver a memorable and cinematic ending'
     ],
     structure: 'Hook -> Problem -> Exploration -> Psychological Insight -> Practical Shift -> Conclusion',
-    visualStyle: 'Minimalist whiteboard animation. Clean vector lines, simple icons, expressive stickman acting, visual metaphors built from everyday objects.',
     rules: [
         'TOTAL VIDEO DURATION MUST NOT exceed the requested duration.',
         'Scene duration: Aim for 10-12 seconds per scene to allow for full animation cycles (zoom-in/out).',
@@ -33,7 +31,7 @@ export const DEFAULT_SPEC = {
         'Narration length MUST match the scene duration accurately.',
         'Avoid clichés and generic motivational language.',
         'Prefer concrete situations from daily life.',
-        "100% LOCAL RULE (STRATEGIC): All scenes use visualSource: 'local' with Stickman/Whiteboard composition. No AI generation. Use onscreenText and keywordVisuals for high-impact visual enhancements.",
+        "100% LOCAL RULE (STRATEGIC): All scenes use visualSource: 'local' with Whiteboard composition. No AI generation. Use onscreenText and keywordVisuals for high-impact visual enhancements.",
         "WHITEBOARD RULE: Background MUST ALWAYS BE SOLID WHITE (#FFFFFF). NO ENVIRONMENTS or background images allowed. For scenes without characters ('poseId: NONE'), rely on 'onscreenText' and 'keywordVisuals'.",
         "ASSET LIBRARY: Characters MUST use pre-rendered 'poseId' (STAND, WALK, RUN, THINK, POINT, SAD, JUMP, SIT, TYPE, EXHAUSTED, NOTEBOOK, PHONE, ANGRY, SHOCK, MEDITATE, LOOK-BACK, CARRY-BOX, FALL, NONE).",
         "PO SE STYLE: Use 'poseStyle' to position the character. Default is 'center'. Use 'left' or 'right' when 'onscreenText' is present to avoid overlap. 'scale' (0.5-1.5) adjusts character size. SMART FALLBACK: You can propose NEW descriptive pose names (e.g. 'FLYING', 'CLIMBING'). If the pose is not in the asset library, the system will automatically use AI to generate it.",
@@ -62,7 +60,7 @@ export const DEFAULT_SPEC = {
                 cameraType: 'String',
                 framing: 'String',
                 lighting: 'String',
-                imagePrompt: 'A clean 2D vector sketch of [action/metaphor] on a solid white background',
+                imagePrompt: '[action/metaphor]',
                 animationPrompt: '...',
                 transitionToNext: 'fade | slide-left | zoom-in | wipe | swish',
                 tension: 5,
@@ -102,7 +100,7 @@ export const DEFAULT_SPEC = {
         'Think step-by-step.',
         "First, write the complete narration in 'fullNarration'.",
         'Then, break it down into scenes.',
-        'For each scene, ensure all visuals use local Stickman composition (visualSource: local). Use poseId, onscreenText, and keywordVisuals for visual variety.',
+        'For each scene, ensure all visuals use local composition (visualSource: local). Use poseId, onscreenText, and keywordVisuals for visual variety.',
         'Ensure narration flows perfectly across cuts.'
     ]
 };

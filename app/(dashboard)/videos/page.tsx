@@ -4,38 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Plus, Play, Search, ChevronLeft, ChevronRight,
-  Pencil, Download, Loader2, AlertCircle, Image, Clock
+  Plus, Search, ChevronLeft, ChevronRight,
+  Play, CheckCircle2, Loader2, AlertCircle, Video as VideoIcon
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import { videosService, type Video } from "@/src/services/videos-service";
-
-type VideoStatus = Video["status"];
-
-const statusConfig: Record<string, { label: string; className: string }> = {
-  completed: { label: "Terminé", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  processing: { label: "En cours", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse" },
-  queued: { label: "En attente", className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
-  failed: { label: "Échec", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  cancelled: { label: "Annulé", className: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400" },
-  draft: { label: "Brouillon", className: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400" },
-  scenes_generated: { label: "Visuels générés", className: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" },
-  narration_generated: { label: "Narration prête", className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-};
-
-const EDIT_ROUTE: Record<string, string> = {
-  draft: "storyboard",
-  scenes_generated: "storyboard",
-  narration_generated: "audio",
-  failed: "storyboard",
-  completed: "storyboard",
-  queued: "storyboard",
-  processing: "storyboard",
-};
+import { VideoCard } from "@/src/components/organisms/video-card";
 
 export default function VideosPage() {
   const router = useRouter();
@@ -65,229 +43,197 @@ export default function VideosPage() {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
-  const getEditPath = (v: Video): string | null => {
-    const step = EDIT_ROUTE[v.status] || "storyboard";
-    return `/generate/${v.id}/${step}`;
-  };
-
-  const formatDate = (v: Video) => {
-    // Try to extract date from the video object
-    const date = (v as any).createdAt || (v as any).created_at;
-    if (!date) return "";
-    return new Date(date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+  // Stats for the library
+  const stats = {
+    total: videos.length,
+    completed: videos.filter(v => v.status === 'completed').length,
+    processing: videos.filter(v => v.status === 'processing' || v.status === 'queued').length
   };
 
   return (
-    <div className="relative min-h-screen mt-12">
-      <div className="mesh-gradient" />
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8 relative z-10">
+    <div className="relative min-h-screen">
+      <div className="mesh-gradient opacity-30 dark:opacity-20" />
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-              Mes vidéos
+      <div className="mx-auto max-w-7xl px-6 py-12 space-y-12 relative z-10">
+
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-500 dark:from-zinc-100 dark:via-zinc-200 dark:to-zinc-500 bg-clip-text text-transparent">
+              Mes Vidéos
             </h1>
-            <p className="text-zinc-500 mt-1">
-              {loading ? "Chargement..." : `${videos.length} vidéo${videos.length > 1 ? "s" : ""} au total`}
+            <p className="text-zinc-500 font-medium">
+              Gérez et téléchargez vos créations visuelles.
             </p>
           </div>
-          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-500/20 h-11 px-6">
+
+          <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-12 px-8 font-bold shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">
             <Link href="/generate">
-              <Plus className="h-4 w-4 mr-2" /> Créer une vidéo
+              <Plus className="h-5 w-5 mr-2" /> Créer une vidéo
             </Link>
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <Input
-              placeholder="Rechercher une vidéo..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-9"
+        {/* Quick Stats Row */}
+        {!loading && videos.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <SmallStatCard
+              label="Total Vidéos"
+              value={stats.total}
+              icon={<VideoIcon className="h-4 w-4 text-zinc-400" />}
             />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-full sm:w-52">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="draft">Brouillon</SelectItem>
-              <SelectItem value="scenes_generated">Visuels générés</SelectItem>
-              <SelectItem value="narration_generated">Narration prête</SelectItem>
-              <SelectItem value="completed">Terminé</SelectItem>
-              <SelectItem value="processing">En cours</SelectItem>
-              <SelectItem value="queued">En attente</SelectItem>
-              <SelectItem value="failed">Échec</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-600 px-4 py-3 rounded-xl text-sm">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
+            <SmallStatCard
+              label="Terminées"
+              value={stats.completed}
+              icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+            />
+            <SmallStatCard
+              label="En cours"
+              value={stats.processing}
+              icon={<Loader2 className="h-4 w-4 text-blue-500 animate-spin" />}
+            />
           </div>
         )}
 
-        {/* Loading skeleton */}
+        {/* Filters & Search Toolbar */}
+        <Card className="bg-white/80 dark:bg-zinc-950/40 border-none shadow-sm backdrop-blur-md rounded-[2rem] p-2 ring-1 ring-zinc-200 dark:ring-zinc-800">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                placeholder="Rechercher par titre..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="pl-11 h-12 bg-transparent border-none focus-visible:ring-0 text-sm font-medium"
+              />
+            </div>
+            <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800 self-center hidden sm:block" />
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-full sm:w-56 h-12 bg-transparent border-none focus:ring-0 font-bold text-xs uppercase tracking-widest text-zinc-500">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-zinc-200 dark:border-zinc-800">
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="draft">Brouillon</SelectItem>
+                <SelectItem value="completed">Terminées</SelectItem>
+                <SelectItem value="processing">En cours</SelectItem>
+                <SelectItem value="failed">Échecs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center gap-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 p-6 rounded-3xl animate-in zoom-in duration-300">
+            <div className="bg-red-500 text-white p-2 rounded-xl">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="font-bold">Une erreur est survenue</p>
+              <p className="text-sm opacity-80">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeletons */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden glass-pill animate-pulse">
-                <div className="aspect-video bg-zinc-200 dark:bg-zinc-700" />
-                <div className="p-4 space-y-2">
-                  <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded-md w-3/4" />
-                  <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-md w-1/2" />
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="aspect-video rounded-[2rem] bg-zinc-100 dark:bg-zinc-900 animate-pulse border border-zinc-200 dark:border-zinc-800" />
             ))}
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty State */}
         {!loading && !error && paginated.length === 0 && (
-          <div className="text-center py-24">
-            <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-zinc-100 dark:bg-zinc-800 mb-6">
-              <Play className="h-8 w-8 text-zinc-300 dark:text-zinc-600" />
+          <div className="text-center py-32 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="h-24 w-24 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-800">
+              <Play className="h-10 w-10 text-zinc-300" />
             </div>
-            <h2 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-              {search || statusFilter !== "all" ? "Aucune vidéo trouvée" : "Vous n'avez aucune vidéo pour l'instant"}
-            </h2>
-            <p className="text-zinc-500 text-sm mb-6">
-              {search || statusFilter !== "all" ? "Essayez d'autres filtres" : "Créez votre première vidéo dès maintenant !"}
-            </p>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tight">Aucune vidéo trouvée</h2>
+              <p className="text-zinc-500 max-w-sm mx-auto font-medium">
+                {search || statusFilter !== "all"
+                  ? "Essayez d'ajuster vos filtres de recherche pour trouver ce que vous cherchez."
+                  : "Vous n'avez pas encore créé de vidéo. Commencez l'aventure dès maintenant !"}
+              </p>
+            </div>
             {!search && statusFilter === "all" && (
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-                <Link href="/generate"><Plus className="h-4 w-4 mr-2" /> Créer une vidéo</Link>
+              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-10 font-black shadow-xl shadow-emerald-500/20">
+                <Link href="/generate">Créer ma première vidéo</Link>
               </Button>
             )}
           </div>
         )}
 
-        {/* Video grid */}
+        {/* Video Grid */}
         {!loading && paginated.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginated.map((v) => {
-              const s = statusConfig[v.status] || statusConfig.draft;
-              const editPath = getEditPath(v);
-              const isProcessing = v.status === "processing" || v.status === "queued";
-
-              return (
-                <Card key={v.id} className="glass-pill border-none shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                  {/* Thumbnail */}
-                  <div className="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center relative overflow-hidden">
-                    {(v as any).thumbnailUrl ? (
-                      <img
-                        src={(v as any).thumbnailUrl}
-                        alt={v.topic}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    ) : isProcessing ? (
-                      <div className="flex flex-col items-center gap-2 text-emerald-500">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                        <span className="text-xs font-medium text-zinc-500">Génération en cours...</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Image className="h-8 w-8 text-zinc-300 dark:text-zinc-600 opacity-40" />
-                      </div>
-                    )}
-                    {/* Status badge */}
-                    <span className={cn("absolute top-2 left-2 text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm", s.className)}>
-                      {s.label}
-                    </span>
-                    {/* Play overlay (completed only) */}
-                    {v.status === "completed" && v.videoUrl && (
-                      <a
-                        href={v.videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300"
-                      >
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full bg-white/90 p-3 shadow-xl">
-                          <Play className="h-6 w-6 text-zinc-900 fill-zinc-900" />
-                        </div>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <CardContent className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-bold text-sm leading-snug text-zinc-900 dark:text-zinc-100 line-clamp-2">{v.topic}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
-                        <Clock className="h-3 w-3" />
-                        {formatDate(v)}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
-                      {editPath && (
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg h-8 px-2"
-                          onClick={() => router.push(editPath)}
-                        >
-                          <Pencil className="h-3 w-3 mr-1.5" />
-                          Éditer
-                        </Button>
-                      )}
-                      {v.status === "completed" && v.videoUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-xs rounded-lg h-8"
-                          asChild
-                        >
-                          <a href={v.videoUrl} download>
-                            <Download className="h-3 w-3 mr-1.5" />
-                            Télécharger
-                          </a>
-                        </Button>
-                      )}
-                      {v.status === "completed" && !v.videoUrl && (
-                        <Button size="sm" variant="outline" className="flex-1 text-xs rounded-lg h-8" disabled>
-                          Voir la vidéo
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {paginated.map((video) => (
+              <VideoCard key={video.id} video={video} showActions={true} />
+            ))}
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              <ChevronLeft className="h-4 w-4" />
+          <div className="flex items-center justify-center gap-3 pt-8">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-5 w-5" />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPage(p)}
-                className={p === page ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
-              >
-                {p}
-              </Button>
-            ))}
-            <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              <ChevronRight className="h-4 w-4" />
+            <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={p === page ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "h-9 min-w-[36px] font-black text-xs rounded-xl transition-all",
+                    p === page
+                      ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black shadow-md"
+                      : "text-zinc-500"
+                  )}
+                >
+                  {p}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function SmallStatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+  return (
+    <Card className="bg-white/40 dark:bg-zinc-950/20 border-none shadow-sm backdrop-blur-sm rounded-2xl p-4 ring-1 ring-zinc-200/50 dark:ring-zinc-800/50">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{label}</p>
+          <p className="text-xl font-black tracking-tight">{value}</p>
+        </div>
+        <div className="h-8 w-8 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+          {icon}
+        </div>
+      </div>
+    </Card>
   );
 }

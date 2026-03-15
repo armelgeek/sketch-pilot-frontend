@@ -32,6 +32,7 @@ export interface VideoGenerationOptions {
     musicVolume?: number;
     voiceVolume?: number;
     backgroundMusic?: string;
+    promptId?: string;
     [key: string]: any; // For any other options passed down
 }
 

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signUp, authClient } from "@/src/lib/auth-client";
 import { handleError, type AppError } from "@/src/lib/error-handler";
+import { useUtmStore } from "@/src/app/tracking";
 
 interface UseSignUpOptions {
   onSuccess?: () => void;
@@ -13,6 +14,8 @@ interface SignUpData {
   email: string;
   password: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   planId?: string;
   billingInterval?: "month" | "year";
 }
@@ -46,25 +49,37 @@ export function useSignUp(options: UseSignUpOptions = {}) {
       setLoading(true);
       setError(null);
 
+      const utmParams = useUtmStore.getState().utmParams;
+
       try {
         await signUp.email(
           {
             email: data.email,
             password: data.password,
             name: data.name,
+            firstname: data.firstName || "",
+            lastname: data.lastName || "",
+            isAdmin: false,
+            role: "user",
+            banned: false,
+            utmSource: utmParams.utmSource || "",
+            utmMedium: utmParams.utmMedium || "",
+            utmCampaign: utmParams.utmCampaign || "",
+            utmTerm: utmParams.utmTerm || "",
+            utmContent: utmParams.utmContent || "",
           },
           {
             onSuccess: async () => {
               setError(null);
               onSuccess?.();
-              
+
               // Si un plan est sélectionné (et ce n'est pas le plan gratuit), rediriger vers Stripe
               if (data.planId && data.planId !== "plan_free") {
                 try {
-                  const priceId = data.billingInterval === "year" 
+                  const priceId = data.billingInterval === "year"
                     ? "price_pro_year" // À adapter selon le plan
                     : "price_pro_month";
-                  
+
                   const { error: upgradeError } = await authClient.subscription.upgrade({
                     plan: data.planId,
                     annual: data.billingInterval === "year",
