@@ -106,13 +106,13 @@ export default function DashboardPage() {
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
           {modelsLoading ? (
             [1, 2, 3, 4].map(i => (
-              <div key={i} className="min-w-[140px] h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+              <div key={i} className="min-w-35 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
             ))
           ) : models.length === 0 ? (
             <div className="text-zinc-500 text-sm font-medium italic">No persons found. Create some in the admin panel.</div>
           ) : (
             models.slice(0, 4).map((model: any) => (
-              <Card key={model.id} className="min-w-[140px] flex flex-col items-center p-4 bg-white dark:bg-zinc-900/40 border-none shadow-sm hover:shadow-md transition-all rounded-3xl ring-1 ring-zinc-200 dark:ring-zinc-800">
+              <Card key={model.id} className="min-w-35 flex flex-col items-center p-4 bg-white dark:bg-zinc-900/40 border-none shadow-sm hover:shadow-md transition-all rounded-3xl ring-1 ring-zinc-200 dark:ring-zinc-800">
                 <Avatar className="h-16 w-16 mb-3 border-2 border-emerald-500/20">
                   <AvatarImage src={model.thumbnailUrl || model.imageUrl} />
                   <AvatarFallback className="bg-emerald-50 text-emerald-600 font-bold">{model.name[0]}</AvatarFallback>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Call to Action for Upgrade */}
-      <Card className="bg-gradient-to-r from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-200 text-white dark:text-black overflow-hidden relative rounded-[32px] border-none shadow-2xl">
+      <Card className="bg-linear-to-r from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-200 text-white dark:text-black overflow-hidden relative rounded-4xl border-none shadow-2xl">
         <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-emerald-400 dark:text-emerald-600">
@@ -178,7 +178,7 @@ export default function DashboardPage() {
         </CardContent>
         {/* Subtle pattern background */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent dark:from-black"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-white to-transparent dark:from-black"></div>
         </div>
       </Card>
 

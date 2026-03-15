@@ -4,7 +4,7 @@ export interface GenerationVariant {
     id: string;
     imageUrl: string;
     seedUsed?: number;
-    generatedAt: string;
+    generatedAt?: string;
     promptUsed?: string;
 }
 

@@ -27,6 +27,8 @@ export interface PromptFormData {
     outputFormat: string;
     instructions: string[];
     description?: string;
+    category?: string;
+    tags?: string[];
     isActive: boolean;
 }
 
@@ -129,6 +131,36 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                 />
                                 <Label htmlFor="isActive" className="font-black cursor-pointer text-sm">Prompt Actif</Label>
+                            </div>
+
+                            <div className="space-y-4 md:col-span-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Catégorie</Label>
+                                        <select
+                                            className="w-full rounded-2xl h-12 bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold focus:ring-black transition-all appearance-none px-4"
+                                            value={formData.category || ""}
+                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        >
+                                            <option value="">Sélectionner une catégorie</option>
+                                            <option value="Storytelling">Storytelling</option>
+                                            <option value="Éducatif">Éducatif</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="News">News</option>
+                                            <option value="Divertissement">Divertissement</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Tags (Séparés par des virgules)</Label>
+                                        <Input
+                                            placeholder="Ex: Shorts, Vertical, Pro"
+                                            className="rounded-2xl h-12 bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold focus-visible:ring-black transition-all"
+                                            value={Array.isArray(formData.tags) ? formData.tags.join(', ') : formData.tags || ""}
+                                            onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

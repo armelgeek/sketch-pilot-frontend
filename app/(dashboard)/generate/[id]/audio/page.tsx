@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Music, Play, Volume2, SkipBack, SkipForward } from "lucide-react";
+import { ChevronLeft, Music, Play, Volume2, SkipBack, SkipForward, Type, Eye, Check, ExternalLink, Zap } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
@@ -34,6 +34,12 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     const [voiceVolume, setVoiceVolume] = useState(80);
     const [isPlayingAudio, setIsPlayingAudio] = useState(false);
     const [kokoroVoicePreset, setKokoroVoicePreset] = useState<string>("af_heart");
+    const [showCaptions, setShowCaptions] = useState(true);
+    const [captionStyle, setCaptionStyle] = useState<string>("colored");
+    const [fontSize, setFontSize] = useState(48);
+    const [highlightColor, setHighlightColor] = useState("#FFE135");
+    const [captionPosition, setCaptionPosition] = useState<string>("bottom");
+    const [showAdvancedCaptions, setShowAdvancedCaptions] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -64,6 +70,23 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 if (video.options?.kokoroVoicePreset) {
                     setKokoroVoicePreset(video.options.kokoroVoicePreset);
                 }
+
+                // Initialize volumes from options
+                if (video.options?.narrationVolume !== undefined) {
+                    setVoiceVolume(Math.round(video.options.narrationVolume * 100));
+                }
+                if (video.options?.backgroundMusicVolume !== undefined) {
+                    setMusicVolume(Math.round(video.options.backgroundMusicVolume * 100));
+                }
+
+                if (video.options?.assCaptions) {
+                    setShowCaptions(video.options.assCaptions.enabled !== false);
+                    setCaptionStyle(video.options.assCaptions.style || "colored");
+                    if (video.options.assCaptions.fontSize) setFontSize(video.options.assCaptions.fontSize);
+                    if (video.options.assCaptions.highlightColor) setHighlightColor(video.options.assCaptions.highlightColor);
+                    if (video.options.assCaptions.position) setCaptionPosition(video.options.assCaptions.position);
+                }
+
                 setActiveVideo(video);
             } catch (err) {
                 setError("Failed to load video settings.");
@@ -115,18 +138,48 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
             setGenerating(true);
 
             // Save final music and global voice selection if changed
+            const nVol = voiceVolume / 100;
+            const mVol = musicVolume / 100;
+
             if (activeVideo.options?.backgroundMusic !== selectedMusicId ||
-                activeVideo.options?.kokoroVoicePreset !== kokoroVoicePreset) {
+                activeVideo.options?.kokoroVoicePreset !== kokoroVoicePreset ||
+                activeVideo.options?.narrationVolume !== nVol ||
+                activeVideo.options?.backgroundMusicVolume !== mVol ||
+                activeVideo.options?.assCaptions?.enabled !== showCaptions ||
+                activeVideo.options?.assCaptions?.style !== captionStyle ||
+                activeVideo.options?.assCaptions?.fontSize !== fontSize ||
+                activeVideo.options?.assCaptions?.highlightColor !== highlightColor ||
+                activeVideo.options?.assCaptions?.position !== captionPosition) {
                 await videosService.update(activeVideo.id, {
                     options: {
                         ...activeVideo.options,
                         backgroundMusic: selectedMusicId === 'none' ? undefined : selectedMusicId,
-                        kokoroVoicePreset: kokoroVoicePreset as any
+                        kokoroVoicePreset: kokoroVoicePreset as any,
+                        narrationVolume: nVol,
+                        backgroundMusicVolume: mVol,
+                        assCaptions: {
+                            ...activeVideo.options?.assCaptions,
+                            enabled: showCaptions,
+                            style: captionStyle as any,
+                            fontSize,
+                            highlightColor,
+                            position: captionPosition as any
+                        }
                     }
                 });
             }
 
-            const response = await videosService.assemble(activeVideo.id);
+            const response = await videosService.assemble(activeVideo.id, {
+                narrationVolume: nVol,
+                backgroundMusicVolume: mVol,
+                assCaptions: {
+                    enabled: showCaptions,
+                    style: captionStyle as any,
+                    fontSize,
+                    highlightColor,
+                    position: captionPosition as any
+                }
+            });
             setJobId(response.jobId);
             setError(null);
         } catch (error: any) {
@@ -235,7 +288,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-3">
                             Étape 3 sur 3
                         </div>
-                        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                        <h1 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
                             Vidéo &amp; Audio
                         </h1>
                         <p className="text-zinc-500 text-lg">Dernier réglages avant la production finale</p>
@@ -317,7 +370,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {/* Track list */}
-                                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="space-y-2 max-h-75 overflow-y-auto pr-2 custom-scrollbar">
                                         <button
                                             onClick={() => setSelectedMusicId("none")}
                                             className={cn(
@@ -438,16 +491,228 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {/* Captions configuration & Preview */}
+                            <Card className="glass-pill border-none shadow-xl overflow-hidden">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <Type className="h-4 w-4" /> Sous-titres (Légendes)
+                                        </CardTitle>
+                                        <div
+                                            onClick={() => setShowCaptions(!showCaptions)}
+                                            className={cn(
+                                                "relative w-10 h-5 rounded-full transition-colors cursor-pointer",
+                                                showCaptions ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                                                showCaptions ? "translate-x-5.5" : "translate-x-0.5"
+                                            )} />
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {showCaptions ? (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] uppercase font-bold text-zinc-400">Style d'animation</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {[
+                                                        { id: "colored", label: "Classique Coloré" },
+                                                        { id: "scaling", label: "Grossissement" },
+                                                        { id: "bounce", label: "Rebondissant" },
+                                                        { id: "neon", label: "Néon" },
+                                                        { id: "typewriter", label: "Machine" },
+                                                        { id: "karaoke", label: "Karaoké" },
+                                                        { id: "animated-background", label: "Bulle" },
+                                                        { id: "remotion", label: "Moderne" }
+                                                    ].map((s) => (
+                                                        <button
+                                                            key={s.id}
+                                                            onClick={() => setCaptionStyle(s.id)}
+                                                            className={cn(
+                                                                "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-all text-left flex items-center justify-between",
+                                                                captionStyle === s.id
+                                                                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900"
+                                                                    : "bg-zinc-50 border-zinc-200 text-zinc-600 hover:border-zinc-400 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400"
+                                                            )}
+                                                        >
+                                                            {s.label}
+                                                            {captionStyle === s.id && <Check className="h-3 w-3" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Style Preview Area */}
+                                            <div className="relative aspect-video rounded-xl bg-zinc-900 flex flex-col items-center justify-center overflow-hidden border border-zinc-200/20 shadow-inner group">
+                                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80')] bg-cover bg-center opacity-40 group-hover:opacity-50 transition-opacity" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+                                                <div className="relative z-10 flex flex-col items-center gap-2 px-6 text-center">
+                                                    {captionStyle === "colored" && (
+                                                        <div className="text-xl font-black italic tracking-tight drop-shadow-xl text-white">
+                                                            UN DESIGN <span className="text-emerald-400">ÉPIQUE</span> POUR VOTRE VIDEO.
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "scaling" && (
+                                                        <div className="text-xl font-bold text-white uppercase scale-110 motion-safe:animate-pulse">
+                                                            TEXTE DYNAMIQUE
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "bounce" && (
+                                                        <div className="text-xl font-bold text-yellow-400 motion-safe:animate-bounce">
+                                                            EFFET REBOND
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "neon" && (
+                                                        <div className="text-xl font-bold text-pink-500 [text-shadow:0_0_10px_rgba(236,72,153,0.8),0_0_20px_rgba(236,72,153,0.5)]">
+                                                            STYLE NÉON MODERNE
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "typewriter" && (
+                                                        <div className="text-xl font-mono text-emerald-400 border-r-2 border-emerald-400 pr-1 animate-pulse">
+                                                            MACHINE À ÉCRIRE...
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "karaoke" && (
+                                                        <div className="text-xl font-bold flex gap-1">
+                                                            <span style={{ color: highlightColor }} className="underline underline-offset-4 decoration-2">MOT</span>
+                                                            <span className="text-white">PAR</span>
+                                                            <span className="text-white">MOT</span>
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "animated-background" && (
+                                                        <div className="text-xl font-bold bg-emerald-500 text-white px-4 py-1 rounded-full shadow-lg rotate-2">
+                                                            BULLE ANIMÉE
+                                                        </div>
+                                                    )}
+                                                    {captionStyle === "remotion" && (
+                                                        <div className="text-2xl font-black text-white uppercase tracking-tighter drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                                                            PURE MOTION
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="absolute bottom-2 left-3 flex items-center gap-1.5 opacity-60">
+                                                    <Eye className="h-3 w-3 text-zinc-400" />
+                                                    <span className="text-[9px] font-medium text-zinc-400 tracking-wider">PREVISUALISATION LIVE</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Advanced Caption Settings Toggle */}
+                                            <div className="pt-2">
+                                                <button
+                                                    onClick={() => setShowAdvancedCaptions(!showAdvancedCaptions)}
+                                                    className="w-full py-1.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center justify-center gap-1 transition-colors uppercase tracking-widest border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                                                >
+                                                    {showAdvancedCaptions ? "Moins d'options ▲" : "Plus d'options de style ▼"}
+                                                </button>
+
+                                                {showAdvancedCaptions && (
+                                                    <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[10px] uppercase font-bold text-zinc-400">Taille</label>
+                                                                <Select value={fontSize.toString()} onValueChange={(v) => setFontSize(parseInt(v))}>
+                                                                    <SelectTrigger className="h-8 text-xs">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="32">Petit (32px)</SelectItem>
+                                                                        <SelectItem value="48">Normal (48px)</SelectItem>
+                                                                        <SelectItem value="64">Grand (64px)</SelectItem>
+                                                                        <SelectItem value="80">Énorme (80px)</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[10px] uppercase font-bold text-zinc-400">Position</label>
+                                                                <Select value={captionPosition} onValueChange={setCaptionPosition}>
+                                                                    <SelectTrigger className="h-8 text-xs">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="bottom">En bas</SelectItem>
+                                                                        <SelectItem value="center">Au centre</SelectItem>
+                                                                        <SelectItem value="top">En haut</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] uppercase font-bold text-zinc-400">Couleur d'accentuation</label>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {["#FFE135", "#10B981", "#3B82F6", "#EC4899", "#F97316", "#FFFFFF"].map((color) => (
+                                                                    <button
+                                                                        key={color}
+                                                                        onClick={() => setHighlightColor(color)}
+                                                                        className={cn(
+                                                                            "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110",
+                                                                            highlightColor === color ? "border-zinc-900 dark:border-white scale-110" : "border-transparent"
+                                                                        )}
+                                                                        style={{ backgroundColor: color }}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="py-8 flex flex-col items-center justify-center text-center gap-2 opacity-50 grayscale">
+                                            <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                                <Type className="h-6 w-6 text-zinc-400" />
+                                            </div>
+                                            <div className="text-xs font-medium text-zinc-500">Sous-titres désactivés</div>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
 
                         {/* Generate button */}
-                        <div className="flex justify-center pt-8">
+                        <div className="space-y-3">
+                            {activeVideo?.videoUrl && (isFinished || activeVideo.status === 'completed') && (
+                                <Button
+                                    onClick={() => window.open(activeVideo.videoUrl, '_blank')}
+                                    variant="outline"
+                                    className="w-full py-6 rounded-2xl border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all font-bold group"
+                                >
+                                    <ExternalLink className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                                    Voir la vidéo finale
+                                </Button>
+                            )}
+
                             <Button
-                                size="lg"
                                 onClick={handleAssemble}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-16 h-14 text-lg font-bold rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105"
+                                disabled={generating && !isFinished}
+                                className="w-full py-7 rounded-2xl bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 hover:scale-[1.01] active:scale-95 transition-all shadow-xl font-black text-lg group overflow-hidden relative"
                             >
-                                Générer la vidéo finale <Play className="ml-3 h-5 w-5 fill-current" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                {generating && !isFinished ? (
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex gap-1">
+                                            {[0.1, 0.2, 0.3].map((delay, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"
+                                                    style={{ animationDelay: `${delay}s` }}
+                                                />
+                                            ))}
+                                        </div>
+                                        ASSEMBLAGE... {realProgress}%
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="h-5 w-5 fill-current" />
+                                        GÉNÉRER LA VIDÉO FINALE ({activeVideo?.options?.resolution === '1080p' ? '10 🪙' : '5 🪙'})
+                                    </div>
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -458,7 +723,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                     <div className="flex justify-center animate-in fade-in zoom-in-95 duration-700">
                         <div className="w-full max-w-2xl px-4 lg:px-0">
                             <Card className="glass-pill border-none shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden relative group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
+                                <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
                                 <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8 relative z-10">
                                     {/* High-tech Circular progress */}
                                     <div className="relative h-48 w-48 animate-float">

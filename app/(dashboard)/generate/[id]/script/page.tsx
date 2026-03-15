@@ -28,20 +28,21 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [v, models] = await Promise.all([
+                const [v, models, voices] = await Promise.all([
                     videosService.getById(resolvedParams.id),
-                    adminService.listModels()
+                    adminService.listModels(),
+                    adminService.listVoices()
                 ]);
 
                 // Auto-initialize character sheets if missing
                 if (v.script && !v.script.characterSheets) {
                     console.log("Initializing character sheets...");
-                    // Try to detect names from scenes if possible, or use a default
                     v.script.characterSheets = [];
                 }
 
                 setVideo(v);
                 setAvailableModels(models || []);
+                setAvailableVoices(voices || []);
                 setLoading(false);
             } catch (err) {
                 setError("Impossible de charger les données.");
@@ -81,7 +82,7 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
 
     const onCastChange = (
         characterId: string,
-        updates: { modelId?: string; voiceId?: string; referenceImageUrl?: string }
+        updates: any
     ) => {
         if (!video || !video.script) return;
 
@@ -236,6 +237,7 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
                                 <CharacterCasting
                                     characters={video.script.characterSheets || []}
                                     availableModels={availableModels}
+                                    availableVoices={availableVoices}
                                     onCastChange={onCastChange}
                                     onGenerate={handleGenerateCharacter}
                                     onSaveAsModel={handleSaveAsModel}

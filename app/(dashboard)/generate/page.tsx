@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Clock, Globe, Layout, Sparkles, User, Wand2, Type, Music } from "lucide-react";
+import { ChevronRight, Clock, Globe, Layout, Sparkles, User, Wand2, Type, Music, Grid3X3, RefreshCw } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { Label } from "@/src/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { videosService } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
 import { AdminService } from "@/src/app/admin/api/admin-service";
+import { cn } from "@/src/lib/utils";
 
 const adminService = new AdminService();
 
@@ -29,12 +30,15 @@ export default function GenerateContentPage() {
   const [musicTracks, setMusicTracks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedCharacterModelId, setSelectedCharacterModelId] = useState<string>('none')
   const [selectedMusicId, setSelectedMusicId] = useState<string>('none')
   const [duration, setDuration] = useState<string>("30");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
   const [language, setLanguage] = useState<string>("fr-FR");
   const [style, setStyle] = useState<string>("storytelling");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[] | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,8 +80,10 @@ export default function GenerateContentPage() {
         language,
         style,
         scriptOnly: true,
-        videoType: selectedPrompt?.name || "explainer",
-        videoGenre: selectedPrompt?.name?.toLowerCase().includes("explicative") ? "educational" : "general",
+        videoType: selectedPrompt?.category || selectedPrompt?.name || "explainer",
+        videoGenre: selectedPrompt?.category?.toLowerCase() === "storytelling" ? "storytelling" :
+          selectedPrompt?.category?.toLowerCase() === "éducatif" ? "educational" :
+            selectedPrompt?.category?.toLowerCase() === "marketing" ? "marketing" : "general",
         backgroundMusic: selectedMusicId !== 'none' ? selectedMusicId : undefined
       }
 
@@ -92,6 +98,33 @@ export default function GenerateContentPage() {
       setError(error.message || "Failed to start generation");
       setGenerating(false);
     }
+  };
+  const handleSuggestTopics = async () => {
+    try {
+      setSuggesting(true);
+      setError(null);
+      setSuggestions(null);
+      const selectedPrompt = prompts.find(p => p.id === selectedPromptId);
+      const response = await videosService.suggestTopics({
+        language,
+        videoType: selectedPrompt?.category || selectedPrompt?.name,
+        videoGenre: selectedPrompt?.category?.toLowerCase() === "storytelling" ? "storytelling" : "general",
+        aspectRatio,
+        themeName: selectedPrompt?.name,
+        themeDescription: selectedPrompt?.description,
+        goals: selectedPrompt?.goals || []
+      });
+      setSuggestions(response.topics);
+    } catch (err: any) {
+      setError(err.message || "Impossible de générer des idées.");
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion: string) => {
+    setScript(suggestion);
+    setSuggestions(null);
   };
 
   useEffect(() => {
@@ -139,10 +172,62 @@ export default function GenerateContentPage() {
             <div className="lg:col-span-2 space-y-6">
               <Card className="glass-pill border border-emerald-500/10 shadow-2xl overflow-hidden group">
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400 font-bold text-sm uppercase tracking-wider">
-                    <Wand2 className="h-4 w-4" />
-                    Script & Narration
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm uppercase tracking-wider">
+                      <Wand2 className="h-4 w-4" />
+                      Script & Narration
+                    </div>
+
+                    <Button
+                      onClick={handleSuggestTopics}
+                      disabled={suggesting}
+                      variant="outline"
+                      className="h-8 text-[10px] font-bold uppercase tracking-widest border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-full group"
+                    >
+                      {suggesting ? (
+                        <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
+                      ) : (
+                        <Sparkles className="h-3 w-3 mr-1.5 group-hover:scale-125 transition-transform" />
+                      )}
+                      Générer une idée (5 🪙)
+                    </Button>
                   </div>
+
+                  {suggesting && (
+                    <div className="mb-6 grid grid-cols-1 gap-3">
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className="h-16 w-full rounded-xl bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800/50 animate-pulse flex items-center px-4 gap-3"
+                          style={{ animationDelay: `${i * 150}ms` }}
+                        >
+                          <div className="h-4 w-4 rounded-full bg-emerald-500/20" />
+                          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full flex-1 max-w-[80%]" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {suggestions && (
+                    <div className="mb-6 grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2">Suggestions de l'IA</span>
+                        <button onClick={() => setSuggestions(null)} className="text-[10px] text-zinc-400 hover:text-zinc-600 font-bold">FErmer</button>
+                      </div>
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSelectSuggestion(s)}
+                          className="text-left p-4 rounded-xl border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ChevronRight className="h-4 w-4 text-emerald-500" />
+                          </div>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 pr-6 italic">"{s}"</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="relative rounded-2xl bg-slate-50 dark:bg-slate-900/50 p-2 transition-all duration-300 group-focus-within:ring-2 ring-emerald-500/20 border border-slate-200 dark:border-slate-800">
                     <Textarea
                       placeholder="Il était une fois dans un futur proche... Expliquez-moi votre concept ou entrez votre texte final."
@@ -205,19 +290,68 @@ export default function GenerateContentPage() {
                     </Select>
                   </div>
 
+                  {/* Category Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <Grid3X3 className="h-3 w-3" /> Catégorie de Contenu
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {["All", ...new Set(prompts.map(p => p.category).filter(Boolean)), ...(prompts.some(p => !p.category) ? ["Autres"] : [])].map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat);
+                            setSelectedPromptId(""); // Reset prompt on category change
+                          }}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-bold transition-all border-2",
+                            selectedCategory === cat
+                              ? "bg-black border-black text-white shadow-lg"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-300"
+                          )}
+                        >
+                          {cat === "All" ? "Tous" : cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Prompt Model Selection */}
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                      <Type className="h-3 w-3" /> Template Visuel
+                      <Type className="h-3 w-3" /> Template Visuel {selectedCategory !== "All" && `(${selectedCategory})`}
                     </Label>
                     <Select value={selectedPromptId} onValueChange={setSelectedPromptId}>
                       <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 rounded-xl">
-                        <SelectValue />
+                        <SelectValue placeholder="Choisir un style visuel..." />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        {prompts.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
+                        {prompts
+                          .filter(p =>
+                            selectedCategory === "All" ||
+                            p.category === selectedCategory ||
+                            (selectedCategory === "Autres" && !p.category)
+                          )
+                          .map((p) => (
+                            <SelectItem key={p.id} value={p.id} className="py-3">
+                              <div className="flex flex-col">
+                                <span className="font-bold">{p.name}</span>
+                                {p.tags && p.tags.length > 0 && (
+                                  <span className="text-[9px] text-slate-400 italic">#{p.tags.join(' #')}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {prompts.filter(p =>
+                          selectedCategory === "All" ||
+                          p.category === selectedCategory ||
+                          (selectedCategory === "Autres" && !p.category)
+                        ).length === 0 && (
+                            <div className="p-4 text-center text-xs text-slate-400 font-medium">
+                              Aucun template disponible pour cette catégorie.
+                            </div>
+                          )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -306,7 +440,7 @@ export default function GenerateContentPage() {
                     className="w-full mt-4 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl shadow-emerald-500/20 group relative overflow-hidden transition-all active:scale-95"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-transparent group-hover:translate-x-full transition-transform duration-500 pointer-events-none" />
-                    Continuer <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                    DÉMARRER (~85 🪙) <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
               </Card>

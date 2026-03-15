@@ -71,6 +71,21 @@ export class VideosService extends BaseService<Video> {
         return response.data;
     }
 
+    async suggestTopics(options: {
+        language?: string;
+        videoType?: string;
+        videoGenre?: string;
+        aspectRatio?: string;
+        themeName?: string;
+        themeDescription?: string;
+        goals?: string[];
+    }): Promise<{ topics: string[] }> {
+        return this.apiFetch<{ topics: string[] }>(`${this.endpoint}/suggest-topics`, {
+            method: "POST",
+            body: JSON.stringify({ options }),
+        });
+    }
+
     async generate(topic: string, options: any = {}): Promise<ScriptGenerationResponse> {
         return this.apiFetch<ScriptGenerationResponse>(`/v1/scripts/generate`, {
             method: "POST",
@@ -97,9 +112,10 @@ export class VideosService extends BaseService<Video> {
         });
     }
 
-    async assemble(id: string): Promise<JobResponse> {
+    async assemble(id: string, options: any = {}): Promise<JobResponse> {
         return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/assemble`, {
             method: "POST",
+            body: JSON.stringify({ options }),
         });
     }
 

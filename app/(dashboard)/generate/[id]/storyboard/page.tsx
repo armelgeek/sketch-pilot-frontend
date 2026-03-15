@@ -1,16 +1,26 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, FileText, Image, Play, RefreshCw, Wand2, ChevronLeft, Zap, Sparkles } from "lucide-react";
+import {
+    ChevronRight, FileText, Image, Play, RefreshCw, Wand2,
+    ChevronLeft, Zap, Sparkles, Music, Volume2, SkipBack,
+    SkipForward, Type, Eye, Check, ExternalLink, Settings2,
+    Users, MessageSquare, Monitor
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/src/components/ui/accordion";
+import { Slider } from "@/src/components/ui/slider";
 import { cn } from "@/src/lib/utils";
 import { videosService, type Video } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { AdminService } from "@/src/app/admin/api/admin-service";
+import { CharacterCasting } from "@/src/components/organisms/character-casting";
+
+const adminService = new AdminService();
 
 export default function StoryboardPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -27,7 +37,26 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
     const [repromptJobId, setRepromptJobId] = useState<string | undefined>();
     const [error, setError] = useState<string | null>(null);
 
-    // Dynamic States
+    // Audio/Video Settings States (Moved from Step 3)
+    const [availableVoices, setAvailableVoices] = useState<any[]>([]);
+    const [availableModels, setAvailableModels] = useState<any[]>([]);
+    const [musicTracks, setMusicTracks] = useState<any[]>([]);
+    const [selectedMusicId, setSelectedMusicId] = useState<string>("none");
+    const [musicVolume, setMusicVolume] = useState(60);
+    const [voiceVolume, setVoiceVolume] = useState(80);
+    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+    const [kokoroVoicePreset, setKokoroVoicePreset] = useState<string>("af_heart");
+    const [showCaptions, setShowCaptions] = useState(true);
+    const [captionStyle, setCaptionStyle] = useState<string>("colored");
+    const [fontSize, setFontSize] = useState(48);
+    const [highlightColor, setHighlightColor] = useState("#FFE135");
+    const [captionPosition, setCaptionPosition] = useState<string>("bottom");
+    const [showAdvancedCaptions, setShowAdvancedCaptions] = useState(false);
+    const [resolution, setResolution] = useState<string>("720p");
+
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Context & Edits
     const [sceneEdits, setSceneEdits] = useState<Record<string, any>>({});
 
     const {
@@ -390,7 +419,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                         disabled={isGeneratingThis || generating}
                                                     >
                                                         <RefreshCw className={cn("h-4 w-4 mr-2", isGeneratingThis && "animate-spin")} />
-                                                        Régénérer l'image
+                                                        Régénérer l'image (5 🪙)
                                                     </Button>
                                                 </div>
 

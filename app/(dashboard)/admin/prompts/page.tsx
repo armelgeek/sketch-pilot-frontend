@@ -113,9 +113,16 @@ export default function AdminPromptsPage() {
                                         <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-zinc-400">{prompt.role}</CardDescription>
                                     </div>
                                 </div>
-                                <Badge variant={prompt.isActive ? "default" : "secondary"} className="rounded-lg text-[9px] uppercase font-black px-1.5 py-0.5">
-                                    {prompt.isActive ? "Actif" : "Brouillon"}
-                                </Badge>
+                                <div className="flex flex-col items-end gap-2">
+                                    <Badge variant={prompt.isActive ? "default" : "secondary"} className="rounded-lg text-[9px] uppercase font-black px-1.5 py-0.5">
+                                        {prompt.isActive ? "Actif" : "Brouillon"}
+                                    </Badge>
+                                    {prompt.category && (
+                                        <Badge variant="outline" className="border-zinc-200 dark:border-zinc-800 text-[9px] uppercase font-black px-1.5 py-0.5 w-fit">
+                                            {prompt.category}
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-6 pt-0">
@@ -133,6 +140,16 @@ export default function AdminPromptsPage() {
                                         <ArrowRight className="h-4 w-4 text-black" />
                                     </div>
                                 </div>
+
+                                {prompt.tags && prompt.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {prompt.tags.map((tag: string) => (
+                                            <span key={tag} className="text-[9px] font-bold bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-500 uppercase tracking-tighter">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
 
                                 <div className="flex items-center justify-between pt-2">
                                     <Button
@@ -171,6 +188,6 @@ export default function AdminPromptsPage() {
                 }}
                 isLoading={isPending}
             />
-        </div>
+        </div >
     );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Globe, Menu, X, Coins, Zap, Shield, LayoutDashboard } from "lucide-react";
+import { Menu, X, Coins, Zap, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import {
@@ -113,7 +113,7 @@ export function NavbarPrivate() {
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[280px] p-3 mt-4 rounded-[32px] border-zinc-200 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <DropdownMenuContent align="end" className="w-70 p-3 mt-4 rounded-4xl border-zinc-200 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center gap-4 p-4 mb-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50">
                 <Avatar className="h-12 w-12 shadow-sm">
                   <AvatarImage src={session?.user?.image || ""} alt={userName} />
