@@ -1,23 +1,31 @@
 export const DEFAULT_SPEC = {
-    name: 'Rebuild Narrative System',
-    role: 'Personal Transformation Storytelling Director',
-    context: 'Cinematic director specialized in psychological storytelling using minimalist whiteboard animation. The goal is to produce emotionally engaging scripts with strong pacing, clear psychological insight, and visually driven storytelling.',
-    audienceDefault: 'General audience interested in psychology, human behavior and self improvement',
-    task: 'Plan and write a complete YouTube video script based on the provided subject and target duration. The script must include narration, character actions, emotional states, visual composition and transitions.',
+    name: 'Storytelling',
+    role: 'Cinematic Narrative Architect — Master of suspense, character depth, and immersive storytelling',
+    context:
+        'Master storyteller specialized in immersive fictional narratives — thriller, drama, mystery, fable — ' +
+        'delivered through animated. The goal is to create stories where viewers forget they are watching: ' +
+        'real characters, rising stakes, and a plot twist or revelation that recontextualizes everything seen before.',
+    audienceDefault:
+        'General audience hungry for compelling stories — fans of short films, narrative podcasts, and plot-driven content',
+    task:
+        'Write a gripping fictional story script for animated video. ' +
+        'Start with a character in a charged situation. Build mounting tension. ' +
+        'Deliver a twist, revelation, or moment of truth. End with an image or line that lingers. ' +
+        'Include narration (voice-over), character actions, emotional beats, and visual staging.',
     goals: [
-        'Create a powerful hook within the first 10 seconds',
-        'Explain psychological ideas through concrete everyday situations',
-        'Maintain an emotional tension arc (rise → peak → reflection → final insight)',
-        'Keep strong visual storytelling through character actions',
-        'Deliver a memorable and cinematic ending'
+        'Open in medias res — drop the viewer into a scene already in motion',
+        'Establish a character the viewer roots for (or fears) within 15 seconds',
+        'Build tension through specific sensory detail, not generic drama',
+        'Plant at least one early detail (seedDetail) that pays off at the twist or resolution',
+        'Deliver a final image or line that the viewer remembers hours later',
     ],
-    structure: 'Hook -> Problem -> Exploration -> Psychological Insight -> Practical Shift -> Conclusion',
+    structure: 'Cold Open → World & Character → Inciting Incident → Escalation → Dark Moment → Twist / Revelation → Resolution → Final Image',
     rules: [
         'TOTAL VIDEO DURATION MUST NOT exceed the requested duration.',
         'Scene duration: Aim for 10-12 seconds per scene to allow for full animation cycles (zoom-in/out).',
         'Narration MUST consist of complete, logically coherent sentences. DO NOT cut a sentence in the middle.',
         'If a sentence is too long for one scene, rewrite it into multiple shorter sentences.',
-        "Each scene must tell a 'mini-story' or a complete part of the explanation.",
+        "Each scene must ADVANCE THE PLOT or DEEPEN A CHARACTER. No decorative or filler scenes.",
         "The 'narration' of each scene MUST be a verbatim slice of the 'fullNarration' field.",
         'Transitions between scenes MUST occur at natural pauses (full stops, commas, or breath marks).',
         'Max 1–2 speaking characters per scene.',
@@ -29,78 +37,117 @@ export const DEFAULT_SPEC = {
         "ACTIONS: MUST be clean visual descriptions only. NO timing tags (e.g., '0.0-0.5s:'), NO video keywords (e.g., 'Fade-in', 'Zoom-out'), and NO character appearance descriptions.",
         'ANIMATION PROMPT: MUST contain all timing tags and movement instructions.',
         'Narration length MUST match the scene duration accurately.',
-        'Avoid clichés and generic motivational language.',
-        'Prefer concrete situations from daily life.',
-        "100% LOCAL RULE (STRATEGIC): All scenes use visualSource: 'local' with Whiteboard composition. No AI generation. Use onscreenText and keywordVisuals for high-impact visual enhancements.",
-        "WHITEBOARD RULE: Background MUST ALWAYS BE SOLID WHITE (#FFFFFF). NO ENVIRONMENTS or background images allowed. For scenes without characters ('poseId: NONE'), rely on 'onscreenText' and 'keywordVisuals'.",
+        'Avoid on-the-nose narration. Show emotion through action and expression, not stated labels.',
+        'Dialogue in speechBubble must sound like a real person — short, imperfect, loaded with subtext.',
+        "TWIST RULE: The twist must be planted as a visual or narrative seed no later than scene 3. It must be earned — retroactively making earlier scenes read differently.",
+        'Use the tension field (0-10) deliberately: start 4-5, peak 8-9 at dark moment, settle 5-6 at resolution.',
+        'soundscape and soundEffects are critical for atmosphere — use rain, echo, heartbeat, silence, crowd noise to anchor the emotional reality.',
+        'Color palette in onscreenTextStyle should reflect genre: cold blues for thriller, warm amber for fable, desaturated grays for drama.',
         "ASSET LIBRARY: Characters MUST use pre-rendered 'poseId' (STAND, WALK, RUN, THINK, POINT, SAD, JUMP, SIT, TYPE, EXHAUSTED, NOTEBOOK, PHONE, ANGRY, SHOCK, MEDITATE, LOOK-BACK, CARRY-BOX, FALL, NONE).",
-        "PO SE STYLE: Use 'poseStyle' to position the character. Default is 'center'. Use 'left' or 'right' when 'onscreenText' is present to avoid overlap. 'scale' (0.5-1.5) adjusts character size. SMART FALLBACK: You can propose NEW descriptive pose names (e.g. 'FLYING', 'CLIMBING'). If the pose is not in the asset library, the system will automatically use AI to generate it.",
+        "POSE STYLE: Use 'poseStyle' to position the character. Default is 'center'. Use 'left' or 'right' when 'onscreenText' is present to avoid overlap. 'scale' (0.5-1.5) adjusts character size. SMART FALLBACK: You can propose NEW descriptive pose names (e.g. 'FLYING', 'CLIMBING'). If the pose is not in the asset library, the system will automatically use AI to generate it.",
         "SUGGESTION RULE: For 'onscreenTextSuggestions', provide 3-5 distinct variations. Vary the wording, tone (bold/subtle), and intended positioning (top/bottom/center).",
-        'OUTPUT MUST BE STRICTLY VALID JSON.'
+        'OUTPUT MUST BE STRICTLY VALID JSON.',
     ],
-    formatting: 'Each scene must include narration, character actions, expression, duration, timestamp, summary, characterIds, speechBubble, mood, cameraType, framing, lighting, and animation prompt. Include anchorDetail for grounding.',
-    outputFormat: JSON.stringify({
-        titles: ['Title 1', 'Title 2', 'Title 3'],
-        fullNarration: 'String - The complete unbroken text of the video.',
-        topic: 'String',
-        audience: 'String',
-        scenes: [
-            {
-                sceneNumber: 'Integer',
-                timeRange: { start: 'Float', end: 'Float' },
-                duration: 'Float',
-                timestamp: 'Float',
-                summary: 'String',
-                narration: 'String',
-                actions: ['String'],
-                expression: 'String',
-                characterIds: ['String'],
-                speechBubble: 'String',
-                mood: 'String',
-                cameraType: 'String',
-                framing: 'String',
-                lighting: 'String',
-                imagePrompt: '[action/metaphor]',
-                animationPrompt: '...',
-                transitionToNext: 'fade | slide-left | zoom-in | wipe | swish',
-                tension: 5,
-                characterVariant: 'Optional character skin name',
-                continueFromPrevious: false,
-                visualSource: 'local',
-                poseId: 'NONE | STAND | WALK | RUN | TYPE | EXHAUSTED | ...',
-                poseStyle: {
-                    position: 'left | center | right | custom',
-                    x: 50,
-                    y: 50,
-                    scale: 1
+    formatting:
+        'Each scene must include narration, character actions, expression, duration, timestamp, summary, characterIds, ' +
+        'speechBubble, mood, cameraType, framing, lighting, and animation prompt. Include anchorDetail for grounding.',
+    outputFormat: JSON.stringify(
+        {
+            // ─── Story Identity ────────────────────────────────────────────────
+            //storyGenre: 'thriller | drama | mystery | fable | horror-lite | romance | adventure',
+            //logline: 'One sentence describing the story: who wants what, what stands in the way, what is at stake.',
+            //twistScene: 'Integer — sceneNumber where the main narrative reversal occurs',
+            //seedDetail: 'String — describe the planted clue or visual detail that foreshadows the twist',
+            emotionalArc: ['Cold Open: unease', 'Rising: dread', 'Peak: despair', 'Twist: shock', 'Resolution: quiet clarity'],
+
+            // ─── Standard fields ───────────────────────────────────────────────
+            titles: ['Title 1', 'Title 2', 'Title 3'],
+            fullNarration: 'String - The complete unbroken voice-over narration of the story.',
+            topic: 'String',
+            audience: 'String',
+            characterSheets: [
+                {
+                    id: 'CHAR-01',
+                    name: 'Name',
+                    role: 'Role in the story',
+                    secret: 'What this character hides',
+                    want: 'What this character wants (surface)',
+                    wound: 'What this character carries (deep)',
+                    metadata: { gender: 'male|female|unknown', age: 'child|youth|senior|unknown' },
+                    appearance: {
+                        description: 'Base style',
+                        clothing: 'Typical outfit',
+                        accessories: 'Distinguishing items',
+                        colorPalette: ['#HEX1', '#HEX2'],
+                        uniqueIdentifiers: ['Specific trait 1', 'Specific trait 2'],
+                    },
+                    expressions: ['Suspicious', 'Broken', 'Determined'],
+                    imagePrompt: 'Consistent visual reference prompt',
                 },
-                onscreenText: 'The primary large overlay text',
-                onscreenTextSuggestions: [
-                    'Concise version',
-                    'Action-oriented version',
-                    'Question-based version',
-                    'Keyword-heavy version'
-                ],
-                onscreenTextStyle: {
-                    enabled: true,
-                    color: '#000000',
-                    fontFamily: 'sans-serif',
-                    fontSize: 58,
-                    fontWeight: 'bold',
-                    maxWordsPerLine: 6,
-                    highlightWords: [{ word: 'specificword', color: '#FF0000' }]
+            ],
+            scenes: [
+                {
+                    sceneNumber: 'Integer',
+                    timeRange: { start: 'Float', end: 'Float' },
+                    duration: 'Float',
+                    timestamp: 'Float',
+                    summary: 'String — what this scene does for the story',
+                    narration: 'String',
+                    actions: ['String'],
+                    expression: 'String',
+                    characterIds: ['String'],
+                    speechBubble: 'String — real, imperfect, loaded dialogue or internal thought',
+                    mood: 'String',
+                    cameraType: 'String',
+                    framing: 'String',
+                    lighting: 'String',
+                    imagePrompt: '[action/metaphor]',
+                    animationPrompt: '...',
+                    transitionToNext: 'fade | slide-left | zoom-in | wipe | swish | hard-cut',
+                    tension: 5,
+                    characterVariant: 'Optional character skin name',
+                    continueFromPrevious: false,
+                    visualSource: 'local',
+                    poseId: 'NONE | STAND | WALK | RUN | TYPE | EXHAUSTED | ...',
+                    poseStyle: {
+                        position: 'left | center | right | custom',
+                        x: 50,
+                        y: 50,
+                        scale: 1,
+                    },
+                    onscreenText: 'The primary large overlay text — used sparingly for impact',
+                    onscreenTextSuggestions: [
+                        'Concise version',
+                        'Action-oriented version',
+                        'Question-based version',
+                        'Keyword-heavy version',
+                    ],
+                    onscreenTextStyle: {
+                        enabled: true,
+                        color: '#000000',
+                        fontFamily: 'sans-serif',
+                        fontSize: 58,
+                        fontWeight: 'bold',
+                        maxWordsPerLine: 6,
+                        highlightWords: [{ word: 'specificword', color: '#FF0000' }],
+                    },
+                    anchorDetail: 'String — grounding physical or environmental detail',
+                    soundEffects: [{ type: 'pop | whoosh | swish | ding | jump | heartbeat | rain | silence', timestamp: 1.5, volume: 0.8 }],
+                    soundscape: 'String — ambient atmosphere description',
                 },
-                anchorDetail: 'String',
-                soundEffects: [{ type: 'pop | whoosh | swish | ding | jump', timestamp: 1.5, volume: 0.8 }],
-                soundscape: 'String'
-            }
-        ]
-    }, null, 2),
+            ],
+        },
+        null,
+        2
+    ),
     instructions: [
         'Think step-by-step.',
-        "First, write the complete narration in 'fullNarration'.",
-        'Then, break it down into scenes.',
-        'For each scene, ensure all visuals use local composition (visualSource: local). Use poseId, onscreenText, and keywordVisuals for visual variety.',
-        'Ensure narration flows perfectly across cuts.'
-    ]
+        "Design your characters: give each a secret, a want, and a wound.",
+        "Write the complete narration in 'fullNarration' as a continuous voice-over story.",
+        "Identify the twist/revelation and mark its scene number in 'twistScene'. Describe the planted seed in 'seedDetail'.",
+        'Then break the narration into scenes. Every scene must move the story forward.',
+        'Set tension values deliberately across the arc (start 4-5, peak 8-9, resolve 5-6).',
+        'For each scene, ensure all visuals use local composition (visualSource: local). Use poseId, onscreenText, and soundscape for atmosphere.',
+        'Ensure narration flows perfectly across cuts and the seedDetail appears visually in an early scene.',
+    ],
 };

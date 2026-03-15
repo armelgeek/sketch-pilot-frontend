@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Clock, Globe, Layout, Sparkles, User, Wand2, Type } from "lucide-react";
+import { ChevronRight, Clock, Globe, Layout, Sparkles, User, Wand2, Type, Music } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
@@ -24,43 +24,37 @@ export default function GenerateContentPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Generation Options State
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [characterModels, setCharacterModels] = useState<any[]>([]);
+  const [prompts, setPrompts] = useState<any[]>([])
+  const [characterModels, setCharacterModels] = useState<any[]>([])
+  const [musicTracks, setMusicTracks] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
-  const [selectedCharacterModelId, setSelectedCharacterModelId] = useState<string>("none");
+  const [selectedCharacterModelId, setSelectedCharacterModelId] = useState<string>('none')
+  const [selectedMusicId, setSelectedMusicId] = useState<string>('none')
   const [duration, setDuration] = useState<string>("30");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
   const [language, setLanguage] = useState<string>("fr-FR");
   const [style, setStyle] = useState<string>("storytelling");
 
   useEffect(() => {
-    adminService.listPublicPrompts({ limit: 100 })
-      .then(res => {
-        console.log("[Generate] Public prompts loaded:", res.data);
-        setPrompts(res.data);
-        if (res.data.length > 0) {
-          setSelectedPromptId(res.data[0].id);
-        }
-      })
-      .catch(err => {
-        console.error("[Generate] Failed to fetch prompts:", err);
-      });
-
-    adminService.listModels()
-      .then(models => {
-        console.log("[Generate] Character models loaded:", models);
-        setCharacterModels(models || []);
-        if (models && models.length > 0) {
-          // Find standard model if available
-          const standard = models.find((m: any) => m.isStandard);
-          if (standard) {
-            setSelectedCharacterModelId(standard.id);
-          }
-        }
-      })
-      .catch(err => {
-        console.error("[Generate] Failed to fetch character models:", err);
-      });
+    const loadData = async () => {
+      try {
+        const [pData, mData, musicData] = await Promise.all([
+          adminService.listPublicPrompts({ limit: 100 }),
+          adminService.listModels(),
+          adminService.listMusic()
+        ])
+        setPrompts(pData.data || [])
+        setCharacterModels(mData || [])
+        setMusicTracks(musicData || [])
+        if (pData.data?.length > 0) setSelectedPromptId(pData.data[0].id)
+        setLoading(false)
+      } catch (err) {
+        console.error("[Generate] Failed to fetch initial data:", err);
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const {
@@ -75,17 +69,23 @@ export default function GenerateContentPage() {
     try {
       setGenerating(true);
       const selectedPrompt = prompts.find(p => p.id === selectedPromptId);
-      const response = await videosService.generate(script, {
+      const options: any = {
         promptId: selectedPromptId,
-        videoType: selectedPrompt?.name || "explainer",
-        duration: parseInt(duration, 10),
+        maxDuration: parseInt(duration, 10),
         aspectRatio,
         language,
         style,
         scriptOnly: true,
-        characterModelId: selectedCharacterModelId === "none" ? undefined : selectedCharacterModelId,
+        videoType: selectedPrompt?.name || "explainer",
         videoGenre: selectedPrompt?.name?.toLowerCase().includes("explicative") ? "educational" : "general",
-      });
+        backgroundMusic: selectedMusicId !== 'none' ? selectedMusicId : undefined
+      }
+
+      if (selectedCharacterModelId !== 'none') {
+        options.characterModelId = selectedCharacterModelId
+      }
+
+      const response = await videosService.generate(script, options);
       setError(null);
       router.push(`/generate/${response.videoId}/script`);
     } catch (error: any) {
@@ -121,7 +121,7 @@ export default function GenerateContentPage() {
         {/* Header Section */}
         <div className="text-center space-y-4 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-2">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-3 w-3" />
             Étape 1 sur 3 : Conception
           </div>
           <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-white sm:text-6xl">
@@ -214,9 +214,36 @@ export default function GenerateContentPage() {
                       <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {prompts.map((p) => (
                           <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Music Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <Music className="h-3 w-3" /> Musique de fond
+                    </Label>
+                    <Select value={selectedMusicId} onValueChange={setSelectedMusicId}>
+                      <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 rounded-xl">
+                        <SelectValue placeholder="Aucune musique" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="none">Aucune musique</SelectItem>
+                        {musicTracks.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            <div className="flex flex-col items-start">
+                              <span className="font-bold">{m.name}</span>
+                              {m.tags && m.tags.length > 0 && (
+                                <span className="text-[10px] text-zinc-400 uppercase italic">
+                                  {m.tags.join(", ")}
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

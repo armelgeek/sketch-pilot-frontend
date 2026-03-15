@@ -4,7 +4,9 @@ export interface VideoScript {
     title?: string;
     description?: string;
     scenes: any[];
+    characterSheets?: any[]; // New field for multi-character support
     totalDuration?: number;
+    metadata?: any;
 }
 
 export interface Video {
@@ -111,6 +113,20 @@ export class VideosService extends BaseService<Video> {
             body: JSON.stringify(data),
         });
         return response.video;
+    }
+
+    async generateCharacter(
+        id: string,
+        characterId: string,
+        data: { prompt: string; modelId?: string }
+    ): Promise<{ success: boolean; imageUrl: string }> {
+        return this.apiFetch<{ success: boolean; imageUrl: string }>(
+            `${this.endpoint}/${id}/characters/${characterId}/generate`,
+            {
+                method: "POST",
+                body: JSON.stringify(data),
+            }
+        );
     }
 }
 

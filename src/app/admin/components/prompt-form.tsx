@@ -19,11 +19,9 @@ export interface PromptFormData {
     role: string;
     context: string;
     audienceDefault: string;
-    character: string;
     task: string;
     goals: string[];
     structure: string;
-    visualStyle: string;
     rules: string[];
     formatting: string;
     outputFormat: string;
@@ -175,16 +173,6 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                                 />
                             </div>
 
-                            <div className="space-y-2 md:col-span-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Description des Personnages</Label>
-                                <Textarea
-                                    placeholder="..."
-                                    className="rounded-2xl min-h-[100px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none"
-                                    value={formData.character || ""}
-                                    onChange={(e) => setFormData({ ...formData, character: e.target.value })}
-                                />
-                            </div>
-
                             <div className="space-y-2">
                                 <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Structure Narrative</Label>
                                 <Input
@@ -192,16 +180,6 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                                     className="rounded-2xl h-12 bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold focus-visible:ring-black transition-all"
                                     value={formData.structure || ""}
                                     onChange={(e) => setFormData({ ...formData, structure: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Style Visuel</Label>
-                                <Input
-                                    placeholder="Minimalist whiteboard animation..."
-                                    className="rounded-2xl h-12 bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold focus-visible:ring-black transition-all"
-                                    value={formData.visualStyle || ""}
-                                    onChange={(e) => setFormData({ ...formData, visualStyle: e.target.value })}
                                 />
                             </div>
 
@@ -281,7 +259,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </div >
+        </form >
     );
 }
