@@ -476,10 +476,15 @@ export default function GenerateContentPage() {
                         style={{ transition: "stroke-dashoffset 1s ease-out" }}
                       />
                     </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4">
                       <span className="text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
                         {currentProgress}%
                       </span>
+                      {currentMessage && (
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 text-center leading-tight tracking-tight">
+                          {currentMessage}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -487,7 +492,6 @@ export default function GenerateContentPage() {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 animate-pulse">
                       Intelligence Artificielle Active
                     </div>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">{currentMessage}</h2>
                     <p className="text-slate-500 font-medium italic animate-pulse">
                       La production de votre chef-d'œuvre est en cours...
                     </p>

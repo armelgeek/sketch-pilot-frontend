@@ -28,8 +28,11 @@ export function useVideoProgress(jobId?: string) {
 
         let eventSource: EventSource | null = null;
         let reconnectTimeout: any = null;
+        let explicitlyClosed = false;
 
         const connect = () => {
+            if (explicitlyClosed) return;
+
             console.log(`[SSE] Connecting to job: ${jobId}`);
             // Using withCredentials for auth session cookies
             eventSource = new EventSource(`${BASE_URL}/v1/videos/jobs/${jobId}/stream`, {
@@ -67,6 +70,7 @@ export function useVideoProgress(jobId?: string) {
                     videoId: data.videoId,
                 }));
                 setIsFinished(true);
+                explicitlyClosed = true;
                 eventSource?.close();
             });
 
@@ -82,20 +86,24 @@ export function useVideoProgress(jobId?: string) {
                         message: data.error || "An error occurred",
                     }));
                     setIsFinished(true);
+                    explicitlyClosed = true;
+                    eventSource?.close();
                 } catch {
                     console.error("[SSE] Connection Error");
+                    eventSource?.close();
                     // Handle transparent connection errors / timeouts
-                    if (eventSource?.readyState === EventSource.CLOSED) {
-                        // Optional: reconnect logic if not explicitly finished
+                    if (!explicitlyClosed) {
+                        console.log("[SSE] Attempting to reconnect in 3s...");
+                        reconnectTimeout = setTimeout(connect, 3000);
                     }
                 }
-                eventSource?.close();
             });
         };
 
         connect();
 
         return () => {
+            explicitlyClosed = true;
             if (eventSource) {
                 eventSource.close();
             }
