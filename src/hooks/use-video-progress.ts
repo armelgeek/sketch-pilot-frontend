@@ -22,6 +22,8 @@ export function useVideoProgress(jobId?: string) {
     });
 
     const [isFinished, setIsFinished] = useState(false);
+    const [isReconnecting, setIsReconnecting] = useState(false);
+    const [retryCountState, setRetryCountState] = useState(0);
 
     useEffect(() => {
         if (!jobId) return;
@@ -29,11 +31,12 @@ export function useVideoProgress(jobId?: string) {
         let eventSource: EventSource | null = null;
         let reconnectTimeout: any = null;
         let explicitlyClosed = false;
+        let retryCount = 0;
 
         const connect = () => {
             if (explicitlyClosed) return;
 
-            console.log(`[SSE] Connecting to job: ${jobId}`);
+            console.log(`[SSE] Connecting to job: ${jobId} (Attempt: ${retryCount})`);
             // Using withCredentials for auth session cookies
             eventSource = new EventSource(`${BASE_URL}/v1/videos/jobs/${jobId}/stream`, {
                 withCredentials: true,
@@ -42,19 +45,27 @@ export function useVideoProgress(jobId?: string) {
             eventSource.addEventListener("connected", (event: any) => {
                 const data = JSON.parse(event.data);
                 console.log("[SSE] Connected:", data);
+                retryCount = 0; // Reset retry count on successful connection
+                setIsReconnecting(false);
+                setRetryCountState(0);
                 setState((prev) => ({ ...prev, status: data.status, progress: data.progress || 0 }));
             });
 
             eventSource.addEventListener("progress", (event: any) => {
                 const data = JSON.parse(event.data);
                 console.log("[SSE] Progress:", data);
-                setState({
+                setState((prev) => ({
+                    ...prev,
                     progress: data.progress,
                     message: data.message || data.step || "Processing...",
                     step: data.step,
                     status: data.status || "processing",
                     videoId: data.videoId,
-                });
+                }));
+            });
+
+            eventSource.addEventListener("ping", () => {
+                // Silently ignore keep-alive heartbeats to prevent idle timeout
             });
 
             eventSource.addEventListener("completed", (event: any) => {
@@ -76,34 +87,65 @@ export function useVideoProgress(jobId?: string) {
 
             eventSource.addEventListener("error", (event: any) => {
                 // SSE errors are often actually completion or failure data in this specific API design
-                try {
-                    const data = JSON.parse(event.data);
-                    console.error("[SSE] Error Data:", data);
-                    setState((prev) => ({
-                        ...prev,
-                        status: "failed",
-                        error: data.error || "Generation failed",
-                        message: data.error || "An error occurred",
-                    }));
-                    setIsFinished(true);
-                    explicitlyClosed = true;
-                    eventSource?.close();
-                } catch {
-                    console.error("[SSE] Connection Error");
-                    eventSource?.close();
-                    // Handle transparent connection errors / timeouts
-                    if (!explicitlyClosed) {
-                        console.log("[SSE] Attempting to reconnect in 3s...");
-                        reconnectTimeout = setTimeout(connect, 3000);
+                // But it can also be a network failure event without data
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.error("[SSE] Error Data:", data);
+                        setState((prev) => ({
+                            ...prev,
+                            status: "failed",
+                            error: data.error || "Generation failed",
+                            message: data.error || "An error occurred",
+                        }));
+                        
+                        if (data.retryable === false) {
+                            setIsFinished(true);
+                            explicitlyClosed = true;
+                            eventSource?.close();
+                            return;
+                        }
+                    } catch {
+                        // ignored json parsing error
                     }
+                }
+                
+                // If it's a network-level error or retryable application error
+                console.error("[SSE] Connection Error or Drop");
+                eventSource?.close();
+                
+                if (!explicitlyClosed) {
+                    retryCount++;
+                    setRetryCountState(retryCount);
+                    setIsReconnecting(true);
+                    
+                    // Exponential backoff: starting at 2s, 4s, 8s, up to strictly 30s
+                    const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
+                    console.log(`[SSE] Attempting to reconnect in ${delay / 1000}s...`);
+                    reconnectTimeout = setTimeout(connect, delay);
                 }
             });
         };
 
         connect();
 
+        // Mobile / Background Tab asleep recovery
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible" && !explicitlyClosed) {
+                // Browsers often silently disconnect SSE when tab goes to background / sleep
+                if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+                    console.log("[SSE] Tab became visible, connection appears closed. Forcing reconnection...");
+                    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+                    connect();
+                }
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
         return () => {
             explicitlyClosed = true;
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
             if (eventSource) {
                 eventSource.close();
             }
@@ -121,7 +163,9 @@ export function useVideoProgress(jobId?: string) {
             status: "queued",
         });
         setIsFinished(false);
+        setIsReconnecting(false);
+        setRetryCountState(0);
     }, []);
 
-    return { ...state, isFinished, reset };
+    return { ...state, isFinished, isReconnecting, retryCount: retryCountState, reset };
 }
