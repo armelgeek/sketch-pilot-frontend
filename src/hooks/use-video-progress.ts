@@ -8,6 +8,8 @@ export interface ProgressState {
     videoId?: string;
     videoUrl?: string;
     thumbnailUrl?: string;
+    lastScene?: any;
+    lastSceneIndex?: number;
     error?: string;
 }
 
@@ -61,6 +63,8 @@ export function useVideoProgress(jobId?: string) {
                     step: data.step,
                     status: data.status || "processing",
                     videoId: data.videoId,
+                    lastScene: data.scene,
+                    lastSceneIndex: data.sceneIndex,
                 }));
             });
 
@@ -98,7 +102,7 @@ export function useVideoProgress(jobId?: string) {
                             error: data.error || "Generation failed",
                             message: data.error || "An error occurred",
                         }));
-                        
+
                         if (data.retryable === false) {
                             setIsFinished(true);
                             explicitlyClosed = true;
@@ -109,16 +113,16 @@ export function useVideoProgress(jobId?: string) {
                         // ignored json parsing error
                     }
                 }
-                
+
                 // If it's a network-level error or retryable application error
                 console.error("[SSE] Connection Error or Drop");
                 eventSource?.close();
-                
+
                 if (!explicitlyClosed) {
                     retryCount++;
                     setRetryCountState(retryCount);
                     setIsReconnecting(true);
-                    
+
                     // Exponential backoff: starting at 2s, 4s, 8s, up to strictly 30s
                     const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
                     console.log(`[SSE] Attempting to reconnect in ${delay / 1000}s...`);

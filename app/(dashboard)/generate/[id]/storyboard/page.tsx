@@ -63,6 +63,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         progress: realProgress,
         message: realMessage,
         isFinished,
+        lastScene,
+        lastSceneIndex,
         error: jobError
     } = useVideoProgress(jobId);
 
@@ -139,6 +141,21 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
             [id]: { ...prev[id], [field]: value }
         }));
     };
+
+    useEffect(() => {
+        if (lastScene && lastSceneIndex !== undefined && activeVideo) {
+            setActiveVideo((prev: any) => {
+                if (!prev) return prev;
+                const scenes = [...(prev.scenes || prev.script?.scenes || [])];
+                if (scenes[lastSceneIndex]) {
+                    scenes[lastSceneIndex] = { ...scenes[lastSceneIndex], ...lastScene };
+                } else {
+                    scenes[lastSceneIndex] = lastScene;
+                }
+                return { ...prev, scenes };
+            });
+        }
+    }, [lastScene, lastSceneIndex]);
 
     useEffect(() => {
         if (isFinished && jobId && !jobError) {
@@ -255,7 +272,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 )}
 
                 {/* Storyboard Content */}
-                {!generating && (
+                {(storyboardView === "script" || visualsGenerated || (generating && !isScriptMissing)) && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Sub-view tabs */}
                         <div className="flex gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-800/50 w-fit rounded-2xl border border-zinc-200 dark:border-zinc-700/50 backdrop-blur-sm">
@@ -499,7 +516,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 )}
 
                 {/* Global Progress Screen (Shown when generating in any step) */}
-                {generating && (
+                {(generating && isScriptMissing) && (
                     <div className="flex justify-center animate-in fade-in zoom-in-95 duration-700">
                         <div className="w-full max-w-2xl px-4 lg:px-0">
                             <Card className="glass-pill border-none shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden relative group">
