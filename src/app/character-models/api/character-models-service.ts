@@ -19,6 +19,8 @@ export interface CharacterModel {
     tags?: string[];
     lockedPromptSegment?: string;
     advancedSeed?: number;
+    stylePrefix?: string;
+    artistPersona?: string;
     generationHistory?: GenerationVariant[];
     createdAt?: string;
     updatedAt?: string;
@@ -36,6 +38,8 @@ export class CharacterModelsService extends BaseService<CharacterModel> {
         voiceId?: string;
         tags?: string[];
         lockedPromptSegment?: string;
+        stylePrefix?: string;
+        artistPersona?: string;
     }) {
         const res = await this.apiFetch<{ success: boolean; data: CharacterModel }>(
             `${this.endpoint}/personal`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X, Loader2, Save, Mic2, Tag, Lock, Zap } from "lucide-react";
+import { Plus, X, Loader2, Save, Mic2, Tag, Lock, Zap, Palette } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -29,6 +29,8 @@ interface PersonalModelFormProps {
         tags?: string[];
         lockedPromptSegment?: string;
         advancedSeed?: number;
+        stylePrefix?: string;
+        artistPersona?: string;
     }) => Promise<void>;
     isLoading?: boolean;
     trigger?: React.ReactNode;
@@ -51,6 +53,8 @@ export function PersonalModelForm({
         tags: model?.tags || [] as string[],
         lockedPromptSegment: model?.lockedPromptSegment || "",
         advancedSeed: model?.advancedSeed || initialSeed,
+        stylePrefix: model?.stylePrefix || "",
+        artistPersona: model?.artistPersona || "",
     });
 
     const [newTag, setNewTag] = useState("");
@@ -211,6 +215,40 @@ export function PersonalModelForm({
                             </div>
                             <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
                                 Utilisez le même seed pour reproduire exactement la même génération.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Style Theme */}
+                    <div className="space-y-4 p-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl border border-orange-200 dark:border-orange-800">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Palette className="h-4 w-4 text-orange-600" />
+                            <Label className="font-bold">Thème Visuel</Label>
+                        </div>
+
+                        <div>
+                            <Label className="text-sm font-semibold">Style Prefix (Prompt)</Label>
+                            <Textarea
+                                value={formData.stylePrefix}
+                                onChange={(e) => setFormData(prev => ({ ...prev, stylePrefix: e.target.value }))}
+                                placeholder="ex: Clean Whiteboard illustration, monochrome black ink on white background..."
+                                className="mt-2 rounded-lg border-orange-200 dark:border-orange-800 min-h-20 text-sm"
+                            />
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                                Définit le style artistique global des images générées pour ce personnage. Exemples : "Watercolor illustration", "Flat vector minimalist", "Cyberpunk 2D neon", "Whiteboard stick figure".
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label className="text-sm font-semibold">Persona Artiste (Rôle IA)</Label>
+                            <Input
+                                value={formData.artistPersona}
+                                onChange={(e) => setFormData(prev => ({ ...prev, artistPersona: e.target.value }))}
+                                placeholder="ex: Whiteboard artist, Concept illustrator, Manga artist..."
+                                className="mt-2 rounded-lg border-orange-200 dark:border-orange-800"
+                            />
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                                Définit le persona de l'IA lors de la génération (ex : "As a [persona], draw the following scene").
                             </p>
                         </div>
                     </div>

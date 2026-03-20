@@ -27,13 +27,18 @@ export function NavbarPublic() {
   return (
     <header
       className={cn(
-        "fixed left-0 right-0 top-0 z-50 transition-all duration-500 border-b",
-        scrolled
-          ? "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl py-3 border-zinc-200 dark:border-zinc-800 shadow-sm"
-          : "bg-transparent py-5 border-transparent"
+        "fixed inset-x-0 top-0 z-50 transition-all duration-500 flex justify-center",
+        scrolled ? "pt-4 px-4" : "pt-6 px-4"
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 lg:px-8">
+      <div
+        className={cn(
+          "flex w-full items-center justify-between transition-all duration-500",
+          scrolled
+            ? "max-w-5xl bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl py-3 px-6 rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+            : "max-w-7xl bg-transparent py-3 px-6 lg:px-8 border border-transparent rounded-none"
+        )}
+      >
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 font-black text-xl text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-all active:scale-95">
@@ -99,7 +104,7 @@ export function NavbarPublic() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 p-6 md:hidden animate-in slide-in-from-top-4 duration-300">
+        <div className="fixed inset-x-4 top-24 rounded-3xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl md:hidden animate-in slide-in-from-top-4 duration-300">
           <nav className="flex flex-col gap-2">
             {navLinks.map((link) => (
               <Link

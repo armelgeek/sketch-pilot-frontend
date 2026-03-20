@@ -29,6 +29,8 @@ export function usePersonalModels() {
         voiceId?: string;
         tags?: string[];
         lockedPromptSegment?: string;
+        stylePrefix?: string;
+        artistPersona?: string;
     }) => {
         try {
             const newModel = await characterModelsService.savePersonal(data);

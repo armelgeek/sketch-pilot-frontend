@@ -34,8 +34,9 @@ export class BaseService<T> {
         return this.apiFetch<T[]>(this.endpoint);
     }
 
-    async getById(id: string): Promise<T> {
-        return this.apiFetch<T>(`${this.endpoint}/${id}`);
+    async getById(id: string, refresh: boolean = false): Promise<T> {
+        const path = refresh ? `${this.endpoint}/${id}?t=${Date.now()}` : `${this.endpoint}/${id}`;
+        return this.apiFetch<T>(path);
     }
 
     async create(data: Partial<T>): Promise<T> {

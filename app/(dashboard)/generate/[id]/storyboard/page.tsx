@@ -120,11 +120,13 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
     useEffect(() => {
         if (isRepromptFinished && repromptJobId && !repromptError) {
-            videosService.getById(resolvedParams.id).then(updated => {
-                setActiveVideo(updated);
-                setRegeneratingSceneId(null);
-                setRepromptJobId(undefined);
-            });
+            setTimeout(() => {
+                videosService.getById(resolvedParams.id, true).then(updated => {
+                    setActiveVideo(updated);
+                    setRegeneratingSceneId(null);
+                    setRepromptJobId(undefined);
+                });
+            }, 1000);
         } else if (isRepromptFinished && repromptError) {
             setError("Erreur lors de la regénération de l'image");
             setRegeneratingSceneId(null);

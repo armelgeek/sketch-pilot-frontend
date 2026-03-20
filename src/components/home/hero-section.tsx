@@ -12,17 +12,20 @@ interface HeroSectionProps {
 export function HeroSection({ isAuthenticated }: HeroSectionProps) {
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 -z-20 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+
       {/* Premium Background Elements */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-600/5 rounded-full blur-[100px] animate-float" />
+        <div className="absolute top-[-10%] left-1/4 w-[500px] h-[500px] bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-300/20 dark:bg-emerald-600/5 rounded-full blur-[100px] animate-float" />
         <div className="absolute bottom-0 left-1/3 w-[600px] h-[300px] bg-zinc-200/50 dark:bg-emerald-900/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           {/* Announcement Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 border border-zinc-200/60 bg-white/50 dark:border-zinc-800/60 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm scale-95 hover:scale-100 transition-transform duration-500 cursor-default">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 border border-zinc-200/80 bg-white/80 dark:border-zinc-800/60 dark:bg-zinc-950/50 backdrop-blur-md shadow-sm scale-95 hover:scale-100 transition-transform duration-500 cursor-default">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
               Nouveau — Vidéos Long-Form 60 min
@@ -45,11 +48,11 @@ export function HeroSection({ isAuthenticated }: HeroSectionProps) {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Button
               size="lg"
               asChild
-              className="h-14 px-10 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-emerald-500/20 group"
+              className="h-14 px-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-[0_8px_30px_rgb(16,185,129,0.3)] dark:shadow-emerald-500/20 group"
             >
               <Link href={isAuthenticated ? "/generate" : "/register"}>
                 {isAuthenticated ? "Créer une vidéo" : "Commencer gratuitement"}
@@ -60,7 +63,7 @@ export function HeroSection({ isAuthenticated }: HeroSectionProps) {
               size="lg"
               variant="outline"
               asChild
-              className="h-14 px-10 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 font-black text-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all active:scale-95"
+              className="h-14 px-8 rounded-full border-2 border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm font-black text-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all active:scale-95"
             >
               <a href="#gallery">Voir nos créations</a>
             </Button>
@@ -69,7 +72,7 @@ export function HeroSection({ isAuthenticated }: HeroSectionProps) {
           {/* Video Placeholder / Player Frame */}
           <div className="mt-20 relative group w-full max-w-5xl mx-auto">
             <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-zinc-500/20 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
-            <div className="relative rounded-[2rem] border border-zinc-200/60 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm p-4 shadow-2xl">
+            <div className="relative rounded-[2rem] border border-zinc-200/80 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/50 backdrop-blur-md p-3 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-2xl">
               <div className="relative aspect-video rounded-2xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex items-center justify-center group/player shadow-inner">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
