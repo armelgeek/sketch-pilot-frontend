@@ -18,6 +18,8 @@ export default function NewModelPage() {
                 formData.append("voiceId", data.voiceId);
             }
             formData.append("isStandard", String(data.isStandard));
+            formData.append("stylePrefix", data.stylePrefix || "");
+            formData.append("artistPersona", data.artistPersona || "");
             if (file) {
                 formData.append("image", file);
             }

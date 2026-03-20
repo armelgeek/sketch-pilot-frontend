@@ -14,7 +14,9 @@ import {
     Baby,
     UserCircle2,
     UserCircle,
-    Mic2
+    Mic2,
+    Palette,
+    TextQuote
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -47,6 +49,8 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
         gender: "unknown",
         age: "unknown",
         voiceId: "",
+        stylePrefix: "",
+        artistPersona: "",
         isStandard: true
     });
 
@@ -185,6 +189,48 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                                     checked={formData.isStandard}
                                     onCheckedChange={(checked: boolean) => setFormData({ ...formData, isStandard: checked })}
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Visual Style Theme */}
+                    <Card className="rounded-[32px] border-none shadow-xl shadow-orange-200/20 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden border-t-4 border-orange-500">
+                        <CardHeader className="p-8 pb-4">
+                            <div className="flex items-center gap-3">
+                                <Palette className="h-6 w-6 text-orange-500" />
+                                <CardTitle className="font-black tracking-tight text-xl">Style Visuel & Persona</CardTitle>
+                            </div>
+                            <CardDescription className="font-medium">Définit l'identité artistique générée par l'IA pour ce personnage.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8 pt-4 space-y-6">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="font-extrabold text-xs uppercase tracking-widest text-orange-400 pl-1">Style Prefix (Prompt)</Label>
+                                    <div className="relative">
+                                        <TextQuote className="absolute left-4 top-4 h-4 w-4 text-zinc-400" />
+                                        <textarea
+                                            className="w-full min-h-[100px] rounded-2xl border-zinc-100 dark:border-zinc-800 bg-orange-50/30 dark:bg-orange-950/10 p-4 pl-12 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all text-sm"
+                                            value={formData.stylePrefix || ""}
+                                            onChange={(e) => setFormData({ ...formData, stylePrefix: e.target.value })}
+                                            placeholder="Ex: Clean Whiteboard illustration, monochrome black ink on pure white background..."
+                                        />
+                                    </div>
+                                    <p className="text-[10px] font-bold text-zinc-400 px-2 uppercase tracking-tighter">Instructions de style injectées dans chaque prompt d'image.</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="font-extrabold text-xs uppercase tracking-widest text-orange-400 pl-1">Artist Persona</Label>
+                                    <div className="relative">
+                                        <UserSquare2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                        <Input
+                                            className="h-12 rounded-2xl border-zinc-100 dark:border-zinc-800 bg-orange-50/30 dark:bg-orange-950/10 pl-12 font-bold focus-visible:ring-orange-500"
+                                            value={formData.artistPersona || ""}
+                                            onChange={(e) => setFormData({ ...formData, artistPersona: e.target.value })}
+                                            placeholder="Ex: Whiteboard artist, Manga illustrator..."
+                                        />
+                                    </div>
+                                    <p className="text-[10px] font-bold text-zinc-400 px-2 uppercase tracking-tighter">Le rôle que l'IA doit endosser (ex: "As a [Persona]...").</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
