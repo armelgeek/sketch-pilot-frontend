@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-    ChevronRight, FileText, Image, Play, RefreshCw, Wand2,
+    ChevronRight, FileText, Image, Play, RefreshCw, Wand2, Loader2,
     ChevronLeft, Zap, Sparkles, Music, Volume2, SkipBack,
     SkipForward, Type, Eye, Check, ExternalLink, Settings2,
     Users, MessageSquare, Monitor
@@ -65,10 +65,12 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         isFinished,
         lastScene,
         lastSceneIndex,
+        currentSceneIndex,
         error: jobError
     } = useVideoProgress(jobId);
 
     const {
+        currentSceneIndex: repromptIndex,
         isFinished: isRepromptFinished,
         error: repromptError
     } = useVideoProgress(repromptJobId);
@@ -271,6 +273,37 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                     </div>
                 )}
 
+                {/* Global Progress Banner (shown when generating but script is already present) */}
+                {(generating && !isScriptMissing) && (
+                    <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="bg-emerald-500/5 backdrop-blur-sm overflow-hidden border-2 border-emerald-500/20 rounded-2xl">
+                            <div className="p-4 flex flex-col md:flex-row items-center gap-4">
+                                <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                                </div>
+                                <div className="flex-1 min-w-full md:min-w-0">
+                                    <div className="flex items-center justify-between mb-1 gap-4">
+                                        <p className="font-bold text-xs text-emerald-900 dark:text-emerald-100 uppercase tracking-wider truncate">
+                                            {currentMessage || "Génération en cours..."}
+                                        </p>
+                                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 shrink-0">{currentProgress}%</span>
+                                    </div>
+                                    <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="bg-emerald-500 h-full transition-all duration-700 ease-out"
+                                            style={{ width: `${currentProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="hidden md:flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                    <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">En direct</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Storyboard Content */}
                 {(storyboardView === "script" || visualsGenerated || (generating && !isScriptMissing)) && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -324,9 +357,12 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                         )}
                                                     >
                                                         <div className="flex items-center justify-between mb-1">
-                                                            <span className={cn("font-bold", selectedScene === currentId ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-900 dark:text-zinc-100")}>
-                                                                Scène {i + 1}
-                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={cn("font-bold", selectedScene === currentId ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-900 dark:text-zinc-100")}>
+                                                                    Scène {i + 1}
+                                                                </span>
+                                                                {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />}
+                                                            </div>
                                                             {scene.imageUrl && <div className="h-2 w-2 rounded-full bg-emerald-500" />}
                                                         </div>
                                                         <span className="block text-zinc-500 text-xs truncate font-medium">{sceneEdits[currentId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}</span>
@@ -350,8 +386,10 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                     className="glass-pill border-none px-6 rounded-2xl shadow-lg transition-all"
                                                 >
                                                     <AccordionTrigger className="hover:no-underline py-4">
-                                                        <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left">
-                                                            Scène {i + 1} — <span className="text-zinc-500 font-medium break-words leading-tight pl-1">{(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
+                                                        <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left flex items-center gap-2">
+                                                            Scène {i + 1}
+                                                            {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />}
+                                                            <span className="text-zinc-500 font-medium break-words leading-tight pl-1">— {(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
                                                         </span>
                                                     </AccordionTrigger>
                                                     <AccordionContent className="pb-6">
@@ -410,6 +448,14 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                             <Image className="h-8 w-8 text-zinc-400 opacity-20" />
                                                         </div>
                                                     )}
+
+                                                    {(currentSceneIndex === i || repromptIndex === i) && (
+                                                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 z-10 animate-in fade-in duration-300 transition-all">
+                                                            <Wand2 className="h-8 w-8 text-emerald-500 animate-bounce" />
+                                                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-pulse italic">GÉNÉRATION...</p>
+                                                        </div>
+                                                    )}
+
                                                     <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-tighter">
                                                         Scène {i + 1}
                                                     </div>

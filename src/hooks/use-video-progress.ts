@@ -10,6 +10,7 @@ export interface ProgressState {
     thumbnailUrl?: string;
     lastScene?: any;
     lastSceneIndex?: number;
+    currentSceneIndex?: number;
     error?: string;
 }
 
@@ -29,6 +30,17 @@ export function useVideoProgress(jobId?: string) {
 
     useEffect(() => {
         if (!jobId) return;
+
+        // Reset state for new job tracking
+        setState({
+            progress: 0,
+            message: "Initializing...",
+            step: "idle",
+            status: "queued",
+        });
+        setIsFinished(false);
+        setIsReconnecting(false);
+        setRetryCountState(0);
 
         let eventSource: EventSource | null = null;
         let reconnectTimeout: any = null;
@@ -56,16 +68,29 @@ export function useVideoProgress(jobId?: string) {
             eventSource.addEventListener("progress", (event: any) => {
                 const data = JSON.parse(event.data);
                 console.log("[SSE] Progress:", data);
-                setState((prev) => ({
-                    ...prev,
-                    progress: data.progress,
-                    message: data.message || data.step || "Processing...",
-                    step: data.step,
-                    status: data.status || "processing",
-                    videoId: data.videoId,
-                    lastScene: data.scene,
-                    lastSceneIndex: data.sceneIndex,
-                }));
+
+                // Robust key handling for scene indices
+                // If a scene object is present, it's a new generated scene
+                const msgCurrentIdx = data.currentSceneIndex !== undefined ? data.currentSceneIndex : data.sceneIndex;
+
+                setState((prev) => {
+                    const isNewScene = !!data.scene;
+                    const lastIdx = data.lastSceneIndex !== undefined ? data.lastSceneIndex :
+                        (isNewScene && msgCurrentIdx !== undefined ? msgCurrentIdx : prev.lastSceneIndex);
+
+                    return {
+                        ...prev,
+                        progress: data.progress !== undefined ? data.progress : prev.progress,
+                        message: data.message || data.step || prev.message,
+                        step: data.step || prev.step,
+                        status: data.status || prev.status,
+                        videoId: data.videoId || prev.videoId,
+                        // Persistence: only update scene info if a new one arrives
+                        lastScene: isNewScene ? data.scene : prev.lastScene,
+                        lastSceneIndex: lastIdx,
+                        currentSceneIndex: msgCurrentIdx !== undefined ? msgCurrentIdx : prev.currentSceneIndex,
+                    };
+                });
             });
 
             eventSource.addEventListener("ping", () => {
