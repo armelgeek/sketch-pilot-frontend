@@ -35,14 +35,19 @@ export const DEFAULT_SPEC = {
         "Avoid stacking more than 3 consecutive sections with identical structure (observation → psychology → consequence → verdict).",
         "Use contrast pairs to sharpen points: 'The fake rich person does X. The truly wealthy person does Y.'",
 
-        // ─── Visual & Character Rules ───────────────────────────────────────
+        "SCENES: prioritize visual clarity and simplicity. Avoid cluttered scenes with too many irrelevant elements. Clarity over complexity.",
+        "EVERY scene MUST include at least one character (Alex by default). PREFER EXACTLY ONE CHARACTER. Avoid background crowds, extra people, or irrelevant figures. Do not force unnecessary people where they don't add value.",
+        "VISUAL METAPHORS (CRITICAL): Prioritize symbolic objects or metaphorical situations over literal illustrations. If the narration is about an abstract concept (e.g., 'growth'), show a plant growing through concrete or a character climbing a giant ladder, rather than just a character talking.",
+        "PATTERN INTERRUPT (HOOK): The first 5 seconds MUST feature a visually striking, unusual, or highly symbolic 'Hook' to grab attention immediately. Avoid generic opening shots.",
+        "FRAMING DIVERSITY: Alternate camera framing frequently. Use Extreme Close-Ups (ECU) for symbolic objects, Medium Shots (MS) for character actions, and Wide Shots (WS) for environmental context. Never repeat the same framing for more than 2 consecutive scenes.",
+        "NEGATIVE SPACE: Use plenty of empty white space. Keep the focus on a single, clear visual element to maintain a premium, 'faceless animation' aesthetic.",
         "Max 1–2 speaking characters per scene. Speaking → slow zoom-in + lip movement. After → slow zoom-out.",
         "No abrupt motion. Split complex actions across multiple scenes (3-8s per visual cut).",
         "Recurring characters use consistent IDs (CHAR-01, CHAR-02, etc.).",
         "ACTIONS: clean visual descriptions only. No timing tags, no video keywords, no appearance descriptions.",
         "ANIMATION PROMPT: contains all timing tags and movement instructions.",
         "Avoid clichés. Prefer concrete daily-life situations — parking lots, dinner tables, social media feeds, bank apps.",
-        "poseId: use library poses (STAND, WALK, RUN, THINK, POINT, SAD, JUMP, SIT, TYPE, EXHAUSTED, NOTEBOOK, PHONE, ANGRY, SHOCK, MEDITATE, LOOK-BACK, CARRY-BOX, FALL, NONE) or propose new descriptive names — system will auto-generate unknown poses.",
+        "poseId: use library poses (STAND, WALK, RUN, THINK, POINT, SAD, JUMP, SIT, TYPE, EXHAUSTED, NOTEBOOK, PHONE, ANGRY, SHOCK, MEDITATE, LOOK-BACK, CARRY-BOX, FALL, NONE) or propose new descriptive names — system will auto-generate unknown poses. Use NONE when no character is present.",
         "poseStyle: position (left/center/right), scale (0.5–1.5). Use left/right when onscreenText is present to avoid overlap.",
         "onscreenTextSuggestions: 3-5 variations — vary wording, tone, and positioning (top/bottom/center).",
         "OUTPUT MUST BE STRICTLY VALID JSON."
