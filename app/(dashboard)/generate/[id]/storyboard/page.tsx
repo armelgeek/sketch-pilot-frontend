@@ -11,14 +11,11 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/src/components/ui/accordion";
-import { Slider } from "@/src/components/ui/slider";
 import { cn } from "@/src/lib/utils";
 import { videosService, type Video } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
 import { AdminService } from "@/src/app/admin/api/admin-service";
-import { CharacterCasting } from "@/src/components/organisms/character-casting";
 
 const adminService = new AdminService();
 
@@ -395,9 +392,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                 )}
                             >
                                 <FileText className="h-4 w-4" />
-                                {(activeVideo?.script?.characterSheets?.length === 1 && activeVideo.options?.baseImages?.length > 0)
-                                    ? "Script"
-                                    : "Script & Casting"}
+                                Script
                             </button>
                             <button
                                 onClick={() => setStoryboardView("visuals")}

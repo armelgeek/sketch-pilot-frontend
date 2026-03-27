@@ -50,7 +50,11 @@ export const DEFAULT_SPEC = {
         "ACTIONS: clean visual descriptions only. No timing tags, no video keywords, no appearance descriptions.",
         "ANIMATION PROMPT: contains all timing tags and movement instructions.",
         "Avoid clichés. Prefer concrete daily-life situations — parking lots, dinner tables, social media feeds, bank apps.",
-        "OUTPUT MUST BE STRICTLY VALID JSON."
+        "OUTPUT MUST BE STRICTLY VALID JSON.",
+
+        // ─── Camera Motion & Transitions (CRITICAL) ─────────────────────────
+        "Each scene MUST use a dynamic camera action (zoom-in | zoom-out | pan-left | pan-right). Avoid 'static' unless absolutely necessary.",
+        "The camera motion MUST ACCELERATE towards the end of the scene. This 'Ending Acceleration' creates the visual transition to the next scene. All transitions are now movement-based cuts."
     ],
     "scenePresets": {
         "hook": {
@@ -130,14 +134,15 @@ export const DEFAULT_SPEC = {
             scenes: [
                 {
                     sceneNumber: 'Integer',
-                    timestamp: 'Float',
+                    id: 'String (unique scene id)',
                     narration: 'String (verbatim slice of fullNarration)',
                     summary: 'String — visual summary',
                     preset: 'hook | reveal | mirror',
-                    imagePrompt: "A symbolic visual perfectly representing the scene's core idea. The scene takes place in a simple, realistic interior with a table, a chair, a lamp, a shelf, and a window in the background, each object clearly defined and naturally positioned. The camera frames the action clearly, with all elements at a realistic scale. The image is rendered as a highly detailed black and white pencil drawing with soft grayscale shading and subtle textures, creating a clean, balanced, and grounded composition with no empty space.",
+                    visualReferenceId: 'String (CRITICAL for cost optimization: the id of a previous scene to reuse its image, or null if new)',
+                    locationId: 'String (optional: unique location identifier, e.g. "office")',
+                    cameraAction: 'String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.',
+                    imagePrompt: "A symbolic visual perfectly representing the scene's core idea. Detailed text-to-image prompt.",
                     animationPrompt: 'specific movement/performance instructions',
-                    locationId: 'String - Identifier to reuse locations across scenes',
-                    continueFromPrevious: false,
                 },
             ],
         },
