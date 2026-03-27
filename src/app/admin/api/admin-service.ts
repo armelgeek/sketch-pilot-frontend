@@ -215,34 +215,6 @@ export class AdminService extends BaseService<any> {
         });
     }
 
-    // --- Models ---
-    async listModels(): Promise<any[]> {
-        // Character models use a slightly different structure in the API results
-        const res = await this.apiFetch<any>("/v1/character-models");
-        return res.data;
-    }
-
-    async createModel(formData: FormData): Promise<any> {
-        // Models use multipart/form-data, apiFetch now handles it
-        return this.apiFetch(`${this.endpoint}/character-models`, {
-            method: "POST",
-            body: formData,
-        });
-    }
-
-    async updateModel(id: string, data: any): Promise<any> {
-        return this.apiFetch(`${this.endpoint}/character-models/${id}`, {
-            method: "PATCH",
-            body: JSON.stringify(data),
-        });
-    }
-
-    async deleteModel(id: string): Promise<void> {
-        await this.apiFetch(`${this.endpoint}/character-models/${id}`, {
-            method: "DELETE",
-        });
-    }
-
     // --- General Assets ---
     async uploadAsset(file: File, type: 'voice' | 'music'): Promise<string> {
         const formData = new FormData();
@@ -254,5 +226,46 @@ export class AdminService extends BaseService<any> {
             body: formData,
         });
         return res.url;
+    }
+
+    // --- Character Models ---
+    async listModels(params?: { page?: number; limit?: number; search?: string }): Promise<{
+        data: any[];
+        total: number;
+        page: number;
+        limit: number;
+    }> {
+        const query = new URLSearchParams();
+        if (params?.page) query.append("page", params.page.toString());
+        if (params?.limit) query.append("limit", params.limit.toString());
+        if (params?.search) query.append("search", params.search);
+
+        const res = await this.apiFetch<any>(`/v1/characters?${query.toString()}`);
+        return {
+            data: res.data,
+            total: res.total || res.data?.length || 0,
+            page: res.page || 1,
+            limit: res.limit || 10
+        };
+    }
+
+    async createModel(data: any): Promise<any> {
+        return this.apiFetch<any>("/v1/characters", {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+    }
+
+    async updateModel(id: string, data: any): Promise<any> {
+        return this.apiFetch<any>(`/v1/characters/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        });
+    }
+
+    async deleteModel(id: string): Promise<void> {
+        await this.apiFetch(`/v1/characters/${id}`, {
+            method: "DELETE",
+        });
     }
 }

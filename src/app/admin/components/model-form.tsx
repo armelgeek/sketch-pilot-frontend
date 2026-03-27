@@ -35,7 +35,7 @@ import { useAdminVoices } from "../hooks/use-admin-data";
 
 interface ModelFormProps {
     initialData?: any;
-    onSubmit: (data: any, file?: File) => Promise<void>;
+    onSubmit: (data: any, files: File[]) => Promise<void>;
     onCancel: () => void;
     isLoading?: boolean;
     title: string;
@@ -46,19 +46,38 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
 
     const [formData, setFormData] = useState<any>(initialData || {
         name: "",
+        description: "",
         gender: "unknown",
         age: "unknown",
         voiceId: "",
         stylePrefix: "",
         artistPersona: "",
-        isStandard: true
+        isStandard: true,
+        images: []
     });
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit(formData, selectedFile || undefined);
+        await onSubmit(formData, selectedFiles);
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            setSelectedFiles(prev => [...prev, ...files]);
+        }
+    };
+
+    const removeFile = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const removeExistingImage = (index: number) => {
+        const newImages = [...(formData.images || [])];
+        newImages.splice(index, 1);
+        setFormData({ ...formData, images: newImages });
     };
 
     return (
@@ -103,6 +122,16 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                                     value={formData.name || ""}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Ex: Stickman Business"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="font-extrabold text-xs uppercase tracking-widest text-zinc-400 pl-1">Description / Bio</Label>
+                                <textarea
+                                    className="w-full min-h-[80px] rounded-2xl border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 p-4 font-medium focus:ring-2 focus:ring-black focus:outline-none transition-all text-sm"
+                                    value={formData.description || ""}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder="Décrivez brièvement le personnage..."
                                 />
                             </div>
 
@@ -240,49 +269,60 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                     {/* Visual Reference Card */}
                     <Card className="rounded-[32px] border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
                         <CardHeader className="p-8 pb-4">
-                            <CardTitle className="font-black tracking-tight text-xl">Image de Référence</CardTitle>
+                            <CardTitle className="font-black tracking-tight text-xl text-center">Images de Référence</CardTitle>
+                            <CardDescription className="text-center font-medium">Ajoutez plusieurs images pour une meilleure cohérence.</CardDescription>
                         </CardHeader>
                         <CardContent className="p-8 pt-4 space-y-6">
-                            {(formData.imageUrl || selectedFile) ? (
-                                <div className="relative group rounded-3xl overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl aspect-square bg-zinc-100 dark:bg-zinc-800">
-                                    <img
-                                        src={selectedFile ? URL.createObjectURL(selectedFile) : formData.imageUrl}
-                                        alt="Preview"
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                                        <div className="bg-white text-black font-black px-6 py-2.5 rounded-2xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                                            <Upload className="h-4 w-4" /> Changer l'image
-                                        </div>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                                        />
-                                    </label>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <label className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-[32px] cursor-pointer bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <ImageIcon className="w-12 h-12 mb-4 text-zinc-300" />
-                                            <p className="text-sm text-zinc-500 font-black">Uploader une image</p>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                                        />
-                                    </label>
-                                </div>
-                            )}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Existing Images */}
+                                {formData.images?.map((url: string, idx: number) => (
+                                    <div key={`existing-${idx}`} className="relative group rounded-2xl overflow-hidden border-2 border-zinc-100 aspect-square bg-zinc-50">
+                                        <img src={url} alt={`Reference ${idx}`} className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeExistingImage(idx)}
+                                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
 
-                            {selectedFile && (
+                                {/* New Selected Files */}
+                                {selectedFiles.map((file, idx) => (
+                                    <div key={`new-${idx}`} className="relative group rounded-2xl overflow-hidden border-2 border-emerald-100 aspect-square bg-emerald-50/30">
+                                        <img src={URL.createObjectURL(file)} alt={`New ${idx}`} className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFile(idx)}
+                                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <div className="absolute bottom-0 inset-x-0 bg-emerald-500 text-white text-[10px] py-0.5 text-center font-bold">READY</div>
+                                    </div>
+                                ))}
+
+                                {/* Add Button */}
+                                <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-2xl cursor-pointer bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <Upload className="w-6 h-6 mb-2 text-zinc-400" />
+                                        <p className="text-[10px] text-zinc-500 font-black uppercase">Ajouter</p>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleFileChange}
+                                    />
+                                </label>
+                            </div>
+
+                            {selectedFiles.length > 0 && (
                                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
                                     <CheckCircle2 className="h-4 w-4" />
-                                    Nouveau fichier prêt.
+                                    {selectedFiles.length} nouveau(x) fichier(s) prêt(s).
                                 </div>
                             )}
                         </CardContent>

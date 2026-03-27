@@ -2,7 +2,7 @@ export const DEFAULT_SPEC = {
     "name": "Storytellinng",
     "role": "Personal Transformation Storytelling Director",
     "tags": [],
-    "task": "Plan and write a complete YouTube video script based on the provided subject and target duration. The script must include narration, character actions, emotional states, visual composition and transitions.",
+    "task": "Plan and write a complete YouTube video script based on the provided subject and target duration. The script must include narration, visual actions, emotional states, visual composition and transitions.",
     "goals": [
         "Open with 3–4 hyper-concrete, instantly recognizable real-life examples within the first 10 seconds — make the viewer think of someone they know",
         "Name the tension or paradox at the heart of the subject before explaining it",
@@ -12,6 +12,7 @@ export const DEFAULT_SPEC = {
         "End by turning the mirror on the viewer — not just judging others, but inviting self-examination",
         "Deliver one single memorable formulation that crystallizes the entire message (e.g. 'True wealth whispers, false wealth screams')"
     ],
+
     "rules": [
         // ─── Pacing & Duration ──────────────────────────────────────────────
         "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
@@ -36,39 +37,72 @@ export const DEFAULT_SPEC = {
         "Use contrast pairs to sharpen points: 'The fake rich person does X. The truly wealthy person does Y.'",
 
         "SCENES: prioritize visual clarity and simplicity. Avoid cluttered scenes with too many irrelevant elements. Clarity over complexity.",
-        "EVERY scene MUST include at least one character (Alex by default). PREFER EXACTLY ONE CHARACTER. Avoid background crowds, extra people, or irrelevant figures. Do not force unnecessary people where they don't add value.",
-        "VISUAL METAPHORS (CRITICAL): Prioritize symbolic objects or metaphorical situations over literal illustrations. If the narration is about an abstract concept (e.g., 'growth'), show a plant growing through concrete or a character climbing a giant ladder, rather than just a character talking.",
-        "PATTERN INTERRUPT (HOOK): The first 5 seconds MUST feature a visually striking, unusual, or highly symbolic 'Hook' to grab attention immediately. Avoid generic opening shots.",
-        "FRAMING DIVERSITY: Alternate camera framing frequently. Use Extreme Close-Ups (ECU) for symbolic objects, Medium Shots (MS) for character actions, and Wide Shots (WS) for environmental context. Never repeat the same framing for more than 2 consecutive scenes.",
-        "NEGATIVE SPACE: Use plenty of empty white space. Keep the focus on a single, clear visual element to maintain a premium, 'faceless animation' aesthetic.",
-        "Max 1–2 speaking characters per scene. Speaking → slow zoom-in + lip movement. After → slow zoom-out.",
+        "VISUAL FOCUS: Each scene must focus on a clear visual subject interacting with the core concept. Avoid background crowds or irrelevant figures that distract from the main message.",
+        "VISUAL STORYTELLING (CRITICAL): Every image must tell the CORE IDEA of the scene WITHOUT words or narration. THE CORE CONCEPT MUST BE THE LARGEST AND MOST VISUALLY DOMINANT ELEMENT.",
+        "STRICT REALISTIC SCALE: NEVER inflate object sizes for importance. All objects MUST maintain real-life proportions (e.g. a phone is palm-sized, a pencil is shorter than an arm).",
+        "CINEMATIC DETAIL: To show detailed objects (e.g. text on a phone), MUST use an Extreme Close-Up (ECU) or Macro-shot where the object fills the frame.",
+        "BAN WHITE VOIDS: Backgrounds MUST NOT be pure white. Use grayscale shading, hatching, and textures to establish depth.",
+        "MANDATORY DEPTH: Show wall corners or floor perspective lines.",
+        "MANDATORY DENSITY: Include 5+ background objects.",
+        "NO FRAMES: NEVER include visual borders, frames, or artificial outlines around the image.",
+        "PATTERN INTERRUPT (HOOK): The first 5 seconds MUST feature a visually striking, unusual, or highly symbolic 'Hook' to grab attention immediately.",
         "No abrupt motion. Split complex actions across multiple scenes (3-8s per visual cut).",
-        "Recurring characters use consistent IDs (CHAR-01, CHAR-02, etc.).",
         "ACTIONS: clean visual descriptions only. No timing tags, no video keywords, no appearance descriptions.",
         "ANIMATION PROMPT: contains all timing tags and movement instructions.",
         "Avoid clichés. Prefer concrete daily-life situations — parking lots, dinner tables, social media feeds, bank apps.",
-        "poseId: use library poses (STAND, WALK, RUN, THINK, POINT, SAD, JUMP, SIT, TYPE, EXHAUSTED, NOTEBOOK, PHONE, ANGRY, SHOCK, MEDITATE, LOOK-BACK, CARRY-BOX, FALL, NONE) or propose new descriptive names — system will auto-generate unknown poses. Use NONE when no character is present.",
-        "poseStyle: position (left/center/right), scale (0.5–1.5). Use left/right when onscreenText is present to avoid overlap.",
-        "onscreenTextSuggestions: 3-5 variations — vary wording, tone, and positioning (top/bottom/center).",
         "OUTPUT MUST BE STRICTLY VALID JSON."
     ],
-    "narrativeVoice": {
-        "tone": "Cinematic, direct, slightly unsettling — like a sharp friend who sees through social performance",
-        "register": "Conversational but authoritative. Not academic, not motivational-speaker. Observational journalism meets psychological insight.",
-        "openingPattern": "Start with 3–4 rapid-fire concrete observations that create immediate recognition — no preamble, no intro sentence. Drop the viewer straight into examples.",
-        "sectionPattern": "Observation (scene) → Named behavior → Psychological root cause → Real-world consequence (financial, social, emotional) → Contrast with the opposite behavior → One-line verdict",
-        "closingPattern": "Zoom out from 'them' to 'you'. Restate the core tension as a personal question. End with one crystallized line that works as a standalone quote.",
-        "forbiddenPatterns": [
-            "Avoid starting sections with 'In our society...' or similar sociological preambles",
-            "Never end a section with generic advice ('So we must...'). End with observation or contrast.",
-            "No rhetorical questions used as filler — only use questions when they are genuinely uncomfortable",
-            "Avoid stacking superlatives — one strong claim per section maximum"
-        ]
+    "scenePresets": {
+        "hook": {
+            "description": "Visually striking opening to grab attention instantly",
+            "rules": [
+                "The scene must be immediately understandable in under 2 seconds",
+                "Use a strong, unusual, or symbolic visual",
+                "Action must be clear and immediate, not passive",
+                "Keep composition simple and focused",
+                "The core concept must be instantly visible"
+            ]
+        },
+        "reveal": {
+            "description": "Psychological explanation through visual action",
+            "rules": [
+                "Show a concrete action that represents a deeper behavior",
+                "Make the invisible psychological concept visible through action",
+                "Keep the scene grounded in realistic daily life",
+                "Avoid abstract or overly symbolic visuals",
+                "Focus on clarity and understanding"
+            ]
+        },
+        "mirror": {
+            "description": "Relatable moment where the viewer recognizes themselves",
+            "rules": [
+                "Use a highly relatable everyday situation",
+                "Focus on a subtle but emotionally uncomfortable moment",
+                "Keep the scene simple and realistic",
+                "Avoid exaggeration or dramatization",
+                "The viewer should feel personal recognition"
+            ]
+        }
     },
+    "visualRules": [
+        "The concept must be visually dominant without breaking realistic scale",
+        "Environments must be realistic and include multiple objects",
+        "No empty or undefined space; use shading and perspective to create depth",
+        "Maintain consistent black and white pencil rendering with grayscale textures",
+        "Vary framing naturally between close, medium, and wide compositions",
+        "Actions must be simple, clear, and visually readable"
+    ],
+    "orchestration": [
+        "First generate full narration",
+        "Then split into scenes",
+        "Assign a preset type to each scene (hook, reveal, mirror)",
+        "Each scene must visually represent its narration clearly",
+        "Maintain continuity across scenes (location, action)"
+    ],
     "context": "Cinematic director specialized in psychological storytelling applied to personal finance, social behavior, and identity. The goal is to produce emotionally engaging scripts that make viewers recognize behaviors — in others first, then in themselves.",
     "category": "Storytelling",
     "structure": "Cold Open (concrete examples + named paradox) → Numbered Sections (varied rhythm) → Mirror Moment (viewer self-examination) → Crystallized Conclusion",
-    "formatting": "Each scene must include narration, character actions, expression, duration, timestamp, summary, characterIds, speechBubble, mood, cameraType, framing, lighting, and animation prompt. Include anchorDetail for grounding.",
+    "formatting": "Each scene must include narration, duration, timestamp, summary, preset (hook|reveal|mirror), and animation prompt.",
     "instructions": [
         "Think step-by-step.",
         "First, write the complete narration in 'fullNarration' — treat it as a standalone script that could be read aloud and make complete sense.",
@@ -93,83 +127,17 @@ export const DEFAULT_SPEC = {
             fullNarration: 'String - The complete unbroken voice-over narration. Must read as a standalone script with varied rhythm, contrast pairs, and one final crystallized line.',
             topic: 'String',
             audience: 'String',
-            characterSheets: [
-                {
-                    id: 'CHAR-01',
-                    name: 'Name',
-                    role: 'Role in the story',
-                    secret: 'What this character hides',
-                    want: 'What this character wants (surface)',
-                    wound: 'What this character carries (deep)',
-                    metadata: { gender: 'male|female|unknown', age: 'child|youth|senior|unknown' },
-                    appearance: {
-                        description: 'Base style',
-                        clothing: 'Specific clothing...',
-                        accessories: 'Distinguishing items',
-                        colorPalette: ['#HEX1', '#HEX2'],
-                        uniqueIdentifiers: ['Specific trait 1', 'Specific trait 2'],
-                    },
-                    expressions: ['Suspicious', 'Broken', 'Determined'],
-                    imagePrompt: 'Consistent visual reference prompt',
-                },
-            ],
             scenes: [
                 {
                     sceneNumber: 'Integer',
-                    timeRange: { start: 'Float', end: 'Float' },
-                    locationId: 'String - Identifier to reuse locations across scenes',
-                    duration: 'Float',
                     timestamp: 'Float',
-                    summary: 'String — what this scene does for the story',
-                    narrativeRole: 'observation | psychology | consequence | contrast | mirror | verdict',
-                    narration: 'String',
-                    actions: ['String'],
-                    expression: 'String',
-                    characterIds: ['String'],
-                    speechBubble: 'String — real, imperfect, loaded dialogue or internal thought',
-                    mood: 'String',
-                    cameraType: 'String',
-                    framing: 'String',
-                    background: 'String - Explicit background description including weather and time-of-day',
-                    lighting: 'String - Explicit lighting description (e.g., morning sun, neon, soft)',
-                    cameraAction: {
-                        type: 'zoom-in | zoom-out | pan-left | pan-right | pan-up | pan-down | static',
-                        intensity: 'low | medium | high'
-                    },
-                    props: ['String - Relevant props for this scene to track logically'],
-                    imagePrompt: '[action/metaphor]',
-                    animationPrompt: '...',
-                    transitionToNext: 'fade | slide-left | zoom-in | wipe | swish | hard-cut',
-                    tension: 5,
-                    characterVariant: 'Optional character skin name',
+                    narration: 'String (verbatim slice of fullNarration)',
+                    summary: 'String — visual summary',
+                    preset: 'hook | reveal | mirror',
+                    imagePrompt: "A symbolic visual perfectly representing the scene's core idea. The scene takes place in a simple, realistic interior with a table, a chair, a lamp, a shelf, and a window in the background, each object clearly defined and naturally positioned. The camera frames the action clearly, with all elements at a realistic scale. The image is rendered as a highly detailed black and white pencil drawing with soft grayscale shading and subtle textures, creating a clean, balanced, and grounded composition with no empty space.",
+                    animationPrompt: 'specific movement/performance instructions',
+                    locationId: 'String - Identifier to reuse locations across scenes',
                     continueFromPrevious: false,
-                    visualSource: 'local',
-                    poseId: 'NONE | STAND | WALK | RUN | TYPE | EXHAUSTED | ...',
-                    poseStyle: {
-                        position: 'left | center | right | custom',
-                        x: 50,
-                        y: 50,
-                        scale: 1,
-                    },
-                    onscreenText: 'The primary large overlay text — used sparingly for impact',
-                    onscreenTextSuggestions: [
-                        'Concise version',
-                        'Action-oriented version',
-                        'Question-based version',
-                        'Keyword-heavy version',
-                    ],
-                    onscreenTextStyle: {
-                        enabled: true,
-                        color: '#000000',
-                        fontFamily: 'sans-serif',
-                        fontSize: 58,
-                        fontWeight: 'bold',
-                        maxWordsPerLine: 6,
-                        highlightWords: [{ word: 'specificword', color: '#FF0000' }],
-                    },
-                    anchorDetail: 'String — grounding physical or environmental detail (e.g. a logo badge on a car hood, the notification count on a phone screen)',
-                    soundEffects: [{ type: 'pop | whoosh | swish | ding | jump | heartbeat | rain | silence', timestamp: 1.5, volume: 0.8 }],
-                    soundscape: 'String — ambient atmosphere description',
                 },
             ],
         },

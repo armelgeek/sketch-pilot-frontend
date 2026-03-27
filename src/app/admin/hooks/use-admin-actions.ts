@@ -12,7 +12,7 @@ export const adminKeys = {
     voices: () => [...adminKeys.all, "voices"] as const,
     music: () => [...adminKeys.all, "music"] as const,
     prompts: (filters: any) => [...adminKeys.all, "prompts", filters] as const,
-    models: () => [...adminKeys.all, "models"] as const,
+    models: (filters: any = {}) => [...adminKeys.all, "models", filters] as const,
 };
 
 export function useAdminActions() {
@@ -103,7 +103,7 @@ export function useAdminActions() {
 
     // --- Model Mutations ---
     const createModelMutation = useMutation({
-        mutationFn: (formData: FormData) => adminService.createModel(formData),
+        mutationFn: (data: any) => adminService.createModel(data),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.models() }),
     });
 

@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [recentVideos, setRecentVideos] = useState<ApiVideo[]>([]);
   const [videosLoading, setVideosLoading] = useState(true);
   const { data: modelsData, isLoading: modelsLoading } = useAdminModels();
-  const models = modelsData || [];
+  const models: any[] = modelsData?.data || [];
 
   useEffect(() => {
     // Fetch recent videos
@@ -79,20 +79,20 @@ export default function DashboardPage() {
           icon={<Sparkles className="h-5 w-5" />}
         />
         <StatCard
-          title="Avatars"
-          value={models.length.toString()}
-          description="Total generated"
-          icon={<UserSquare2 className="h-5 w-5" />}
-        />
-        <StatCard
           title="Credits"
           value={subLoading ? "..." : (subscriptionStatus?.remainingCredits ?? 0).toString()}
           description="Available"
           icon={<Coins className="h-5 w-5" />}
         />
+        <StatCard
+          title="Avatars"
+          value={modelsLoading ? "..." : (modelsData?.total ?? 0).toString()}
+          description="Your library"
+          icon={<UserSquare2 className="h-5 w-5" />}
+        />
       </div>
 
-      {/* Your Persons Section */}
+      {/* Your Persons Grid */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
@@ -103,26 +103,36 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {modelsLoading ? (
-            [1, 2, 3, 4].map(i => (
-              <div key={i} className="min-w-35 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
-            ))
-          ) : models.length === 0 ? (
-            <div className="text-zinc-500 text-sm font-medium italic">No persons found. Create some in the admin panel.</div>
-          ) : (
-            models.slice(0, 4).map((model: any) => (
-              <Card key={model.id} className="min-w-35 flex flex-col items-center p-4 bg-white dark:bg-zinc-900/40 border-none shadow-sm hover:shadow-md transition-all rounded-3xl ring-1 ring-zinc-200 dark:ring-zinc-800">
-                <Avatar className="h-16 w-16 mb-3 border-2 border-emerald-500/20">
-                  <AvatarImage src={model.thumbnailUrl || model.imageUrl} />
-                  <AvatarFallback className="bg-emerald-50 text-emerald-600 font-bold">{model.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="text-xs font-black text-center truncate w-full">{model.name}</div>
-                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{model.isStandard ? "Standard" : "Custom"}</div>
-              </Card>
-            ))
-          )}
-        </div>
+        {modelsLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="aspect-square rounded-2xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+            ))}
+          </div>
+        ) : !models || models.length === 0 ? (
+          <div className="py-10 text-center bg-zinc-50 dark:bg-zinc-900/40 rounded-3xl border-2 border-dashed border-zinc-100 dark:border-zinc-800">
+            <p className="text-zinc-400 font-medium text-sm">No personas created yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {models.slice(0, 6).map((model: any) => (
+              <Link
+                key={model.id}
+                href={`/admin/models/${model.id}`}
+                className="group relative aspect-square rounded-2xl overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-800 hover:ring-2 hover:ring-black dark:hover:ring-white transition-all"
+              >
+                <img
+                  src={model.images?.[0]}
+                  alt={model.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-[10px] font-black text-white truncate">{model.name}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Generations Grid */}

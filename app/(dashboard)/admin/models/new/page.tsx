@@ -6,25 +6,31 @@ import { useAdminActions } from "@/src/app/admin/hooks/use-admin-actions";
 
 export default function NewModelPage() {
     const router = useRouter();
-    const { createModel, isPending } = useAdminActions();
+    const { createModel, uploadAsset, isPending } = useAdminActions();
 
-    const handleSave = async (data: any, file?: File) => {
+    const handleSave = async (data: any, files: File[]) => {
         try {
-            const formData = new FormData();
-            formData.append("name", data.name);
-            formData.append("gender", data.gender || "unknown");
-            formData.append("age", data.age || "unknown");
-            if (data.voiceId && data.voiceId !== "none") {
-                formData.append("voiceId", data.voiceId);
-            }
-            formData.append("isStandard", String(data.isStandard));
-            formData.append("stylePrefix", data.stylePrefix || "");
-            formData.append("artistPersona", data.artistPersona || "");
-            if (file) {
-                formData.append("image", file);
+            // 1. Upload all new images first
+            const uploadedUrls: string[] = [];
+            for (const file of files) {
+                const url = await uploadAsset({ file, type: 'image' as any }); // Re-using asset upload
+                uploadedUrls.push(url);
             }
 
-            await createModel(formData);
+            // 2. Prepare model data
+            const modelData = {
+                name: data.name,
+                description: data.description || "",
+                gender: data.gender || "unknown",
+                age: data.age || "unknown",
+                voiceId: data.voiceId && data.voiceId !== "none" ? data.voiceId : undefined,
+                isStandard: String(data.isStandard),
+                stylePrefix: data.stylePrefix || "",
+                artistPersona: data.artistPersona || "",
+                images: [...(data.images || []), ...uploadedUrls]
+            };
+
+            await createModel(modelData);
             router.push("/admin/models");
         } catch (error) {
             console.error("Failed to create model:", error);

@@ -7,20 +7,15 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { videosService, type Video } from "@/src/services/videos-service";
 import { ScriptEditor } from "@/src/components/organisms/script-editor";
-import { CharacterCasting } from "@/src/components/organisms/character-casting";
 import { AdminService } from "@/src/app/admin/api/admin-service";
-import { CharacterModelsService } from "@/src/app/character-models/api/character-models-service";
 
 const adminService = new AdminService();
-const characterModelsService = new CharacterModelsService();
 
 export default function ScriptValidationPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const router = useRouter();
 
     const [video, setVideo] = useState<Video | null>(null);
-    const [availableModels, setAvailableModels] = useState<any[]>([]);
-    const [availableVoices, setAvailableVoices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,21 +23,9 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [v, models, voices] = await Promise.all([
-                    videosService.getById(resolvedParams.id),
-                    adminService.listModels(),
-                    adminService.listVoices()
-                ]);
-
-                // Auto-initialize character sheets if missing
-                if (v.script && !v.script.characterSheets) {
-                    console.log("Initializing character sheets...");
-                    v.script.characterSheets = [];
-                }
+                const v = await videosService.getById(resolvedParams.id);
 
                 setVideo(v);
-                setAvailableModels(models || []);
-                setAvailableVoices(voices || []);
                 setLoading(false);
             } catch (err) {
                 setError("Impossible de charger les données.");
@@ -80,99 +63,6 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
         });
     };
 
-    const onCastChange = (
-        characterId: string,
-        updates: any
-    ) => {
-        if (!video || !video.script) return;
-
-        const newSheets = (video.script.characterSheets || []).map((sheet) => {
-            if (sheet.id === characterId || sheet.name === characterId) {
-                return { ...sheet, ...updates };
-            }
-            return sheet;
-        });
-
-        setVideo({
-            ...video,
-            script: {
-                ...video.script,
-                characterSheets: newSheets
-            }
-        });
-    };
-
-    const handleGenerateCharacter = async (characterId: string, prompt: string, modelId?: string) => {
-        if (!video) return "";
-        try {
-            const res = await videosService.generateCharacter(video.id, characterId, { prompt, modelId });
-
-            // Proactively update local state with the new image URL immediately
-            if (res.imageUrl) {
-                onCastChange(characterId, { referenceImageUrl: res.imageUrl, modelId });
-            }
-
-            return res.imageUrl;
-        } catch (err: any) {
-            setError(err.message || "Erreur lors de la génération du personnage.");
-            throw err;
-        }
-    };
-
-    const handleSaveAsModel = async (name: string, imageUrl: string, description: string) => {
-        try {
-            await characterModelsService.savePersonal({ name, imageUrl, description });
-
-            // Refresh available models to include the new one
-            const models = await adminService.listModels();
-            setAvailableModels(models || []);
-        } catch (err: any) {
-            setError(err.message || "Erreur lors de l'enregistrement du modèle.");
-            throw err;
-        }
-    };
-
-    const handleDetectCharacters = () => {
-        if (!video || !video.script) return;
-
-        const scenes = video.script.scenes || [];
-        const detectedNames = new Set<string>();
-
-        scenes.forEach((scene: any) => {
-            if (scene.characterIds && Array.isArray(scene.characterIds)) {
-                scene.characterIds.forEach((id: string) => detectedNames.add(id));
-            }
-            if (scene.speakingCharacterId) {
-                detectedNames.add(scene.speakingCharacterId);
-            }
-        });
-
-        if (detectedNames.size === 0) {
-            detectedNames.add("Narrateur");
-        }
-
-        const newSheets = Array.from(detectedNames).map((name, idx) => ({
-            id: name.startsWith('CHAR-') ? name : `CHAR-0${idx + 1}`,
-            name: name.startsWith('CHAR-') ? name.replace('CHAR-', 'Personnage ') : name,
-            role: "Rôle à définir",
-            appearance: {
-                description: "Style standard",
-                clothing: "Tenue habituelle",
-                accessories: [],
-                colorPalette: [],
-                uniqueIdentifiers: []
-            },
-            expressions: ["Neutre"]
-        }));
-
-        setVideo({
-            ...video,
-            script: {
-                ...video.script,
-                characterSheets: newSheets
-            }
-        });
-    };
 
     if (loading) {
         return (
@@ -232,20 +122,6 @@ export default function ScriptValidationPage({ params }: { params: Promise<{ id:
 
                 <Card className="glass-pill border-none shadow-2xl overflow-hidden mb-8">
                     <CardContent className="p-8 space-y-12">
-                        {video.script && (
-                            <>
-                                <CharacterCasting
-                                    characters={video.script.characterSheets || []}
-                                    availableModels={availableModels}
-                                    availableVoices={availableVoices}
-                                    onCastChange={onCastChange}
-                                    onGenerate={handleGenerateCharacter}
-                                    onSaveAsModel={handleSaveAsModel}
-                                    onDetect={handleDetectCharacters}
-                                />
-                                <div className="h-px bg-zinc-100 dark:bg-zinc-800 mt-8 mb-4" />
-                            </>
-                        )}
 
                         <div className="space-y-6">
                             <div className="flex items-center gap-2 mb-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm uppercase tracking-wider">

@@ -6,7 +6,7 @@ import {
     ChevronRight, FileText, Image, Play, RefreshCw, Wand2, Loader2,
     ChevronLeft, Zap, Sparkles, Music, Volume2, SkipBack,
     SkipForward, Type, Eye, Check, ExternalLink, Settings2,
-    Users, MessageSquare, Monitor
+    Users, MessageSquare, Monitor, FileJson, XCircle, RotateCcw
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -58,6 +58,9 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
     // Context & Edits
     const [sceneEdits, setSceneEdits] = useState<Record<string, any>>({});
+    const [isInserting, setIsInserting] = useState(false);
+    const [insertIndex, setInsertIndex] = useState<number | null>(null);
+    const [newNarration, setNewNarration] = useState("");
 
     const {
         progress: realProgress,
@@ -66,7 +69,13 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         lastScene,
         lastSceneIndex,
         currentSceneIndex,
-        error: jobError
+        error: jobError,
+        promptsUrl,
+        status: jobStatus,
+        cancelVideo,
+        restartVideo,
+        rescriptVideo,
+        insertScene: apiInsertScene
     } = useVideoProgress(jobId);
 
     const {
@@ -83,6 +92,9 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 if ((video.status === "processing" || video.status === "queued") && video.jobId) {
                     setJobId(video.jobId);
                     setGenerating(true);
+                    if (video.script || (video.scenes && video.scenes.length > 0)) {
+                        setStoryboardView("visuals");
+                    }
                 }
                 // Initialize visualsGenerated if scenes are already there
                 if (video.status === 'scenes_generated' || video.status === 'narration_generated' || video.status === 'completed') {
@@ -96,10 +108,28 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
             .catch(err => setError("Failed to load video storyboard."));
     }, [resolvedParams.id]);
 
+    const handleInsertScene = async () => {
+        if (!activeVideo || insertIndex === null || !newNarration) return;
+        try {
+            setGenerating(true);
+            const updatedScript = await apiInsertScene(activeVideo.id, insertIndex, newNarration);
+            if (updatedScript) {
+                setActiveVideo(prev => prev ? { ...prev, script: updatedScript, scenes: updatedScript.scenes } : null);
+                setIsInserting(false);
+                setNewNarration("");
+            }
+            setGenerating(false);
+        } catch (err) {
+            setError("Failed to insert scene");
+            setGenerating(false);
+        }
+    };
+
     const handleAnimate = async () => {
         if (!activeVideo) return;
         try {
             setGenerating(true);
+            setStoryboardView("visuals");
             const response = await videosService.generateScenes(activeVideo.id);
             setJobId(response.jobId);
             setError(null);
@@ -156,6 +186,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 }
                 return { ...prev, scenes };
             });
+            setSelectedScene(lastScene.id || `s${lastSceneIndex + 1}`);
         }
     }, [lastScene, lastSceneIndex]);
 
@@ -254,6 +285,32 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                             ) : (
                                 <>
                                     <Button
+                                        onClick={async () => {
+                                            const newJobId = await restartVideo(activeVideo.id);
+                                            if (newJobId) setJobId(newJobId);
+                                        }}
+                                        variant="outline"
+                                        className="px-6 rounded-xl h-11 text-sm border-orange-200 text-orange-600 hover:bg-orange-50"
+                                    >
+                                        <RotateCcw className="mr-2 h-4 w-4" /> RESTART
+                                    </Button>
+                                    <Button
+                                        onClick={async () => {
+                                            if (confirm("Ceci va régénérer tout le script. Continuer ?")) {
+                                                const newJobId = await rescriptVideo(activeVideo.id);
+                                                if (newJobId) {
+                                                    setJobId(newJobId);
+                                                    setVisualsGenerated(false);
+                                                    setActiveVideo(prev => prev ? { ...prev, script: undefined, scenes: [] } : null);
+                                                }
+                                            }
+                                        }}
+                                        variant="outline"
+                                        className="px-6 rounded-xl h-11 text-sm border-purple-200 text-purple-600 hover:bg-purple-50"
+                                    >
+                                        <Sparkles className="mr-2 h-4 w-4" /> RE-SCRIPT
+                                    </Button>
+                                    <Button
                                         onClick={handleAnimate}
                                         variant="outline"
                                         disabled={generating}
@@ -268,6 +325,15 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         Continuer vers Audio <ChevronRight className="ml-2 h-5 w-5" />
                                     </Button>
                                 </>
+                            )}
+                            {(promptsUrl || activeVideo?.options?.promptsUrl) && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => window.open(promptsUrl || activeVideo?.options?.promptsUrl, '_blank')}
+                                    className="px-4 rounded-xl h-11 border-dashed border-emerald-500/50 text-emerald-600 hover:bg-emerald-50"
+                                >
+                                    <FileJson className="mr-2 h-4 w-4" /> Prompts JSON
+                                </Button>
                             )}
                         </div>
                     </div>
@@ -295,9 +361,19 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         />
                                     </div>
                                 </div>
-                                <div className="hidden md:flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                    <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
-                                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">En direct</span>
+                                <div className="flex shrink-0 items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => cancelVideo(activeVideo.id)}
+                                        className="h-8 px-3 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200"
+                                    >
+                                        <XCircle className="h-3.5 w-3.5 mr-1.5" /> STOP
+                                    </Button>
+                                    <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                        <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
+                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">En direct</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -318,7 +394,10 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                                 )}
                             >
-                                <FileText className="h-4 w-4" /> Script &amp; Casting
+                                <FileText className="h-4 w-4" />
+                                {(activeVideo?.script?.characterSheets?.length === 1 && activeVideo.options?.baseImages?.length > 0)
+                                    ? "Script"
+                                    : "Script & Casting"}
                             </button>
                             <button
                                 onClick={() => setStoryboardView("visuals")}
@@ -380,41 +459,68 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         {displayScenes.map((scene: any, i: number) => {
                                             const currentId = scene.id || `s${i + 1}`;
                                             return (
-                                                <AccordionItem
-                                                    key={currentId}
-                                                    value={currentId}
-                                                    className="glass-pill border-none px-6 rounded-2xl shadow-lg transition-all"
-                                                >
-                                                    <AccordionTrigger className="hover:no-underline py-4">
-                                                        <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left flex items-center gap-2">
-                                                            Scène {i + 1}
-                                                            {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />}
-                                                            <span className="text-zinc-500 font-medium break-words leading-tight pl-1">— {(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
-                                                        </span>
-                                                    </AccordionTrigger>
-                                                    <AccordionContent className="pb-6">
-                                                        <div className="space-y-3">
-                                                            <div className="space-y-1">
-                                                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Narration</label>
-                                                                <Textarea
-                                                                    value={sceneEdits[currentId]?.narration ?? (scene.narration || scene.text || scene.content || "")}
-                                                                    onChange={(e) => updateScene(currentId, 'narration', e.target.value)}
-                                                                    className="min-h-[80px] resize-none"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Prompt de l'image</label>
-                                                                <Textarea
-                                                                    value={sceneEdits[currentId]?.imagePrompt ?? (scene.imagePrompt || scene.prompt || "")}
-                                                                    onChange={(e) => updateScene(currentId, 'imagePrompt', e.target.value)}
-                                                                    className="min-h-[80px] resize-none text-sm font-medium bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
-                                                                    placeholder="Prompt utilisé pour générer le visuel..."
-                                                                />
-                                                            </div>
+                                                <div key={currentId} className="space-y-4">
+                                                    {/* Insertion point before each scene */}
+                                                    <div className="flex justify-center -my-2 opacity-0 hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => { setInsertIndex(i); setIsInserting(true); }}
+                                                            className="h-8 rounded-full border border-dashed border-emerald-500/30 text-emerald-500 hover:bg-emerald-50"
+                                                        >
+                                                            <Sparkles className="h-3 w-3 mr-2" /> Insérer une scène ici
+                                                        </Button>
+                                                    </div>
 
+                                                    <AccordionItem
+                                                        value={currentId}
+                                                        className="glass-pill border-none px-6 rounded-2xl shadow-lg transition-all"
+                                                    >
+                                                        <AccordionTrigger className="hover:no-underline py-4">
+                                                            <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left flex items-center gap-2">
+                                                                Scène {i + 1}
+                                                                {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />}
+                                                                <span className="text-zinc-500 font-medium break-words leading-tight pl-1">— {(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
+                                                            </span>
+                                                        </AccordionTrigger>
+                                                        <AccordionContent className="pb-6">
+                                                            <div className="space-y-3">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Narration</label>
+                                                                    <Textarea
+                                                                        value={sceneEdits[currentId]?.narration ?? (scene.narration || scene.text || scene.content || "")}
+                                                                        onChange={(e) => updateScene(currentId, 'narration', e.target.value)}
+                                                                        className="min-h-[80px] resize-none"
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Prompt de l'image</label>
+                                                                    <Textarea
+                                                                        value={sceneEdits[currentId]?.imagePrompt ?? (scene.imagePrompt || scene.prompt || "")}
+                                                                        onChange={(e) => updateScene(currentId, 'imagePrompt', e.target.value)}
+                                                                        className="min-h-[80px] resize-none text-sm font-medium bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
+                                                                        placeholder="Prompt utilisé pour générer le visuel..."
+                                                                    />
+                                                                </div>
+
+                                                            </div>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+
+                                                    {/* Last insertion point */}
+                                                    {i === displayScenes.length - 1 && (
+                                                        <div className="flex justify-center -my-2 opacity-0 hover:opacity-100 transition-opacity">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => { setInsertIndex(i + 1); setIsInserting(true); }}
+                                                                className="h-8 rounded-full border border-dashed border-emerald-500/30 text-emerald-500 hover:bg-emerald-50"
+                                                            >
+                                                                <Sparkles className="h-3 w-3 mr-2" /> Ajouter une scène à la fin
+                                                            </Button>
                                                         </div>
-                                                    </AccordionContent>
-                                                </AccordionItem>
+                                                    )}
+                                                </div>
                                             )
                                         })}
                                     </Accordion>
@@ -619,12 +725,59 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                     <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-4">
                                         <div className="h-full bg-emerald-500 animate-[loading_2s_infinite]" style={{ width: '30%' }} />
                                     </div>
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => cancelVideo(activeVideo.id)}
+                                        className="mt-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                    >
+                                        <XCircle className="h-4 w-4 mr-2" /> Annuler la génération
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
                     </div>
                 )}
             </div>
+            {/* Insertion Dialog/Modal */}
+            {isInserting && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <Card className="w-full max-w-lg shadow-2xl border-emerald-500/20 overflow-hidden">
+                        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-emerald-500" />
+                                Nouvelle Scène IA
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-4">
+                            <p className="text-sm text-zinc-500 font-medium">
+                                Écrivez la narration. L'IA s'occupe de générer les descriptions visuelles et les prompts correspondants.
+                            </p>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Narration</label>
+                                <Textarea
+                                    placeholder="Ex: Le petit chat saute sur le canapé avec enthousiasme..."
+                                    value={newNarration}
+                                    onChange={(e) => setNewNarration(e.target.value)}
+                                    className="min-h-[120px] focus:ring-emerald-500/20 focus:border-emerald-500"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4">
+                                <Button variant="ghost" onClick={() => setIsInserting(false)} className="rounded-xl">
+                                    Annuler
+                                </Button>
+                                <Button
+                                    onClick={handleInsertScene}
+                                    disabled={!newNarration || generating}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6"
+                                >
+                                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Générer la scène"}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

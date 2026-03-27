@@ -74,10 +74,10 @@ export function useAdminPrompts(filters: { page?: number; limit?: number; isActi
     });
 }
 
-export function useAdminModels() {
+export function useAdminModels(filters?: { page?: number; limit?: number; search?: string }) {
     return useQuery({
-        queryKey: adminKeys.models(),
-        queryFn: () => adminService.listModels(),
+        queryKey: adminKeys.models(filters),
+        queryFn: () => adminService.listModels(filters),
     });
 }
 

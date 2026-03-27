@@ -4,9 +4,13 @@ export interface VideoScript {
     title?: string;
     description?: string;
     scenes: any[];
-    characterSheets?: any[]; // New field for multi-character support
     totalDuration?: number;
     metadata?: any;
+}
+
+export interface VideoIdea {
+    title: string;
+    script: string;
 }
 
 export interface Video {
@@ -35,6 +39,7 @@ export interface VideoGenerationOptions {
     voiceVolume?: number;
     backgroundMusic?: string;
     promptId?: string;
+    characterDescription?: string;
     [key: string]: any; // For any other options passed down
 }
 
@@ -79,10 +84,24 @@ export class VideosService extends BaseService<Video> {
         themeName?: string;
         themeDescription?: string;
         goals?: string[];
-    }): Promise<{ topics: string[] }> {
-        return this.apiFetch<{ topics: string[] }>(`${this.endpoint}/suggest-topics`, {
+        duration?: number;
+        characterDescription?: string;
+        characterModelId?: string;
+    }): Promise<{ topics: VideoIdea[] }> {
+        return this.apiFetch<{ topics: VideoIdea[] }>(`${this.endpoint}/suggest-topics`, {
             method: "POST",
             body: JSON.stringify({ options }),
+        });
+    }
+
+    async generateScriptFromTitle(title: string, options: {
+        language?: string;
+        duration?: number;
+        aspectRatio?: string;
+    } = {}): Promise<{ script: string }> {
+        return this.apiFetch<{ script: string }>(`${this.endpoint}/generate-script-from-title`, {
+            method: "POST",
+            body: JSON.stringify({ title, options }),
         });
     }
 
@@ -131,19 +150,6 @@ export class VideosService extends BaseService<Video> {
         return response.video;
     }
 
-    async generateCharacter(
-        id: string,
-        characterId: string,
-        data: { prompt: string; modelId?: string }
-    ): Promise<{ success: boolean; imageUrl: string }> {
-        return this.apiFetch<{ success: boolean; imageUrl: string }>(
-            `${this.endpoint}/${id}/characters/${characterId}/generate`,
-            {
-                method: "POST",
-                body: JSON.stringify(data),
-            }
-        );
-    }
 }
 
 export const videosService = new VideosService();

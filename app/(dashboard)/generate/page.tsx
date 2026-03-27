@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Label } from "@/src/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { videosService } from "@/src/services/videos-service";
+import type { VideoIdea } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { cn } from "@/src/lib/utils";
@@ -26,32 +27,39 @@ export default function GenerateContentPage() {
 
   // Generation Options State
   const [prompts, setPrompts] = useState<any[]>([])
-  const [characterModels, setCharacterModels] = useState<any[]>([])
   const [musicTracks, setMusicTracks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedCharacterModelId, setSelectedCharacterModelId] = useState<string>('none')
   const [selectedMusicId, setSelectedMusicId] = useState<string>('none')
   const [duration, setDuration] = useState<string>("30");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
   const [language, setLanguage] = useState<string>("fr-FR");
   const [style, setStyle] = useState<string>("storytelling");
   const [suggesting, setSuggesting] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[] | null>(null);
+  const [generatingScript, setGeneratingScript] = useState(false);
+  const [suggestions, setSuggestions] = useState<VideoIdea[] | null>(null);
+  const [characterDescription, setCharacterDescription] = useState<string>("A middle-aged man with short hair, wearing a simple button-down shirt.");
+  const [characterType, setCharacterType] = useState<string>("man");
+  const [characterModels, setCharacterModels] = useState<any[]>([]);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [pData, mData, musicData] = await Promise.all([
+        const [pData, musicData, charData] = await Promise.all([
           adminService.listPublicPrompts({ limit: 100 }),
-          adminService.listModels(),
-          adminService.listMusic()
+          adminService.listMusic(),
+          adminService.listModels()
         ])
         setPrompts(pData.data || [])
-        setCharacterModels(mData || [])
         setMusicTracks(musicData || [])
+        setCharacterModels(charData.data || [])
         if (pData.data?.length > 0) setSelectedPromptId(pData.data[0].id)
+        if (charData.data?.length > 0) {
+          setSelectedCharacterId(charData.data[0].id)
+          setCharacterType('avatar')
+        }
         setLoading(false)
       } catch (err) {
         console.error("[Generate] Failed to fetch initial data:", err);
@@ -84,11 +92,9 @@ export default function GenerateContentPage() {
         videoGenre: selectedPrompt?.category?.toLowerCase() === "storytelling" ? "storytelling" :
           selectedPrompt?.category?.toLowerCase() === "éducatif" ? "educational" :
             selectedPrompt?.category?.toLowerCase() === "marketing" ? "marketing" : "general",
-        backgroundMusic: selectedMusicId !== 'none' ? selectedMusicId : undefined
-      }
-
-      if (selectedCharacterModelId !== 'none') {
-        options.characterModelId = selectedCharacterModelId
+        backgroundMusic: selectedMusicId !== 'none' ? selectedMusicId : undefined,
+        characterDescription: characterType === 'custom' || !selectedCharacterId ? characterDescription : undefined,
+        characterModelId: selectedCharacterId || undefined
       }
 
       const response = await videosService.generate(script, options);
@@ -98,6 +104,17 @@ export default function GenerateContentPage() {
       setError(error.message || "Failed to start generation");
       setGenerating(false);
     }
+  };
+
+  const getEstimatedImages = (dur: string) => {
+    const d = parseInt(dur, 10);
+    if (d <= 30) return 5;
+    if (d <= 60) return 8;
+    if (d <= 120) return 12;
+    if (d <= 300) return 18; // 5m
+    if (d <= 600) return 22; // 10m
+    if (d <= 900) return 25; // 15m
+    return 30; // Max allowed
   };
   const handleSuggestTopics = async () => {
     try {
@@ -112,7 +129,10 @@ export default function GenerateContentPage() {
         aspectRatio,
         themeName: selectedPrompt?.name,
         themeDescription: selectedPrompt?.description,
-        goals: selectedPrompt?.goals || []
+        goals: selectedPrompt?.goals || [],
+        duration: parseInt(duration, 10),
+        characterDescription: characterType === 'custom' || !selectedCharacterId ? characterDescription : undefined,
+        characterModelId: selectedCharacterId || undefined
       });
       setSuggestions(response.topics);
     } catch (err: any) {
@@ -122,9 +142,33 @@ export default function GenerateContentPage() {
     }
   };
 
-  const handleSelectSuggestion = (suggestion: string) => {
-    setScript(suggestion);
+  const handleSelectSuggestion = (idea: VideoIdea) => {
+    setScript(idea.script);
     setSuggestions(null);
+  };
+
+  const handleGenerateScriptFromTitle = async (titleToUse?: string) => {
+    const title = titleToUse || script;
+    if (!title.trim()) {
+      setError("Veuillez entrer un titre ou un sujet.");
+      return;
+    }
+
+    try {
+      setGeneratingScript(true);
+      setError(null);
+      const response = await videosService.generateScriptFromTitle(title, {
+        language,
+        duration: parseInt(duration, 10),
+        aspectRatio,
+      });
+      setScript(response.script);
+      setSuggestions(null);
+    } catch (err: any) {
+      setError(err.message || "Impossible de générer le script.");
+    } finally {
+      setGeneratingScript(false);
+    }
   };
 
   useEffect(() => {
@@ -178,19 +222,35 @@ export default function GenerateContentPage() {
                       Script & Narration
                     </div>
 
-                    <Button
-                      onClick={handleSuggestTopics}
-                      disabled={suggesting}
-                      variant="outline"
-                      className="h-8 text-[10px] font-bold uppercase tracking-widest border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-full group"
-                    >
-                      {suggesting ? (
-                        <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
-                      ) : (
-                        <Sparkles className="h-3 w-3 mr-1.5 group-hover:scale-125 transition-transform" />
-                      )}
-                      Générer une idée (5 🪙)
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleSuggestTopics}
+                        disabled={suggesting || generatingScript}
+                        variant="outline"
+                        className="h-8 text-[10px] font-bold uppercase tracking-widest border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-full group"
+                      >
+                        {suggesting ? (
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
+                        ) : (
+                          <Sparkles className="h-3 w-3 mr-1.5 group-hover:scale-125 transition-transform" />
+                        )}
+                        Générer une idée (5 🪙)
+                      </Button>
+
+                      <Button
+                        onClick={() => handleGenerateScriptFromTitle()}
+                        disabled={suggesting || generatingScript || !script.trim()}
+                        variant="outline"
+                        className="h-8 text-[10px] font-bold uppercase tracking-widest border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-full group mx-2"
+                      >
+                        {generatingScript ? (
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" />
+                        ) : (
+                          <Type className="h-3 w-3 mr-1.5 group-hover:scale-125 transition-transform" />
+                        )}
+                        Générer Script (10 🪙)
+                      </Button>
+                    </div>
                   </div>
 
                   {suggesting && (
@@ -211,20 +271,49 @@ export default function GenerateContentPage() {
                     <div className="mb-6 grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2">Suggestions de l'IA</span>
-                        <button onClick={() => setSuggestions(null)} className="text-[10px] text-zinc-400 hover:text-zinc-600 font-bold">FErmer</button>
+                        <button onClick={() => setSuggestions(null)} className="text-[10px] text-zinc-400 hover:text-zinc-600 font-bold">Fermer</button>
                       </div>
-                      {suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSelectSuggestion(s)}
-                          className="text-left p-4 rounded-xl border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group relative overflow-hidden"
-                        >
-                          <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ChevronRight className="h-4 w-4 text-emerald-500" />
+                      {suggestions.map((idea, i) => {
+                        // Extract a short preview: first non-empty line after the title line
+                        const lines = idea.script.split('\n').map(l => l.trim()).filter(Boolean);
+                        const previewLine = lines.find(l => l !== 'Intro' && l !== 'Center' && l !== 'Outro') || '';
+                        const preview = previewLine.length > 120 ? previewLine.slice(0, 120) + '…' : previewLine;
+                        return (
+                          <div key={i} className="flex flex-col gap-2 p-4 rounded-xl border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group relative overflow-hidden">
+                            <button
+                              onClick={() => handleSelectSuggestion(idea)}
+                              className="text-left flex-1"
+                            >
+                              <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ChevronRight className="h-4 w-4 text-emerald-500" />
+                              </div>
+                              <p className="text-sm font-bold text-slate-800 dark:text-slate-100 pr-6 mb-1">{idea.title}</p>
+                              {preview && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed line-clamp-2">{preview}</p>
+                              )}
+                            </button>
+                            <div className="flex justify-end mt-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleGenerateScriptFromTitle(idea.title);
+                                }}
+                                disabled={generatingScript}
+                                className="h-7 text-[9px] font-bold uppercase tracking-widest text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 rounded-full"
+                              >
+                                {generatingScript ? (
+                                  <RefreshCw className="h-2 w-2 animate-spin mr-1" />
+                                ) : (
+                                  <Sparkles className="h-2 w-2 mr-1" />
+                                )}
+                                Générer script complet
+                              </Button>
+                            </div>
                           </div>
-                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 pr-6 italic">"{s}"</p>
-                        </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -235,6 +324,29 @@ export default function GenerateContentPage() {
                       value={script}
                       onChange={(e) => setScript(e.target.value)}
                     />
+
+                    {/* Magic Expansion Button Overlay */}
+                    {script.length > 0 && script.length < 150 && !generatingScript && (
+                      <div className="absolute bottom-4 right-4 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <Button
+                          onClick={() => handleGenerateScriptFromTitle()}
+                          size="sm"
+                          className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg border-none flex items-center gap-1.5 px-4 font-bold h-9"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Transformer en script complet
+                        </Button>
+                      </div>
+                    )}
+
+                    {generatingScript && (
+                      <div className="absolute inset-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center gap-3 animate-in fade-in duration-300 z-20">
+                        <div className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 rounded-full shadow-2xl border border-emerald-500/20">
+                          <RefreshCw className="h-5 w-5 text-emerald-500 animate-spin" />
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">Expansion du script par l'IA...</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -249,46 +361,6 @@ export default function GenerateContentPage() {
                     Configuration
                   </div>
 
-                  {/* Character Selection */}
-                  <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                      <User className="h-3 w-3" /> Personnage principal
-                    </Label>
-                    <Select value={selectedCharacterModelId} onValueChange={setSelectedCharacterModelId}>
-                      <SelectTrigger className="h-14 bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 rounded-xl px-4 hover:border-emerald-500 transition-colors">
-                        <SelectValue placeholder="Choisir un avatar" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border-emerald-500/20">
-                        <SelectItem value="none" className="py-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8 border-2 border-slate-100 dark:border-slate-800">
-                              <AvatarFallback className="bg-slate-100 dark:bg-slate-900 text-slate-400 text-[10px]">
-                                <Sparkles className="h-4 w-4" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="text-left">
-                              <p className="font-bold text-sm">IA Libre</p>
-                              <p className="text-[10px] text-slate-400 uppercase tracking-tight">Génération créative</p>
-                            </div>
-                          </div>
-                        </SelectItem>
-                        {characterModels.map((m) => (
-                          <SelectItem key={m.id} value={m.id} className="py-3">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8 border-2 border-emerald-500/10">
-                                <AvatarImage src={m.imageUrl} />
-                                <AvatarFallback className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">{m.name[0]}</AvatarFallback>
-                              </Avatar>
-                              <div className="text-left">
-                                <p className="font-bold text-sm">{m.name}</p>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-tight">Profil mémorisé</p>
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   {/* Category Selection */}
                   <div className="space-y-3">
@@ -383,6 +455,42 @@ export default function GenerateContentPage() {
                     </Select>
                   </div>
 
+                  {/* Character Identity */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <User className="h-3 w-3" /> Personnage Principal
+                    </Label>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {/* Character Models (Avatars) */}
+                      {characterModels.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCharacterId(m.id);
+                            setCharacterType('avatar');
+                          }}
+                          className={cn(
+                            "group flex flex-col items-center gap-2 p-2 rounded-2xl transition-all border-2",
+                            selectedCharacterId === m.id
+                              ? "bg-emerald-500/10 border-emerald-500 shadow-lg"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500 hover:border-emerald-500/30"
+                          )}
+                        >
+                          <Avatar className={cn(
+                            "h-12 w-12 border-2 transition-transform duration-300 group-hover:scale-110",
+                            selectedCharacterId === m.id ? "border-emerald-500" : "border-transparent"
+                          )}>
+                            <AvatarImage src={m.images?.[0]} />
+                            <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">{m.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-[9px] font-black truncate w-full text-center uppercase tracking-tight">{m.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Secondary Options Grid */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -398,8 +506,15 @@ export default function GenerateContentPage() {
                           <SelectItem value="30">30s</SelectItem>
                           <SelectItem value="60">1m</SelectItem>
                           <SelectItem value="120">2m</SelectItem>
+                          <SelectItem value="300">5m</SelectItem>
+                          <SelectItem value="600">10m</SelectItem>
+                          <SelectItem value="900">15m</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 px-1 flex items-center gap-1">
+                        <Sparkles className="h-2.5 w-2.5" />
+                        Est. {getEstimatedImages(duration)} images
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -502,6 +617,6 @@ export default function GenerateContentPage() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

@@ -15,19 +15,31 @@ export default function EditModelPage({ params }: EditModelPageProps) {
     const { id } = use(params);
     const router = useRouter();
     const { data: models, isLoading } = useAdminModels();
-    const { updateModel, isPending } = useAdminActions();
+    const { updateModel, uploadAsset, isPending } = useAdminActions();
 
-    const model = models?.find((m: any) => m.id === id);
+    const model = models?.data?.find((m: any) => m.id === id);
 
-    const handleSave = async (data: any, file?: File) => {
+    const handleSave = async (data: any, files: File[]) => {
         try {
-            const updateData = { ...data };
+            // 1. Upload new images
+            const uploadedUrls: string[] = [];
+            for (const file of files) {
+                const url = await uploadAsset({ file, type: 'image' as any });
+                uploadedUrls.push(url);
+            }
+
+            // 2. Prepare update data
+            const updateData = {
+                ...data,
+                images: [...(data.images || []), ...uploadedUrls]
+            };
+
             if (updateData.voiceId === "none") {
                 updateData.voiceId = null;
             }
 
             // Update uses JSON with PATCH
-            await updateModel({ id, data: { ...updateData, image: file || undefined } });
+            await updateModel({ id, data: updateData });
             router.push("/admin/models");
         } catch (error) {
             console.error("Failed to update model:", error);

@@ -28,7 +28,8 @@ import { cn } from "@/src/lib/utils";
 
 export default function AdminModelsPage() {
     const router = useRouter();
-    const { data: models, isLoading } = useAdminModels();
+    const [search, setSearch] = useState("");
+    const { data: models, isLoading } = useAdminModels({ search });
     const { deleteModel, isPending } = useAdminActions();
 
     const [modelToDelete, setModelToDelete] = useState<any>(null);
@@ -42,13 +43,25 @@ export default function AdminModelsPage() {
                     <p className="text-zinc-500 dark:text-zinc-400 mt-2 font-medium">Gérez la bibliothèque de modèles prédéfinis pour la génération de vidéos.</p>
                 </div>
 
-                <Button
-                    className="bg-black hover:bg-zinc-800 text-white rounded-[20px] font-black gap-2 h-12 px-8 shadow-xl"
-                    onClick={() => router.push("/admin/models/new")}
-                >
-                    <Plus className="h-5 w-5" />
-                    Créer un Modèle
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <div className="relative w-full sm:w-80">
+                        <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder="Rechercher un modèle..."
+                            className="w-full pl-11 pr-4 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border-none focus:ring-2 ring-black font-medium text-sm transition-all"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        className="bg-black hover:bg-zinc-800 text-white rounded-[20px] font-black gap-2 h-12 px-8 shadow-xl w-full sm:w-auto"
+                        onClick={() => router.push("/admin/models/new")}
+                    >
+                        <Plus className="h-5 w-5" />
+                        Créer un Modèle
+                    </Button>
+                </div>
             </div>
 
             {/* Model List */}
@@ -56,7 +69,7 @@ export default function AdminModelsPage() {
                 {isLoading ? (
                     Array(8).fill(0).map((_, i) => <Skeleton key={i} className="aspect-square rounded-[32px]" />)
                 ) : (
-                    models?.map((model) => (
+                    models?.data?.map((model: any) => (
                         <Card
                             key={model.id}
                             className="group border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 rounded-[32px] overflow-hidden transition-all duration-300 hover:ring-2 ring-black cursor-pointer"
@@ -64,7 +77,7 @@ export default function AdminModelsPage() {
                         >
                             <CardContent className="p-0 relative aspect-square">
                                 <img
-                                    src={model.imageUrl}
+                                    src={model.images?.[0]}
                                     alt={model.name}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
@@ -93,7 +106,7 @@ export default function AdminModelsPage() {
                                             )}
                                         </div>
                                         <Badge variant="secondary" className="bg-white/10 backdrop-blur-md text-white border-none text-[10px] font-black uppercase tracking-widest px-2 py-0">
-                                            {model.isStandard ? "Standard" : "Perso"}
+                                            {model.gender} • {model.age}
                                         </Badge>
                                     </div>
                                     <div className="h-10 w-10 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-900 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-lg scale-90 group-hover:scale-100">
@@ -106,7 +119,7 @@ export default function AdminModelsPage() {
                 )}
             </div>
 
-            {!isLoading && models?.length === 0 && (
+            {!isLoading && (models?.data?.length === 0 || !models?.data) && (
                 <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 rounded-[40px] border-2 border-dashed border-zinc-100 dark:border-zinc-800 shadow-sm">
                     <UserSquare2 className="h-16 w-16 text-zinc-200 mb-6" />
                     <h3 className="text-xl font-black tracking-tight mb-2">Aucun modèle trouvé</h3>

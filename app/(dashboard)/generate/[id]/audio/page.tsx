@@ -339,26 +339,27 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                 </Card>
 
                                 {/* Character Casting (Specific Voices) */}
-                                {activeVideo?.script?.characterSheets && activeVideo.script.characterSheets.length > 0 && (
-                                    <Card className="p-5 bg-white/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-                                        <div className="flex items-center gap-3 mb-5">
-                                            <div className="h-10 w-10 rounded-full bg-zinc-900 dark:bg-zinc-50 flex items-center justify-center text-zinc-50 dark:text-zinc-900">
-                                                <Play className="h-5 w-5" />
+                                {activeVideo?.script?.characterSheets && activeVideo.script.characterSheets.length > 0 &&
+                                    !(activeVideo.script.characterSheets.length === 1 && activeVideo.options?.baseImages?.length > 0) && (
+                                        <Card className="p-5 bg-white/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
+                                            <div className="flex items-center gap-3 mb-5">
+                                                <div className="h-10 w-10 rounded-full bg-zinc-900 dark:bg-zinc-50 flex items-center justify-center text-zinc-50 dark:text-zinc-900">
+                                                    <Play className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold">Casting & Voix des Personnages</h3>
+                                                    <p className="text-xs text-zinc-500">Assignez une voix à chaque rôle spécifique</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold">Casting & Voix des Personnages</h3>
-                                                <p className="text-xs text-zinc-500">Assignez une voix à chaque rôle spécifique</p>
-                                            </div>
-                                        </div>
 
-                                        <CharacterCasting
-                                            characters={activeVideo.script.characterSheets}
-                                            availableModels={availableModels}
-                                            onCastChange={onCastChange}
-                                            onGenerate={handleGenerateCharacter}
-                                        />
-                                    </Card>
-                                )}
+                                            <CharacterCasting
+                                                characters={activeVideo.script.characterSheets}
+                                                availableModels={availableModels}
+                                                onCastChange={onCastChange}
+                                                onGenerate={handleGenerateCharacter}
+                                            />
+                                        </Card>
+                                    )}
                             </div>
 
                             {/* Music panel */}

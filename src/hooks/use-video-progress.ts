@@ -4,7 +4,7 @@ export interface ProgressState {
     progress: number;
     message: string;
     step: string;
-    status: "queued" | "processing" | "completed" | "failed" | "cancelled" | "narration_generated" | "scenes_generated";
+    status: "draft" | "queued" | "processing" | "completed" | "failed" | "cancelled" | "narration_generated" | "scenes_generated";
     videoId?: string;
     videoUrl?: string;
     thumbnailUrl?: string;
@@ -12,6 +12,7 @@ export interface ProgressState {
     lastSceneIndex?: number;
     currentSceneIndex?: number;
     error?: string;
+    promptsUrl?: string;
 }
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
@@ -51,7 +52,6 @@ export function useVideoProgress(jobId?: string) {
             if (explicitlyClosed) return;
 
             console.log(`[SSE] Connecting to job: ${jobId} (Attempt: ${retryCount})`);
-            // Using withCredentials for auth session cookies
             eventSource = new EventSource(`${BASE_URL}/v1/videos/jobs/${jobId}/stream`, {
                 withCredentials: true,
             });
@@ -59,7 +59,7 @@ export function useVideoProgress(jobId?: string) {
             eventSource.addEventListener("connected", (event: any) => {
                 const data = JSON.parse(event.data);
                 console.log("[SSE] Connected:", data);
-                retryCount = 0; // Reset retry count on successful connection
+                retryCount = 0;
                 setIsReconnecting(false);
                 setRetryCountState(0);
                 setState((prev) => ({ ...prev, status: data.status, progress: data.progress || 0 }));
@@ -67,10 +67,6 @@ export function useVideoProgress(jobId?: string) {
 
             eventSource.addEventListener("progress", (event: any) => {
                 const data = JSON.parse(event.data);
-                console.log("[SSE] Progress:", data);
-
-                // Robust key handling for scene indices
-                // If a scene object is present, it's a new generated scene
                 const msgCurrentIdx = data.currentSceneIndex !== undefined ? data.currentSceneIndex : data.sceneIndex;
 
                 setState((prev) => {
@@ -85,21 +81,16 @@ export function useVideoProgress(jobId?: string) {
                         step: data.step || prev.step,
                         status: data.status || prev.status,
                         videoId: data.videoId || prev.videoId,
-                        // Persistence: only update scene info if a new one arrives
                         lastScene: isNewScene ? data.scene : prev.lastScene,
                         lastSceneIndex: lastIdx,
                         currentSceneIndex: msgCurrentIdx !== undefined ? msgCurrentIdx : prev.currentSceneIndex,
+                        promptsUrl: data.promptsUrl || prev.promptsUrl,
                     };
                 });
             });
 
-            eventSource.addEventListener("ping", () => {
-                // Silently ignore keep-alive heartbeats to prevent idle timeout
-            });
-
             eventSource.addEventListener("completed", (event: any) => {
                 const data = JSON.parse(event.data);
-                console.log("[SSE] Completed:", data);
                 setState((prev) => ({
                     ...prev,
                     progress: 100,
@@ -115,12 +106,9 @@ export function useVideoProgress(jobId?: string) {
             });
 
             eventSource.addEventListener("error", (event: any) => {
-                // SSE errors are often actually completion or failure data in this specific API design
-                // But it can also be a network failure event without data
                 if (event.data) {
                     try {
                         const data = JSON.parse(event.data);
-                        console.error("[SSE] Error Data:", data);
                         setState((prev) => ({
                             ...prev,
                             status: "failed",
@@ -134,23 +122,15 @@ export function useVideoProgress(jobId?: string) {
                             eventSource?.close();
                             return;
                         }
-                    } catch {
-                        // ignored json parsing error
-                    }
+                    } catch { }
                 }
 
-                // If it's a network-level error or retryable application error
-                console.error("[SSE] Connection Error or Drop");
                 eventSource?.close();
-
                 if (!explicitlyClosed) {
                     retryCount++;
                     setRetryCountState(retryCount);
                     setIsReconnecting(true);
-
-                    // Exponential backoff: starting at 2s, 4s, 8s, up to strictly 30s
                     const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
-                    console.log(`[SSE] Attempting to reconnect in ${delay / 1000}s...`);
                     reconnectTimeout = setTimeout(connect, delay);
                 }
             });
@@ -158,12 +138,9 @@ export function useVideoProgress(jobId?: string) {
 
         connect();
 
-        // Mobile / Background Tab asleep recovery
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible" && !explicitlyClosed) {
-                // Browsers often silently disconnect SSE when tab goes to background / sleep
                 if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
-                    console.log("[SSE] Tab became visible, connection appears closed. Forcing reconnection...");
                     if (reconnectTimeout) clearTimeout(reconnectTimeout);
                     connect();
                 }
@@ -175,12 +152,8 @@ export function useVideoProgress(jobId?: string) {
         return () => {
             explicitlyClosed = true;
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            if (eventSource) {
-                eventSource.close();
-            }
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-            }
+            if (eventSource) eventSource.close();
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
         };
     }, [jobId]);
 
@@ -196,5 +169,75 @@ export function useVideoProgress(jobId?: string) {
         setRetryCountState(0);
     }, []);
 
-    return { ...state, isFinished, isReconnecting, retryCount: retryCountState, reset };
+    const cancelVideo = useCallback(async (videoId: string) => {
+        if (!videoId) return;
+        try {
+            const response = await fetch(`${BASE_URL}/v1/videos/${videoId}/cancel`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            if (response.ok) {
+                setState((prev) => ({ ...prev, status: "draft", message: "Generation cancelled by user, saved as draft." }));
+                setIsFinished(true);
+            }
+        } catch (error) {
+            console.error("Failed to cancel video:", error);
+        }
+    }, [jobId]);
+
+    const restartVideo = useCallback(async (videoId: string) => {
+        if (!videoId) return;
+        try {
+            const response = await fetch(`${BASE_URL}/v1/videos/${videoId}/restart`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.info("Pipeline restarted with new JobID:", data.jobId);
+                return data.jobId;
+            }
+        } catch (error) {
+            console.error("Failed to restart video:", error);
+        }
+    }, [jobId]);
+
+    const rescriptVideo = useCallback(async (videoId: string) => {
+        if (!videoId) return;
+        try {
+            const response = await fetch(`${BASE_URL}/v1/videos/${videoId}/rescript`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.info("Pipeline rescripted with new JobID:", data.jobId);
+                return data.jobId;
+            }
+        } catch (error) {
+            console.error("Failed to rescript video:", error);
+        }
+    }, [jobId]);
+
+    const insertScene = useCallback(async (videoId: string, index: number, narration: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/v1/videos/${videoId}/scenes/insert`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ index, narration }),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.script;
+            }
+        } catch (error) {
+            console.error("Failed to insert scene:", error);
+        }
+    }, []);
+
+    return { ...state, isFinished, isReconnecting, retryCount: retryCountState, reset, cancelVideo, restartVideo, rescriptVideo, insertScene };
 }
