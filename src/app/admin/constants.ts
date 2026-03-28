@@ -16,7 +16,7 @@ export const DEFAULT_SPEC = {
     "rules": [
         // ─── Pacing & Duration ──────────────────────────────────────────────
         "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
-        "Aim for 10-12 seconds per scene.",
+        "Aim for 15-18 seconds per scene.",
 
         // ─── Narration Style ────────────────────────────────────────────────
         "Narration MUST be complete, logically coherent sentences. Never cut mid-sentence — rewrite long sentences into shorter ones.",
@@ -138,7 +138,6 @@ export const DEFAULT_SPEC = {
                     narration: 'String (verbatim slice of fullNarration)',
                     summary: 'String — visual summary',
                     preset: 'hook | reveal | mirror',
-                    visualReferenceId: 'String (CRITICAL for cost optimization: the id of a previous scene to reuse its image, or null if new)',
                     locationId: 'String (optional: unique location identifier, e.g. "office")',
                     cameraAction: 'String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.',
                     imagePrompt: "A symbolic visual perfectly representing the scene's core idea. Detailed text-to-image prompt.",
