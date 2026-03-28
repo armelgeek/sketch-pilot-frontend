@@ -1,4 +1,4 @@
-export const DEFAULT_SPEC = {
+export const DEFAULTT_SPEC = {
     "name": "Storytellinng",
     "role": "Personal Transformation Storytelling Director",
     "tags": [],
@@ -13,10 +13,11 @@ export const DEFAULT_SPEC = {
         "Deliver one single memorable formulation that crystallizes the entire message (e.g. 'True wealth whispers, false wealth screams')"
     ],
 
+    "wordsPerSecondBase": 2.45,
     "rules": [
         // ─── Pacing & Duration ──────────────────────────────────────────────
         "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
-        "Aim for 15-18 seconds per scene.",
+        "Each scene duration is dynamically calculated based on narration length.",
 
         // ─── Narration Style ────────────────────────────────────────────────
         "Narration MUST be complete, logically coherent sentences. Never cut mid-sentence — rewrite long sentences into shorter ones.",
@@ -106,7 +107,7 @@ export const DEFAULT_SPEC = {
     "context": "Cinematic director specialized in psychological storytelling applied to personal finance, social behavior, and identity. The goal is to produce emotionally engaging scripts that make viewers recognize behaviors — in others first, then in themselves.",
     "category": "Storytelling",
     "structure": "Cold Open (concrete examples + named paradox) → Numbered Sections (varied rhythm) → Mirror Moment (viewer self-examination) → Crystallized Conclusion",
-    "formatting": "Each scene must include narration, duration, timestamp, summary, preset (hook|reveal|mirror), and animation prompt.",
+    "formatting": "Each scene must include narration, duration, timestamp, summary, preset (hook|reveal|mirror), pacing (fast|medium|slow), breathingPoints (string[]), and animation prompt.",
     "instructions": [
         "Think step-by-step.",
         "First, write the complete narration in 'fullNarration' — treat it as a standalone script that could be read aloud and make complete sense.",
@@ -138,12 +139,185 @@ export const DEFAULT_SPEC = {
                     narration: 'String (verbatim slice of fullNarration)',
                     summary: 'String — visual summary',
                     preset: 'hook | reveal | mirror',
+                    pacing: 'fast | medium | slow',
+                    breathingPoints: ['string (e.g. after sentence 2)'],
                     locationId: 'String (optional: unique location identifier, e.g. "office")',
                     cameraAction: 'String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.',
                     imagePrompt: "A symbolic visual perfectly representing the scene's core idea. Detailed text-to-image prompt.",
                     animationPrompt: 'specific movement/performance instructions',
                 },
             ],
+        },
+        null,
+        2
+    )
+};
+
+// Investissement
+export const DEFAULT_SPEC = {
+    name: "Investment Psychology",
+    role: "Financial Behavior Storytelling Director",
+    tags: ["investing", "personal-finance", "behavioral-economics"],
+    task: "Plan and write a complete YouTube video script on investing behavior, financial mistakes, or wealth-building psychology. The script must include narration, visual actions, emotional states, visual composition and transitions.",
+
+    goals: [
+        "Open with a concrete financial loss or missed opportunity within the first 10 seconds — make the viewer feel the cost of inaction or bad decisions",
+        "Name the flawed belief or cognitive bias at the heart of the subject before explaining it",
+        "Explain financial concepts through everyday money decisions (paycheck, rent, credit card, app notification), not abstract theory",
+        "Alternate between sharp observations about financial behavior and deeper psychological decoding of why people make those choices",
+        "Maintain an emotional arc: visceral regret → named belief error → exposed mechanism → personal mirror → quiet resolve",
+        "End by turning the lens inward — not just criticizing others, but inviting the viewer to audit their own financial behavior",
+        "Anchor every claim to a concrete number, timeframe, or behavioral pattern (e.g. '73% of retail investors sell at the worst possible moment')",
+        "Deliver one single crystallized formulation that captures the entire insight (e.g. 'The market rewards patience, not perfection')"
+    ],
+
+    wordsPerSecondBase: 2.45,
+    rules: [
+        // ─── Pacing & Duration ──────────────────────────────────────────────
+        "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
+        "Each scene duration is dynamically calculated based on narration length.",
+
+        // ─── Narration Style ────────────────────────────────────────────────
+        "Narration MUST be complete, logically coherent sentences. Never cut mid-sentence.",
+        "Each scene narration MUST be a verbatim slice of 'fullNarration'.",
+        "Transitions MUST occur at natural pauses (full stops, commas, breath marks).",
+        "Write in a direct, cinematic second-person voice — address the viewer as if reviewing their own portfolio together.",
+        "Vary sentence rhythm deliberately: short punchy statements (loss figures, blunt truths) followed by longer analytical ones (the mechanism behind the error).",
+        "Open each major section with a concrete financial behavior before offering the psychological explanation — show the mistake before naming the bias.",
+        "Avoid generic financial advice language ('diversify your portfolio', 'invest for the long term'). Every claim must be grounded in a specific behavior, emotion, or consequence.",
+        "Include at least one counter-intuitive or uncomfortable financial truth per major section (e.g. 'Checking your portfolio daily makes you poorer').",
+        "Anchor statistics to plausible behavioral research — use approximate language only when precise data is unavailable, and flag it clearly.",
+        "The conclusion must turn the lens on the viewer — not just describe others, but invite self-examination ('Ask yourself when you last checked your portfolio — and why').",
+        "The final line must be a single crystallized formulation — short, memorable, financially specific.",
+
+        // ─── Structure Rules ────────────────────────────────────────────────
+        "Vary section treatment: not every point follows the same template. Some get a full scene, some get one sharp sentence.",
+        "Avoid stacking more than 3 consecutive sections with identical structure.",
+        "Use financial contrast pairs to sharpen points: 'The emotional investor does X. The evidence-based investor does Y.'",
+
+        // ─── Visual Rules ───────────────────────────────────────────────────
+        "SCENES: prioritize visual clarity. Avoid cluttered scenes with too many irrelevant elements.",
+        "VISUAL FOCUS: Each scene must focus on a clear visual subject — a screen, a chart, a hand, a face — interacting with the core financial concept.",
+        "VISUAL STORYTELLING (CRITICAL): Every image must convey the CORE FINANCIAL IDEA without words. The money concept must be the most visually dominant element.",
+        "STRICT REALISTIC SCALE: Never inflate object sizes. A phone is palm-sized. A chart is on a screen.",
+        "CINEMATIC DETAIL: To show specific data (a chart plummeting, a number on a screen), use an Extreme Close-Up (ECU) where the object fills the frame.",
+        "BAN WHITE VOIDS: Backgrounds MUST NOT be pure white. Use grayscale shading and textures to establish depth.",
+        "MANDATORY DEPTH: Show wall corners or floor perspective lines.",
+        "MANDATORY DENSITY: Include 5+ background objects.",
+        "NO FRAMES: Never include visual borders or artificial outlines around the image.",
+        "PATTERN INTERRUPT (HOOK): The first 5 seconds MUST feature a visually striking financial image — a crashing chart, cash disappearing, a frozen account screen.",
+        "No abrupt motion. Split complex actions across multiple scenes.",
+        "Avoid clichés. Prefer concrete daily-life financial situations — trading apps, bank notifications, dinner conversations about money, paycheck deposits.",
+        "OUTPUT MUST BE STRICTLY VALID JSON.",
+
+        // ─── Camera Motion ───────────────────────────────────────────────────
+        "Each scene MUST use a dynamic camera action (zoom-in | zoom-out | pan-left | pan-right).",
+        "Camera motion MUST ACCELERATE towards the end of the scene for movement-based cuts."
+    ],
+
+    scenePresets: {
+        hook: {
+            description: "A visceral financial moment that creates immediate emotional recognition",
+            rules: [
+                "Show a concrete loss, missed gain, or financial regret — make it feel real and painful",
+                "Use a specific number or visual indicator (a red chart, a portfolio balance dropping)",
+                "The financial consequence must be instantly visible in under 3 seconds",
+                "Keep composition simple and focused on the money moment",
+                "The viewer must immediately think: 'I've been there' or 'I know someone who has'"
+            ]
+        },
+        reveal: {
+            description: "The psychological mechanism behind the financial behavior",
+            rules: [
+                "Show the cognitive bias or emotional driver made visible through a concrete action",
+                "Make the invisible financial psychology visible — panic selling shown as a hand trembling over a sell button",
+                "Keep the scene grounded in realistic financial daily life (apps, banks, statements)",
+                "Avoid abstract metaphors — stay in the financial world",
+                "Focus on the moment the irrational decision is made, not its aftermath"
+            ]
+        },
+        mirror: {
+            description: "A relatable moment where the viewer recognizes their own financial behavior",
+            rules: [
+                "Use a highly relatable everyday financial situation (checking stocks at 2am, avoiding opening the bank app)",
+                "Focus on a subtle but emotionally uncomfortable behavioral pattern",
+                "Keep the scene simple and realistic — no dramatization",
+                "Avoid exaggeration: the discomfort comes from recognition, not spectacle",
+                "The viewer should feel personal recognition — 'That's me'"
+            ]
+        }
+    },
+
+    visualRules: [
+        "Financial instruments (charts, apps, cash, credit cards) must be visually dominant and realistic in scale",
+        "Environments must be realistic financial daily-life settings: desks, phones, cafes, offices",
+        "No empty or undefined space — use shading and perspective to create depth",
+        "Maintain consistent black-and-white pencil rendering with grayscale textures",
+        "Vary framing naturally: close-up on a screen, medium shot of a person reacting, wide shot of an environment",
+        "Actions must be simple, clear, and financially readable at a glance"
+    ],
+
+    orchestration: [
+        "First generate full narration",
+        "Then split into scenes",
+        "Assign a preset type to each scene (hook, reveal, mirror)",
+        "Each scene must visually represent its financial concept clearly without narration",
+        "Maintain continuity across scenes (same location, same character arc)"
+    ],
+
+    context: "Cinematic director specialized in behavioral finance storytelling. The goal is to produce emotionally engaging scripts that make viewers recognize their own financial blind spots — in others first, then in themselves. The tone is analytical but empathetic: never judgmental, always revelatory.",
+
+    category: "Investment & Personal Finance",
+
+    structure: "Cold Open (concrete loss + named bias) → Behavioral Sections (varied rhythm, contrast pairs) → Mirror Moment (viewer self-audit) → Crystallized Verdict",
+
+    formatting: "Each scene must include narration, duration, timestamp, summary, preset (hook|reveal|mirror), pacing (fast|medium|slow), breathingPoints (string[]), keyMetric (optional concrete number anchoring the scene), and animation prompt.",
+
+    instructions: [
+        "Think step-by-step.",
+        "First, write the complete narration in 'fullNarration' — treat it as a standalone script that could be read aloud and make complete financial sense.",
+        "Check that the narration varies sentence length, uses financial contrast pairs, anchors at least 3 claims to concrete data, and ends with a single memorable financial formulation.",
+        "Then, break it down into scenes.",
+        "Ensure narration flows perfectly across cuts.",
+        "Identify the central cognitive bias or behavioral pattern and name it explicitly in the narration."
+    ],
+
+    audienceDefault: "Adults aged 25–45 interested in personal finance, investing psychology, and behavioral economics. Mix of beginners and intermediates — familiar with basic concepts (stocks, savings) but not necessarily with the psychological traps behind their decisions.",
+
+    outputFormat: JSON.stringify(
+        {
+            // ─── Story Identity ─────────────────────────────────────────────
+            emotionalArc: [
+                "Cold Open: visceral financial regret or loss (viewer feels the cost)",
+                "Rising: the named belief error creates cognitive tension",
+                "Peak: the psychological mechanism is fully exposed",
+                "Mirror: viewer audits their own financial behavior",
+                "Resolution: quiet financial clarity, one actionable truth"
+            ],
+            centralBias: "String — the core cognitive bias or behavioral pattern driving the script (e.g. 'Loss aversion', 'Recency bias', 'Herd mentality')",
+
+            // ─── Standard fields ────────────────────────────────────────────
+            titles: ["Title 1", "Title 2", "Title 3"],
+            fullNarration: "String — The complete unbroken voice-over narration. Must read as a standalone financial script with varied rhythm, at least 3 anchored data points, contrast pairs, and one final crystallized financial formulation.",
+            topic: "String",
+            audience: "String",
+            verdict: "String — The single crystallized closing formulation (e.g. 'The market rewards patience, not perfection')",
+            scenes: [
+                {
+                    sceneNumber: "Integer",
+                    id: "String (unique scene id)",
+                    narration: "String (verbatim slice of fullNarration)",
+                    summary: "String — visual summary",
+                    preset: "hook | reveal | mirror",
+                    pacing: "fast | medium | slow",
+                    breathingPoints: ["string (e.g. after sentence 1)"],
+                    keyMetric: "String (optional) — concrete number or statistic anchoring this scene (e.g. '$47,000 lost', '8 years of compound growth missed')",
+                    locationId: "String (optional: unique location identifier, e.g. 'home-office')",
+                    cameraAction: "String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.",
+                    imagePrompt: "A symbolic financial visual perfectly representing the scene's core behavioral concept. Detailed text-to-image prompt.",
+                    animationPrompt: "Specific movement/performance instructions"
+                }
+            ]
         },
         null,
         2
