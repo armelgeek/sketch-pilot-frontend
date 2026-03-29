@@ -32,7 +32,7 @@ export interface VideoGenerationOptions {
     videoGenre?: 'educational' | 'fun' | 'business' | 'lifestyle' | string;
     language?: string;
     style?: 'sketch' | 'cartoon' | 'realistic' | 'minimal' | string;
-    maxDuration?: number;
+    duration?: number;
     aspectRatio?: '16:9' | '9:16' | '1:1';
     kokoroVoicePreset?: string;
     musicVolume?: number;

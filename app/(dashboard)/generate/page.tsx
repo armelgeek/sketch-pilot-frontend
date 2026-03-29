@@ -32,7 +32,7 @@ export default function GenerateContentPage() {
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedMusicId, setSelectedMusicId] = useState<string>('none')
-  const [duration, setDuration] = useState<string>("30");
+  const [duration, setDuration] = useState<string>("60");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
   const [language, setLanguage] = useState<string>("fr-FR");
   const [style, setStyle] = useState<string>("storytelling");
@@ -83,7 +83,7 @@ export default function GenerateContentPage() {
       const selectedPrompt = prompts.find(p => p.id === selectedPromptId);
       const options: any = {
         promptId: selectedPromptId,
-        maxDuration: parseInt(duration, 10),
+        duration: parseInt(duration, 10),
         aspectRatio,
         language,
         style,

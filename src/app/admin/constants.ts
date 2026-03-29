@@ -1,4 +1,4 @@
-export const DEFAULTT_SPEC = {
+export const DEFAULT_SPEC = {
     "name": "Storytellinng",
     "role": "Personal Transformation Storytelling Director",
     "tags": [],
@@ -115,46 +115,11 @@ export const DEFAULTT_SPEC = {
         "Then, break it down into scenes.",
         "Ensure narration flows perfectly across cuts."
     ],
-    audienceDefault: "General audience interested in psychology, social dynamics, and personal finance",
-    outputFormat: JSON.stringify(
-        {
-            // ─── Story Identity ────────────────────────────────────────────────
-            emotionalArc: [
-                'Cold Open: immediate recognition (viewer sees someone they know)',
-                'Rising: named paradox creates tension',
-                'Peak: psychological root exposed',
-                'Mirror: viewer sees themselves',
-                'Resolution: quiet, crystallized clarity'
-            ],
-
-            // ─── Standard fields ───────────────────────────────────────────────
-            titles: ['Title 1', 'Title 2', 'Title 3'],
-            fullNarration: 'String - The complete unbroken voice-over narration. Must read as a standalone script with varied rhythm, contrast pairs, and one final crystallized line.',
-            topic: 'String',
-            audience: 'String',
-            scenes: [
-                {
-                    sceneNumber: 'Integer',
-                    id: 'String (unique scene id)',
-                    narration: 'String (verbatim slice of fullNarration)',
-                    summary: 'String — visual summary',
-                    preset: 'hook | reveal | mirror',
-                    pacing: 'fast | medium | slow',
-                    breathingPoints: ['string (e.g. after sentence 2)'],
-                    locationId: 'String (optional: unique location identifier, e.g. "office")',
-                    cameraAction: 'String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.',
-                    imagePrompt: "A symbolic visual perfectly representing the scene's core idea. Detailed text-to-image prompt.",
-                    animationPrompt: 'specific movement/performance instructions',
-                },
-            ],
-        },
-        null,
-        2
-    )
+    audienceDefault: "General audience interested in psychology, social dynamics, and personal finance"
 };
 
 // Investissement
-export const DEFAULT_SPEC = {
+export const DEFAULT_INVEST_SPEC = {
     name: "Investment Psychology",
     role: "Financial Behavior Storytelling Director",
     tags: ["investing", "personal-finance", "behavioral-economics"],
@@ -282,44 +247,5 @@ export const DEFAULT_SPEC = {
         "Identify the central cognitive bias or behavioral pattern and name it explicitly in the narration."
     ],
 
-    audienceDefault: "Adults aged 25–45 interested in personal finance, investing psychology, and behavioral economics. Mix of beginners and intermediates — familiar with basic concepts (stocks, savings) but not necessarily with the psychological traps behind their decisions.",
-
-    outputFormat: JSON.stringify(
-        {
-            // ─── Story Identity ─────────────────────────────────────────────
-            emotionalArc: [
-                "Cold Open: visceral financial regret or loss (viewer feels the cost)",
-                "Rising: the named belief error creates cognitive tension",
-                "Peak: the psychological mechanism is fully exposed",
-                "Mirror: viewer audits their own financial behavior",
-                "Resolution: quiet financial clarity, one actionable truth"
-            ],
-            centralBias: "String — the core cognitive bias or behavioral pattern driving the script (e.g. 'Loss aversion', 'Recency bias', 'Herd mentality')",
-
-            // ─── Standard fields ────────────────────────────────────────────
-            titles: ["Title 1", "Title 2", "Title 3"],
-            fullNarration: "String — The complete unbroken voice-over narration. Must read as a standalone financial script with varied rhythm, at least 3 anchored data points, contrast pairs, and one final crystallized financial formulation.",
-            topic: "String",
-            audience: "String",
-            verdict: "String — The single crystallized closing formulation (e.g. 'The market rewards patience, not perfection')",
-            scenes: [
-                {
-                    sceneNumber: "Integer",
-                    id: "String (unique scene id)",
-                    narration: "String (verbatim slice of fullNarration)",
-                    summary: "String — visual summary",
-                    preset: "hook | reveal | mirror",
-                    pacing: "fast | medium | slow",
-                    breathingPoints: ["string (e.g. after sentence 1)"],
-                    keyMetric: "String (optional) — concrete number or statistic anchoring this scene (e.g. '$47,000 lost', '8 years of compound growth missed')",
-                    locationId: "String (optional: unique location identifier, e.g. 'home-office')",
-                    cameraAction: "String (zoom-in | zoom-out | pan-left | pan-right). MUST accelerate at the end.",
-                    imagePrompt: "A symbolic financial visual perfectly representing the scene's core behavioral concept. Detailed text-to-image prompt.",
-                    animationPrompt: "Specific movement/performance instructions"
-                }
-            ]
-        },
-        null,
-        2
-    )
+    audienceDefault: "Adults aged 25–45 interested in personal finance, investing psychology, and behavioral economics. Mix of beginners and intermediates — familiar with basic concepts (stocks, savings) but not necessarily with the psychological traps behind their decisions."
 };

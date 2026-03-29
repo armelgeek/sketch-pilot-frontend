@@ -24,7 +24,6 @@ export interface PromptFormData {
     structure: string;
     rules: string[];
     formatting: string;
-    outputFormat: string;
     instructions: string[];
     description?: string;
     category?: string;
@@ -259,15 +258,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Output Format (Figé)</Label>
-                                <div className="bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl p-4 border-none">
-                                    <pre className="text-[10px] font-mono leading-relaxed text-zinc-400 overflow-x-auto">
-                                        {formData.outputFormat ? JSON.stringify(JSON.parse(formData.outputFormat), null, 2) : ""}
-                                    </pre>
-                                </div>
-                                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-tight italic ml-1">Configuré globalement côté serveur.</p>
-                            </div>
+
 
                             <div className="space-y-2">
                                 <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Instructions finales</Label>

@@ -83,7 +83,6 @@ export const videoTypeSpecificationSchema = z.object({
     structure: z.string(),
     rules: z.array(z.string()),
     formatting: z.string(),
-    outputFormat: z.string(),
     instructions: z.array(z.string()),
 });
 
