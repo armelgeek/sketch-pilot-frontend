@@ -69,6 +69,9 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         error: jobError,
         promptsUrl,
         status: jobStatus,
+        previewImageUrl,
+        ffmpegFps,
+        ffmpegTimemark,
         cancelVideo,
         restartVideo,
         rescriptVideo,
@@ -80,6 +83,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
         isFinished: isRepromptFinished,
         error: repromptError
     } = useVideoProgress(repromptJobId);
+
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         videosService.getById(resolvedParams.id)
@@ -102,7 +107,10 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 const firstSceneId = displayScenes[0]?.id || "s1";
                 setSelectedScene(firstSceneId);
             })
-            .catch(err => setError("Failed to load video storyboard."));
+            .catch((err: any) => {
+                console.error('[Storyboard] Failed to load video:', err);
+                setLoadError(err?.message || "Impossible de charger cette vidéo.");
+            });
     }, [resolvedParams.id]);
 
     const handleInsertScene = async () => {
@@ -189,17 +197,21 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
     useEffect(() => {
         if (isFinished && jobId && !jobError) {
-            // Job done: reload video data to show generated images, switch to visuals tab
             videosService.getById(resolvedParams.id).then(updated => {
                 setActiveVideo(updated);
-                setVisualsGenerated(true);
                 setGenerating(false);
-                setStoryboardView("visuals"); // Automatically show generated images
+                if (updated.status === 'scenes_generated' || updated.status === 'completed') {
+                    // Go to audio step before studio
+                    router.push(`/generate/${updated.id}/audio`);
+                } else {
+                    setVisualsGenerated(true);
+                    setStoryboardView("visuals");
+                }
             });
         } else if (isFinished && jobError) {
             setGenerating(false);
         }
-    }, [isFinished, jobId, jobError, resolvedParams.id]);
+    }, [isFinished, jobId, jobError, resolvedParams.id, router]);
 
     const currentProgress = generating ? realProgress : 0;
     const currentMessage = generating ? realMessage : "";
@@ -208,7 +220,29 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
     const isScriptMissing = !activeVideo?.script && !activeVideo?.scenes;
     const showLoadingState = !activeVideo || (generating && isScriptMissing);
 
+    // If video failed to load at all, show an actionable error (not stuck spinner)
+    if (loadError) {
+        return (
+            <div className="mx-auto max-w-7xl px-4 py-24 flex flex-col items-center justify-center gap-6">
+                <div className="h-16 w-16 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                    <XCircle className="h-8 w-8 text-red-500" />
+                </div>
+                <div className="text-center space-y-2">
+                    <h2 className="text-xl font-black">Erreur de chargement</h2>
+                    <p className="text-zinc-500 font-medium text-sm max-w-sm">{loadError}</p>
+                </div>
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => router.back()}>Retour</Button>
+                    <Button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+                        <RefreshCw className="h-4 w-4 mr-2" /> Réessayer
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     if (showLoadingState) {
+        const isScenesReady = activeVideo?.status === 'scenes_generated';
         return (
             <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-500">
                 <div className="h-24 w-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center relative">
@@ -217,19 +251,50 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 </div>
                 <div className="text-center space-y-4 max-w-md">
                     <h2 className="text-2xl font-black tracking-tight">
-                        {activeVideo?.status === "queued" ? "Dans la file d'attente..." : "Génération de votre storyboard..."}
+                        {activeVideo?.status === "queued" ? "Dans la file d'attente..." :
+                            isScenesReady ? "Visuels prêts !" :
+                                "Génération de votre storyboard..."}
                     </h2>
                     <p className="text-zinc-500 font-medium">
-                        {realMessage || "Notre IA concocte vos scènes et vos visuels. Patientez quelques instants."}
+                        {realMessage ||
+                            (isScenesReady ? "Vos scènes ont été générées. Cliquez ci-dessous pour les éditer." :
+                                realProgress === 0 ? "Connexion au moteur de génération..." :
+                                    "Notre IA concocte vos scènes et vos visuels. Patientez quelques instants.")}
                     </p>
                     <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden border border-zinc-200 dark:border-zinc-700/50">
                         <div
-                            className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full transition-all duration-500 ease-out"
-                            style={{ width: `${realProgress}%` }}
+                            className={cn(
+                                "h-full transition-all duration-500 ease-out bg-gradient-to-r from-emerald-500 to-cyan-500",
+                                realProgress === 0 && "animate-pulse"
+                            )}
+                            style={{ width: realProgress > 0 ? `${realProgress}%` : '8%' }}
                         />
                     </div>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{realProgress}% complété</p>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                        {realProgress > 0 ? `${realProgress}% complété` : "Initialisation..."}
+                    </p>
                 </div>
+
+                {/* Escape hatch: if scenes are already generated, let user access the next step */}
+                {(isScenesReady || (activeVideo && ((activeVideo as any).script?.scenes?.length ?? 0) > 0)) && (
+                    <Button
+                        onClick={() => router.push(`/generate/${activeVideo.id}/audio`)}
+                        className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-8 h-11 font-bold shadow-lg shadow-emerald-500/20"
+                    >
+                        Continuer vers Audio <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                )}
+
+                {/* Cancel option for stuck jobs */}
+                {activeVideo && generating && (
+                    <Button
+                        variant="ghost"
+                        onClick={() => cancelVideo(activeVideo.id)}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-sm font-bold"
+                    >
+                        <XCircle className="h-4 w-4 mr-2" /> Annuler la génération
+                    </Button>
+                )}
             </div>
         );
     }
@@ -263,7 +328,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-3">
-                                Étape 2 sur 3
+                                Étape 1 sur 3
                             </div>
                             <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
                                 Storyboard
@@ -308,15 +373,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         <Sparkles className="mr-2 h-4 w-4" /> RE-SCRIPT
                                     </Button>
                                     <Button
-                                        onClick={handleAnimate}
-                                        variant="outline"
-                                        disabled={generating}
-                                        className="px-6 rounded-xl h-11 text-sm"
-                                    >
-                                        <RefreshCw className="mr-2 h-4 w-4" /> Régénérer tout
-                                    </Button>
-                                    <Button
-                                        onClick={() => router.push(`/generate/${resolvedParams.id}/audio`)}
+                                        onClick={() => router.push(`/generate/${activeVideo.id}/audio`)}
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 rounded-xl shadow-lg shadow-emerald-500/20 h-11"
                                     >
                                         Continuer vers Audio <ChevronRight className="ml-2 h-5 w-5" />
@@ -704,12 +761,36 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                             Live Status
                                         </div>
                                         <p className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200">{currentMessage}</p>
+
+                                        {previewImageUrl && (
+                                            <div className="mt-6 flex flex-col items-center animate-in fade-in zoom-in duration-500">
+                                                <div className="relative aspect-video w-64 rounded-xl overflow-hidden border-2 border-emerald-500/30 shadow-2xl">
+                                                    <img src={previewImageUrl} alt="Live Preview" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                                    <div className="absolute bottom-2 left-2 right-2 text-white text-[10px] uppercase font-black tracking-widest text-center shadow-lg">
+                                                        Aperçu de la scène...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {ffmpegFps !== undefined && (
+                                            <div className="flex items-center justify-center gap-4 mt-2">
+                                                <div className="text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
+                                                    FPS: <span className="font-bold text-emerald-600">{ffmpegFps}</span>
+                                                </div>
+                                                <div className="text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
+                                                    ETA: <span className="font-bold text-emerald-600">{ffmpegTimemark}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {jobError && (
                                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-xl text-sm font-medium">
                                                 {jobError}
                                             </div>
                                         )}
-                                        {!jobError && (
+                                        {!jobError && !previewImageUrl && !ffmpegFps && (
                                             <p className="text-zinc-500 font-medium italic">
                                                 Génération des visuels et animations...
                                             </p>

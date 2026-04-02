@@ -22,9 +22,9 @@ export interface PromptFormData {
     task: string;
     goals: string[];
     structure: string;
-    rules: string[];
-    formatting: string;
-    instructions: string[];
+    rules?: string[];
+    formatting?: string;
+    instructions?: string[];
     description?: string;
     category?: string;
     tags?: string[];
@@ -40,6 +40,7 @@ interface PromptFormProps {
 }
 
 export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }: PromptFormProps) {
+    const [showAdvanced, setShowAdvanced] = useState(false);
     const [formData, setFormData] = useState<any>({
         isActive: true,
         ...initialData
@@ -228,58 +229,75 @@ export function PromptForm({ initialData, onSubmit, onCancel, isLoading, title }
                 </div>
 
                 <div className="space-y-8">
-                    {/* --- Section 3: Output --- */}
-                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-[40px] shadow-xl shadow-zinc-200/40 dark:shadow-none border border-zinc-50 dark:border-zinc-800 space-y-8 h-fit lg:sticky lg:top-32">
-                        <div className="flex items-center gap-3 pb-2">
-                            <div className="h-10 w-10 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center">
-                                <Terminal className="w-5 h-5 text-zinc-400" />
+                    {/* --- Section 3: Advanced Options Toggle --- */}
+                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-[40px] shadow-xl shadow-zinc-200/40 dark:shadow-none border border-zinc-50 dark:border-zinc-800 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center">
+                                    <Terminal className="w-5 h-5 text-zinc-400" />
+                                </div>
+                                <h3 className="text-xl font-black tracking-tight">Configuration Avancée</h3>
                             </div>
-                            <h3 className="text-xl font-black tracking-tight">Output & JSON</h3>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-xl font-bold text-xs uppercase tracking-widest text-zinc-400"
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                            >
+                                {showAdvanced ? "Masquer" : "Afficher"}
+                            </Button>
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Task Description</Label>
-                                <Textarea
-                                    placeholder="..."
-                                    className="rounded-2xl min-h-[100px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none"
-                                    value={formData.task || ""}
-                                    onChange={(e) => setFormData({ ...formData, task: e.target.value })}
-                                />
+                        {!showAdvanced && (
+                            <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">
+                                Les règles techniques, le formatage et les instructions JSON sont désormais gérés automatiquement par le moteur backend. Activez le mode avancé pour les surcharger manuellement.
+                            </p>
+                        )}
+
+                        {showAdvanced && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Task Description</Label>
+                                    <Textarea
+                                        placeholder="Description de la tâche LLM..."
+                                        className="rounded-2xl min-h-[100px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none"
+                                        value={formData.task || ""}
+                                        onChange={(e) => setFormData({ ...formData, task: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Formatting Rules</Label>
+                                    <Textarea
+                                        placeholder="Règles de formatage spécifiques..."
+                                        className="rounded-2xl min-h-[100px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none"
+                                        value={formData.formatting || ""}
+                                        onChange={(e) => setFormData({ ...formData, formatting: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Instructions finales</Label>
+                                    <Textarea
+                                        placeholder="Instructions système de fin..."
+                                        className="rounded-2xl min-h-[120px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none text-xs"
+                                        value={Array.isArray(formData.instructions) ? formData.instructions.join('\n') : formData.instructions || ""}
+                                        onChange={(e) => setFormData({ ...formData, instructions: e.target.value.split('\n').filter(Boolean) })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Règles & Contraintes (Rules)</Label>
+                                    <Textarea
+                                        placeholder="Une règle par ligne..."
+                                        className="rounded-2xl min-h-[150px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium leading-relaxed focus-visible:ring-black transition-all resize-none text-xs"
+                                        value={Array.isArray(formData.rules) ? formData.rules.join('\n') : formData.rules || ""}
+                                        onChange={(e) => setFormData({ ...formData, rules: e.target.value.split('\n').filter(Boolean) })}
+                                    />
+                                </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Formatting Rules</Label>
-                                <Textarea
-                                    placeholder="..."
-                                    className="rounded-2xl min-h-[100px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none"
-                                    value={formData.formatting || ""}
-                                    onChange={(e) => setFormData({ ...formData, formatting: e.target.value })}
-                                />
-                            </div>
-
-
-
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Instructions finales</Label>
-                                <Textarea
-                                    placeholder="..."
-                                    className="rounded-2xl min-h-[120px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium focus-visible:ring-black transition-all resize-none text-xs"
-                                    value={Array.isArray(formData.instructions) ? formData.instructions.join('\n') : formData.instructions || ""}
-                                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value.split('\n').filter(Boolean) })}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="font-bold text-zinc-900 dark:text-zinc-100 uppercase text-[10px] tracking-widest ml-1">Règles & Contraintes</Label>
-                                <Textarea
-                                    placeholder="..."
-                                    className="rounded-2xl min-h-[150px] bg-zinc-50 dark:bg-zinc-800/50 border-none p-4 font-medium leading-relaxed focus-visible:ring-black transition-all resize-none text-xs"
-                                    value={Array.isArray(formData.rules) ? formData.rules.join('\n') : formData.rules || ""}
-                                    onChange={(e) => setFormData({ ...formData, rules: e.target.value.split('\n').filter(Boolean) })}
-                                />
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div >

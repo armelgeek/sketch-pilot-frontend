@@ -99,12 +99,33 @@ export default function GenerateContentPage() {
 
       const response = await videosService.generate(script, options);
       setError(null);
-      router.push(`/generate/${response.videoId}/script`);
+
+      if (response.jobId) {
+        setJobId(response.jobId);
+        // We STAY on this page and wait for isFinished via useVideoProgress hook
+      } else if (response.videoId) {
+        // Fallback or explicit videoId returned
+        router.push(`/generate/${response.videoId}/script`);
+      }
     } catch (error: any) {
       setError(error.message || "Failed to start generation");
       setGenerating(false);
     }
   };
+
+  // Handle redirect after async generation is complete
+  useEffect(() => {
+    if (isFinished && generatedVideoId) {
+      router.push(`/generate/${generatedVideoId}/script`);
+    }
+  }, [isFinished, generatedVideoId, router]);
+
+  useEffect(() => {
+    if (jobError) {
+      setError(jobError);
+      setGenerating(false);
+    }
+  }, [jobError]);
 
   const getEstimatedImages = (dur: string) => {
     const d = parseInt(dur, 10);

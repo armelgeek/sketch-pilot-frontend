@@ -26,6 +26,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     const [generating, setGenerating] = useState(false);
     const [jobId, setJobId] = useState<string | undefined>();
     const [error, setError] = useState<string | null>(null);
+    const [hasTriggeredAssemble, setHasTriggeredAssemble] = useState(false);
 
     // Dynamic States
     const [selectedMusicId, setSelectedMusicId] = useState<string>("none");
@@ -60,7 +61,6 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 ]);
                 setActiveVideo(video);
                 setAvailableVoices(voices || []);
-                setAvailableModels(models || []);
                 setMusicTracks(music || []);
 
                 if (video.options?.backgroundMusic) {
@@ -94,42 +94,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
         loadData();
     }, [resolvedParams.id]);
 
-    const onCastChange = async (
-        characterId: string,
-        updates: { modelId?: string; voiceId?: string; referenceImageUrl?: string }
-    ) => {
-        if (!activeVideo || !activeVideo.script) return;
 
-        const newSheets = (activeVideo.script.characterSheets || []).map((sheet) => {
-            if (sheet.id === characterId) {
-                return { ...sheet, ...updates };
-            }
-            return sheet;
-        });
-
-        const updatedVideo = {
-            ...activeVideo,
-            script: {
-                ...activeVideo.script,
-                characterSheets: newSheets
-            }
-        };
-
-        setActiveVideo(updatedVideo);
-        // Persist change
-        await videosService.update(activeVideo.id, { script: updatedVideo.script });
-    };
-
-    const handleGenerateCharacter = async (characterId: string, prompt: string, modelId?: string) => {
-        if (!activeVideo) return "";
-        try {
-            const res = await videosService.generateCharacter(activeVideo.id, characterId, { prompt, modelId });
-            return res.imageUrl;
-        } catch (err: any) {
-            setError(err.message || "Erreur lors de la génération du personnage.");
-            throw err;
-        }
-    };
 
     const handleAssemble = async () => {
         if (!activeVideo) return;
@@ -180,6 +145,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 }
             });
             setJobId(response.jobId);
+            setHasTriggeredAssemble(false); // Reset guard for new generation
             setError(null);
         } catch (error: any) {
             setError(error.message || "Failed to start assembly");
@@ -249,14 +215,18 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     };
 
     useEffect(() => {
-        if (isFinished && jobId && !jobError) {
-            setTimeout(() => {
-                router.push("/videos"); // Or directly to a specific complete page
-            }, 1000);
+        if (isFinished && jobId && !jobError && !hasTriggeredAssemble) {
+            setHasTriggeredAssemble(true); // Set guard immediately
+            const goToResult = async () => {
+                // Small delay to allow DB update to settle
+                await new Promise(resolve => setTimeout(resolve, 800));
+                router.push(`/generate/${resolvedParams.id}/result?jobId=${jobId}`);
+            };
+            goToResult();
         } else if (isFinished && jobError) {
             setGenerating(false);
         }
-    }, [isFinished, jobId, jobError, router]);
+    }, [isFinished, jobId, jobError, router, resolvedParams.id, hasTriggeredAssemble]);
 
     const currentProgress = generating ? realProgress : 0;
     const currentMessage = generating ? realMessage : "";
@@ -285,12 +255,12 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 {!generating && (
                     <div className="text-center space-y-2 mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-3">
-                            Étape 3 sur 3
+                            Étape 2 sur 3
                         </div>
                         <h1 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
                             Vidéo &amp; Audio
                         </h1>
-                        <p className="text-zinc-500 text-lg">Dernier réglages avant la production finale</p>
+                        <p className="text-zinc-500 text-lg">Choisissez vos pistes, puis générez l'audio avant de lancer le rendu final MP4</p>
                     </div>
                 )}
 
@@ -662,7 +632,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                     className="w-full py-6 rounded-2xl border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all font-bold group"
                                 >
                                     <ExternalLink className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                                    Voir la vidéo finale
+                                    Continuer vers l'Éditeur Studio
                                 </Button>
                             )}
 
@@ -683,12 +653,12 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                                 />
                                             ))}
                                         </div>
-                                        ASSEMBLAGE... {realProgress}%
+                                        GÉNÉRATION AUDIO ET TRANSCRIPTION... {realProgress}%
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <Zap className="h-5 w-5 fill-current" />
-                                        GÉNÉRER LA VIDÉO FINALE ({activeVideo?.options?.resolution === '1080p' ? '10 🪙' : '5 🪙'})
+                                        GÉNÉRER L'AUDIO ET CONTINUER
                                     </div>
                                 )}
                             </Button>
@@ -745,7 +715,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                         )}
                                         {!jobError && (
                                             <p className="text-zinc-500 font-medium italic">
-                                                Nous assemblons vos scènes, votre voix off et la musique...
+                                                Nous générons votre voix off et le sous-titrage synchronisé...
                                             </p>
                                         )}
                                     </div>

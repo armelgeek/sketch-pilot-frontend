@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Comfortaa } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/src/components/providers";
 import { UtmCapturer } from "@/src/app/tracking";
+
+const comfortaa = Comfortaa({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-comfortaa",
+});
 
 export const metadata: Metadata = {
   title: "Sketch Pilot — Whiteboard Animation Platform",
@@ -15,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <body className="antialiased font-sans">
+    <html lang="fr" className={comfortaa.variable}>
+      <body className="antialiased font-comfortaa">
         <Providers>
           <UtmCapturer />
           {children}

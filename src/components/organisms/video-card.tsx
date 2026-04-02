@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Play, Pencil, Download, Clock, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Play, Pencil, Download, Clock, Image as ImageIcon, Loader2, Clapperboard } from "lucide-react";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -58,7 +58,7 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                 {video.thumbnailUrl ? (
                     <img
                         src={video.thumbnailUrl}
-                        alt={video.topic}
+                        alt={video.title || video.topic}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                 ) : isProcessing ? (
@@ -108,7 +108,7 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
             <CardContent className="p-6">
                 <div className="flex flex-col gap-1 mb-4">
                     <h3 className="font-black text-lg leading-tight truncate text-zinc-900 dark:text-zinc-100">
-                        {video.topic}
+                        {video.title || video.topic}
                     </h3>
                     <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                         <Clock className="h-3 w-3" />
@@ -118,7 +118,21 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
 
                 {showActions && (
                     <div className="flex gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                        {editPath && (
+                        {/* Studio button for scenes_generated */}
+                        {video.status === "scenes_generated" && (
+                            <Button
+                                size="sm"
+                                className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl h-9"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/studio/${video.id}`);
+                                }}
+                            >
+                                <Clapperboard className="h-3.5 w-3.5 mr-2" />
+                                Studio
+                            </Button>
+                        )}
+                        {video.status !== "scenes_generated" && editPath && (
                             <Button
                                 size="sm"
                                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-9"

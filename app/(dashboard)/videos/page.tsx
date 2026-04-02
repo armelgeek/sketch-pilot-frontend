@@ -33,8 +33,8 @@ export default function VideosPage() {
   }, []);
 
   const filtered = videos.filter((v) => {
-    const topic = (v.topic || "").toLowerCase();
-    const matchSearch = topic.includes(search.toLowerCase());
+    const title = (v.title || v.topic || "").toLowerCase();
+    const matchSearch = title.includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || v.status === statusFilter;
     return matchSearch && matchStatus;
   });

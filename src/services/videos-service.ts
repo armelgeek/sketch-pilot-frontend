@@ -16,12 +16,15 @@ export interface VideoIdea {
 export interface Video {
     id: string;
     topic: string;
+    title?: string;
     status: "draft" | "queued" | "processing" | "scenes_generated" | "narration_generated" | "completed" | "failed" | "cancelled";
     progress: number;
     currentStep?: string;
     jobId?: string;
     videoUrl?: string;
     thumbnailUrl?: string;
+    narrationUrl?: string;
+    captionsUrl?: string;
     script?: VideoScript;
     scenes?: any[];
     options?: any;
@@ -105,8 +108,8 @@ export class VideosService extends BaseService<Video> {
         });
     }
 
-    async generate(topic: string, options: any = {}): Promise<ScriptGenerationResponse> {
-        return this.apiFetch<ScriptGenerationResponse>(`/v1/scripts/generate`, {
+    async generate(topic: string, options: any = {}): Promise<JobResponse> {
+        return this.apiFetch<JobResponse>(`/v1/scripts/generate`, {
             method: "POST",
             body: JSON.stringify({ topic, options }),
         });
@@ -148,6 +151,20 @@ export class VideosService extends BaseService<Video> {
             body: JSON.stringify(data),
         });
         return response.video;
+    }
+
+    async updateScript(id: string, script: VideoScript): Promise<{ success: boolean }> {
+        return this.apiFetch<{ success: boolean }>(`${this.endpoint}/${id}/script`, {
+            method: "PATCH",
+            body: JSON.stringify(script),
+        });
+    }
+
+    async generateAudio(id: string, options: any): Promise<{ success: boolean; jobId: string }> {
+        return this.apiFetch<{ success: boolean; jobId: string }>(`${this.endpoint}/${id}/audio`, {
+            method: "POST",
+            body: JSON.stringify(options),
+        });
     }
 
 }

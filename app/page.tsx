@@ -21,7 +21,7 @@ export default function HomePage() {
   const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
+    <div className="force-light-theme bg-background text-foreground relative flex h-fit flex-col">
       <NavbarPublic />
       <HeroSection isAuthenticated={!!session?.user} />
       <LiveDemoSection />

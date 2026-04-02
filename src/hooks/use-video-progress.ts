@@ -13,6 +13,9 @@ export interface ProgressState {
     currentSceneIndex?: number;
     error?: string;
     promptsUrl?: string;
+    previewImageUrl?: string;
+    ffmpegFps?: number;
+    ffmpegTimemark?: string;
 }
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
@@ -85,6 +88,8 @@ export function useVideoProgress(jobId?: string) {
                         lastSceneIndex: lastIdx,
                         currentSceneIndex: msgCurrentIdx !== undefined ? msgCurrentIdx : prev.currentSceneIndex,
                         promptsUrl: data.promptsUrl || prev.promptsUrl,
+                        ...(data.type === 'scene_preview' && data.imageUrl && { previewImageUrl: data.imageUrl }),
+                        ...(data.type === 'ffmpeg_progress' && { ffmpegFps: data.fps, ffmpegTimemark: data.timemark }),
                     };
                 });
             });

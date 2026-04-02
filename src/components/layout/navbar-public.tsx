@@ -1,157 +1,132 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Menu, X, ArrowRight, LayoutDashboard } from "lucide-react";
-import { cn } from "@/src/lib/utils";
+import Logo from "@/src/components/ui/logo";
+import UserNav from "@/src/components/ui/user-nav";
+import useTheme from '@/src/hooks/useTheme';
+import { Menu, PlusIcon, X, ChevronDown } from "lucide-react";
 import { useSession } from "@/src/lib/auth-client";
+import Link from "next/link";
+import React, { Suspense, useEffect, useState } from 'react';
+import FeedbackDialog from "./FeedbackDialog";
+import { cn } from "@/src/lib/utils";
 
-const navLinks = [
-  { href: "/#features", label: "Fonctionnalités" },
-  { href: "/pricing", label: "Tarifs" },
-];
-
-export function NavbarPublic() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+function Navbar() {
   const { data: session, isPending } = useSession();
+  const status = isPending ? "loading" : session?.user ? "authenticated" : "unauthenticated";
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const themeColor = useTheme();
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-500 flex justify-center",
-        scrolled ? "pt-4 px-4" : "pt-6 px-4"
-      )}
-    >
-      <div
-        className={cn(
-          "flex w-full items-center justify-between transition-all duration-500",
-          scrolled
-            ? "max-w-5xl bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl py-3 px-6 rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
-            : "max-w-7xl bg-transparent py-3 px-6 lg:px-8 border border-transparent rounded-none"
-        )}
-      >
-        <div className="flex items-center gap-8">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 font-black text-xl text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-all active:scale-95">
-            <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 shadow-lg shadow-zinc-500/20">
-              <span className="text-base">✏️</span>
-            </div>
-            <span className="tracking-tighter">Sketch Pilot</span>
-          </Link>
+    <>
+      <header className="bg-background/80 fixed inset-x-0 top-0 z-50 flex w-screen border-b border-zinc-200 backdrop-blur-md" style={{ height: '80px' }}>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 lg:px-8">
+          {/* Logo & Mobile Menu Trigger */}
+          <div className="flex items-center gap-2">
+            <button
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium outline-none transition-all hover:bg-accent hover:text-accent-foreground size-9 md:hidden"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              <Menu className="size-5" />
+              <span className="sr-only">Menu</span>
+            </button>
 
-          {/* Desktop nav links */}
-          <div className="hidden items-center gap-1 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-full px-4 py-2 text-sm font-bold text-zinc-500 transition-all hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-              >
-                {link.label}
+            <Link href="/" className="flex items-center gap-2">
+              <Logo />
+            </Link>
+          </div>
+
+          {/* Desktop Navigation Menu */}
+          <div className="hidden md:flex items-center">
+            <nav className="flex items-center justify-center gap-1">
+              <button className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                Features <ChevronDown className="ml-1 size-3 transition duration-300 group-hover:rotate-180" />
+              </button>
+              <button className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                Solutions <ChevronDown className="ml-1 size-3 transition duration-300 group-hover:rotate-180" />
+              </button>
+              <Link href="#pricing" className="inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                Pricing
               </Link>
-            ))}
+              <Link href="/posts" className="inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                Blog
+              </Link>
+            </nav>
+          </div>
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-4">
+            {status === "authenticated" ? (
+              <>
+                <div className="hidden sm:flex items-center gap-3">
+                  <Link
+                    href="/editor"
+                    className="inline-flex shrink-0 items-center justify-center whitespace-nowrap text-sm font-bold transition-all bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 h-8 rounded-md px-4 active:scale-95 gap-2"
+                  >
+                    <PlusIcon size={14} />
+                    Get started
+                  </Link>
+                </div>
+                <UserNav />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex shrink-0 items-center justify-center whitespace-nowrap text-sm font-bold transition-all  shadow-sm  h-8 rounded-md px-4 active:scale-95"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex shrink-0 items-center justify-center whitespace-nowrap text-sm font-bold transition-all bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 h-8 rounded-md px-4 active:scale-95"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
+      </header>
 
-        {/* Right side Actions */}
-        <div className="hidden items-center gap-4 md:flex">
-          {isPending ? (
-            <div className="h-10 w-24 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-          ) : session ? (
-            <Link
-              href="/dashboard"
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-6 py-2.5 text-sm font-black text-white transition-all hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-xl shadow-zinc-500/10 active:scale-95"
-            >
-              Tableau de bord
-              <LayoutDashboard className="h-4 w-4 opacity-70 group-hover:rotate-12 transition-transform" />
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="rounded-2xl px-5 py-2.5 text-sm font-bold text-zinc-500 transition-all hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-              >
-                Se connecter
-              </Link>
-              <Link
-                href="/register"
-                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2.5 text-sm font-black text-white transition-all hover:bg-emerald-500 shadow-xl shadow-emerald-500/20 active:scale-95"
-              >
-                Commencer gratuitement
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile menu toggle */}
-        <button
-          className="md:hidden flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 transition-all active:scale-90"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {mobileOpen && (
-        <div className="fixed inset-x-4 top-24 rounded-3xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl md:hidden animate-in slide-in-from-top-4 duration-300">
-          <nav className="flex flex-col gap-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-2xl px-5 py-4 text-base font-bold text-zinc-600 transition-all hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900"
+        <div className="fixed inset-0 z-[60] bg-white dark:bg-zinc-950 md:hidden animate-in fade-in duration-200">
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <Logo />
+              <button
                 onClick={() => setMobileOpen(false)}
+                className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
               >
-                {link.label}
-              </Link>
-            ))}
-            <div className="my-4 h-px bg-zinc-100 dark:bg-zinc-800" />
-            <div className="flex flex-col gap-3">
-              {isPending ? (
-                <div className="h-14 w-full animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-              ) : session ? (
-                <Link
-                  href="/dashboard"
-                  className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-zinc-900 px-5 py-4 text-base font-black text-white transition-all active:scale-95"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Tableau de bord
-                  <LayoutDashboard className="h-5 w-5 opacity-70" />
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="rounded-2xl px-5 py-4 text-base font-bold text-zinc-900 dark:text-zinc-50 transition-all border border-zinc-200 dark:border-zinc-800 text-center"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Se connecter
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Commencer gratuitement
-                    <ArrowRight className="h-5 w-5 transition-transform" />
-                  </Link>
-                </>
-              )}
+                <X size={20} />
+              </button>
             </div>
-          </nav>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <nav className="flex flex-col gap-2">
+                <Link href="#features" className="text-lg font-bold p-2 rounded-xl hover:bg-zinc-50" onClick={() => setMobileOpen(false)}>Features</Link>
+                <Link href="#solutions" className="text-lg font-bold p-2 rounded-xl hover:bg-zinc-50" onClick={() => setMobileOpen(false)}>Solutions</Link>
+                <Link href="#pricing" className="text-lg font-bold p-2 rounded-xl hover:bg-zinc-50" onClick={() => setMobileOpen(false)}>Pricing</Link>
+                <Link href="/posts" className="text-lg font-bold p-2 rounded-xl hover:bg-zinc-50" onClick={() => setMobileOpen(false)}>Blog</Link>
+              </nav>
+              <div className="pt-6 border-t space-y-4">
+                {status === "unauthenticated" && (
+                  <>
+                    <Link href="/login" className="block text-center p-4 font-bold rounded-2xl border" onClick={() => setMobileOpen(false)}>Se connecter</Link>
+                    <Link href="/register" className="block text-center p-4 font-bold bg-emerald-600 text-white rounded-2xl" onClick={() => setMobileOpen(false)}>Get Started</Link>
+                  </>
+                )}
+                {status === "authenticated" && (
+                  <Link href="/editor" className="block text-center p-4 font-bold bg-emerald-600 text-white rounded-2xl" onClick={() => setMobileOpen(false)}>Créer un projet</Link>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
+
+export { Navbar as NavbarPublic };
+export default Navbar;

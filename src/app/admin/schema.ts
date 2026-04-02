@@ -81,9 +81,15 @@ export const videoTypeSpecificationSchema = z.object({
     task: z.string(),
     goals: z.array(z.string()),
     structure: z.string(),
-    rules: z.array(z.string()),
-    formatting: z.string(),
-    instructions: z.array(z.string()),
+
+    // Optional high-level metadata
+    category: z.string().optional(),
+
+    // Technical fields now optional
+    rules: z.array(z.string()).optional(),
+    formatting: z.string().optional(),
+    outputFormat: z.string().optional(),
+    instructions: z.array(z.string()).optional(),
 });
 
 export const adminPromptSchema = videoTypeSpecificationSchema.extend({

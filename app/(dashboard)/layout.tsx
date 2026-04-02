@@ -5,17 +5,23 @@ import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "@/src/lib/auth-client";
 import { Navbar } from "@/src/components/layout/navbar";
 import { cn } from "@/src/lib/utils";
+import { useOnboardingStore } from "@/src/app/onboarding/store";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
+  const { completed: onboardingCompleted } = useOnboardingStore();
 
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/login");
+    if (!isPending) {
+      if (!session) {
+        router.push("/login");
+      } else if (!onboardingCompleted && pathname !== "/onboarding") {
+        router.push("/onboarding");
+      }
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, onboardingCompleted, pathname, router]);
 
   if (isPending) {
     return (

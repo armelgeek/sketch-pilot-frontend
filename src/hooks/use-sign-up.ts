@@ -24,7 +24,7 @@ export function useSignUp(options: UseSignUpOptions = {}) {
   const router = useRouter();
   const [error, setError] = useState<AppError | null>(null);
   const [loading, setLoading] = useState(false);
-  const { onSuccess, onError, redirectTo = "/dashboard" } = options;
+  const { onSuccess, onError, redirectTo = "/onboarding" } = options;
 
   const validatePassword = useCallback((password: string): AppError | null => {
     if (password.length < 8) {
@@ -59,15 +59,12 @@ export function useSignUp(options: UseSignUpOptions = {}) {
             name: data.name,
             firstname: data.firstName || "",
             lastname: data.lastName || "",
-            isAdmin: false,
-            role: "user",
-            banned: false,
             utmSource: utmParams.utmSource || "",
             utmMedium: utmParams.utmMedium || "",
             utmCampaign: utmParams.utmCampaign || "",
             utmTerm: utmParams.utmTerm || "",
             utmContent: utmParams.utmContent || "",
-          },
+          } as any,
           {
             onSuccess: async () => {
               setError(null);
@@ -83,7 +80,7 @@ export function useSignUp(options: UseSignUpOptions = {}) {
                   const { error: upgradeError } = await authClient.subscription.upgrade({
                     plan: data.planId,
                     annual: data.billingInterval === "year",
-                    successUrl: `${window.location.origin}/dashboard`,
+                    successUrl: `${window.location.origin}/onboarding`,
                     cancelUrl: `${window.location.origin}/register`,
                     disableRedirect: false,
                   });
