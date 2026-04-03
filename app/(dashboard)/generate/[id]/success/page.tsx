@@ -54,9 +54,7 @@ export default function SuccessPage({ params }: { params: Promise<{ id: string }
             </div>
 
             <div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-                    {video.title || video.topic || "Votre vidéo est prête !"}
-                </h1>
+            
                 <p className="text-sm text-zinc-500 mt-1">
                     Format {video.options?.aspectRatio || "16:9"}{video.script?.totalDuration ? ` · ${Math.round(video.script.totalDuration)}s` : ""}
                 </p>
@@ -67,8 +65,7 @@ export default function SuccessPage({ params }: { params: Promise<{ id: string }
                     <video src={video.videoUrl} controls autoPlay className="w-full h-full object-contain" poster={video.thumbnailUrl} />
                 </div>
                 <CardContent className="p-4 flex items-center justify-between gap-4">
-                    <p className="font-bold text-zinc-900 truncate text-sm">{video.title || video.topic}</p>
-                    <div className="flex gap-2 shrink-0">
+                   <div className="flex gap-2 shrink-0">
                         <Button asChild className="bg-zinc-900 hover:bg-zinc-700 text-white font-bold rounded-xl h-9 px-4 text-sm">
                             <a href={video.videoUrl} download={`video-${video.id}.mp4`}>
                                 <Download className="h-4 w-4 mr-1.5" /> Télécharger

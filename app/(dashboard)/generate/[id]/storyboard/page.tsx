@@ -767,6 +767,19 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
                                             {/* Right panel */}
                                             <div className="flex-1 min-w-0 shrink-0 flex flex-col gap-2.5 min-h-0 overflow-y-auto">
+                                               
+
+                                                {/* Narration */}
+                                                <div className="bg-white border border-zinc-200/80 rounded-xl p-3.5 flex flex-col gap-2">
+                                                    <p className="text-[12px] font-black text-zinc-400 uppercase tracking-widest">
+                                                        Narration
+                                                    </p>
+                                                    <p className="text-sm text-zinc-700 leading-relaxed">
+                                                        {activeScene?.narration || activeScene?.prompt || "Aucune narration disponible"}
+                                                    </p>
+                                                </div>
+
+                                                {/* Prompt Visuel */}
                                                 <div className="bg-white border border-zinc-200/80 rounded-xl p-3.5 flex flex-col gap-3">
                                                     <div>
                                                         <p className="text-[12px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
@@ -885,7 +898,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         );
                                     })}
 
-                                    {/* Add scene button */}
+                                    {/* Add scene button
                                     {!generating && (
                                         <button
                                             onClick={() => { setInsertIndex(displayScenes.length); setIsInserting(true); }}
@@ -895,7 +908,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                             <Plus className="h-4 w-4" />
                                             <span className="text-[9px] font-black uppercase tracking-wider">Scène</span>
                                         </button>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
                         </div>
