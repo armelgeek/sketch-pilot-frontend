@@ -46,8 +46,9 @@ export interface VideoGenerationOptions {
 
 export interface ScriptGenerationResponse {
     topic: string;
+    jobId?: string;
     videoId: string;
-    script: VideoScript;
+    script?: VideoScript;
     metadata: {
         sceneCount: number;
         estimatedDuration: number;

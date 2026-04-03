@@ -99,7 +99,11 @@ export default function GenerateContentPage() {
 
       const response = await videosService.generate(script, options);
       setError(null);
-      router.push(`/generate/${response.videoId}/script`);
+      if (response.jobId) {
+        setJobId(response.jobId);
+      } else {
+        router.push(`/generate/${response.videoId}/script`);
+      }
     } catch (error: any) {
       setError(error.message || "Failed to start generation");
       setGenerating(false);
