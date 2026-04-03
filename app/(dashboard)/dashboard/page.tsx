@@ -14,8 +14,6 @@ import {
   Sparkles,
   UserSquare2,
   Coins,
-  ChevronRight,
-  Home
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
@@ -45,22 +43,15 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-      {/* Breadcrumb / Navigation */}
-      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
-        <Home className="h-4 w-4" />
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-zinc-600 dark:text-zinc-300">Dashboard</span>
-      </div>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Title & Description */}
       <div className="space-y-1">
-        <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-4xl font-black tracking-tight text-zinc-900">
           Dashboard
         </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 font-medium">
-          Overview of {session?.user?.name || "your account"}
+        <p className="text-zinc-500 font-medium">
+          Aperçu de {session?.user?.name || "votre compte"}
         </p>
       </div>
 
