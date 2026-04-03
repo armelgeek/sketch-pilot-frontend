@@ -696,7 +696,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                     <div className="flex justify-center animate-in fade-in zoom-in-95 duration-700">
                         <div className="w-full max-w-2xl px-4 lg:px-0">
                             <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden relative group">
-                                <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
                                 <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8">
                                     {/* High-tech Circular progress */}
                                     <div className="relative h-48 w-48 animate-float">

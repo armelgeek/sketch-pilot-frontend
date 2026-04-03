@@ -732,7 +732,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
             {/* Insertion Dialog/Modal */}
             {isInserting && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <Card className="w-full max-w-lg shadow-none border border-zinc-100 overflow-hidden">
+                    <Card className="w-full max-w-lg shadow-lg border border-zinc-100 overflow-hidden">
                         <CardHeader className="bg-emerald-50/50 border-b border-emerald-100">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Sparkles className="h-5 w-5 text-emerald-500" />
