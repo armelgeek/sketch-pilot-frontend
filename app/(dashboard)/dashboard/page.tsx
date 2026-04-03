@@ -51,7 +51,7 @@ export default function DashboardPage() {
           Dashboard
         </h1>
         <p className="text-zinc-500 font-medium">
-          Overview of {session?.user?.name || "your account"}
+          Aperçu de {session?.user?.name || "votre compte"}
         </p>
       </div>
 

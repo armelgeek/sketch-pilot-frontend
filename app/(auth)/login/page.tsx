@@ -24,7 +24,7 @@ export default function LoginPage() {
       <CardHeader className="text-center pb-4">
         <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-zinc-900 text-white shadow-md text-lg mx-auto mb-3">✏️</div>
         <CardTitle className="text-2xl font-black tracking-tight text-zinc-900">Connexion</CardTitle>
-        <CardDescription className="text-zinc-500 font-medium">Bon retour ! Connectez-vous pour continuer.</CardDescription>
+        <CardDescription className="text-zinc-500 font-medium">Bienvenue ! Connectez-vous pour continuer.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <button
