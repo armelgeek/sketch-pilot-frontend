@@ -10,8 +10,7 @@ import {
   VoiceoverSection,
   ConsistentCharacterSection,
   PricingPreviewSection,
-  FAQSection,
-  FinalCTASection,
+  FAQSection
 } from "@/src/components/home";
 
 export default function HomePage() {

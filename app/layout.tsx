@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="light">
       <body className={`${headingFont.variable} ${bodyFont.variable} font-body antialiased bg-[#FAFAFA] text-zinc-950 selection:bg-[#F59E0B]/20 selection:text-[#F59E0B]`}>
         <Providers>
           <UtmCapturer />

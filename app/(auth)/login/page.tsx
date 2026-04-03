@@ -22,9 +22,8 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-sm mx-4">
       <CardHeader className="text-center">
-        <div className="text-3xl mb-2">✏️</div>
-        <CardTitle className="text-xl">Connexion</CardTitle>
-        <CardDescription>Connectez-vous à votre compte Sketch Pilot</CardDescription>
+        <CardTitle className="text-xl">Sign in to Sketch pilot</CardTitle>
+        <CardDescription>Welcome back! Please sign in to continue</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button variant="outline" className="w-full gap-2" onClick={signInWithGoogle} disabled={loading}>
@@ -92,7 +91,8 @@ export default function LoginPage() {
               disabled={loading}
             />
           </div>
-          <Button className="w-full" type="submit" disabled={loading}>
+          <Button  variant='ghost' className="w-full group inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-600 active:scale-95 no-underline shadow-[0_4px_15px_-3px_rgba(245,158,11,0.4)]"
+            type="submit" disabled={loading}>
             {loading ? "Connexion en cours..." : "Se connecter"}
           </Button>
         </form>

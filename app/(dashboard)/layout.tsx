@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdminRoute = pathname?.startsWith("/admin");
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen">
       {!isAdminRoute && <Navbar />}
       <main className={cn(!isAdminRoute && "pt-20")}>{children}</main>
     </div>
