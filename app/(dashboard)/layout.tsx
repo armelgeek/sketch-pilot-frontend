@@ -15,13 +15,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!isPending && !session) {
       router.push("/login");
+      return;
     }
-  }, [session, isPending, router]);
+    if (!isPending && session && pathname === "/dashboard") {
+      const userId = session.user?.id;
+      if (userId) {
+        const done = localStorage.getItem(`sketch_pilot_onboarded_${userId}`);
+        if (!done) {
+          router.push("/onboarding");
+        }
+      }
+    }
+  }, [session, isPending, router, pathname]);
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] grain-overlay">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-amber-500 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-300 border-t-zinc-900"></div>
       </div>
     );
   }
@@ -31,6 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const isAdminRoute = pathname?.startsWith("/admin");
+  const isOnboarding = pathname === "/onboarding";
 
   if (isAdminRoute) {
     return (
@@ -48,8 +59,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  if (isOnboarding) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA]">
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen bg-[#FAFAFA] selection:bg-amber-500/20 selection:text-amber-600 grain-overlay">
+    <div className="flex min-h-screen bg-[#FAFAFA]">
       <DashboardSidebar />
       <main className="flex-1 overflow-auto min-w-0">
         <div className="mx-auto max-w-5xl px-6 py-8">
@@ -59,4 +78,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
-
