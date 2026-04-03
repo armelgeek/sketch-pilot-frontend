@@ -13,7 +13,6 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/generate", label: "Générer", icon: Plus },
   { href: "/videos", label: "Mes Vidéos", icon: Video },
-  { href: "/my-models", label: "Ma Bibliothèque", icon: Library },
   { href: "/subscription", label: "Abonnement", icon: Zap },
 ];
 
