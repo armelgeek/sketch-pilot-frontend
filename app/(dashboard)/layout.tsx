@@ -7,6 +7,8 @@ import { DashboardSidebar } from "@/src/components/layout/dashboard-sidebar";
 import { DashboardHeader } from "@/src/components/layout/dashboard-header";
 import { AdminSidebar } from "@/src/components/admin/admin-sidebar";
 import { AdminHeader } from "@/src/components/admin/admin-header";
+import { SSEProgressProvider } from "@/src/contexts/sse-progress-context";
+import { SSEProgressOverlay } from "@/src/components/ui/sse-progress-overlay";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -71,19 +73,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isStudio = pathname?.startsWith("/generate/");
 
   return (
-    <div className="flex min-h-screen bg-[#FAFAFA]">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 overflow-auto">
-          {isStudio ? (
-            children
-          ) : (
-            <div className="mx-auto max-w-5xl px-6 py-8">
-              {children}
-            </div>
-          )}
-        </main>
+    <SSEProgressProvider>
+      <SSEProgressOverlay />
+      <div className="flex min-h-screen bg-[#FAFAFA]">
+        <DashboardSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1 overflow-auto">
+            {isStudio ? (
+              children
+            ) : (
+              <div className="mx-auto max-w-5xl px-6 py-8">
+                {children}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </SSEProgressProvider>
   );
 }

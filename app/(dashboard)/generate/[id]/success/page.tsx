@@ -2,10 +2,9 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { CheckCircle2, Download, Share2, Plus, Video } from "lucide-react";
+import { Video } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
+import { VideoSuccessModal } from "@/src/components/ui/video-success-modal";
 import { videosService, type Video as ApiVideo } from "@/src/services/videos-service";
 
 export default function SuccessPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,8 +22,8 @@ export default function SuccessPage({ params }: { params: Promise<{ id: string }
 
     if (loading) {
         return (
-            <div className="min-h-[50vh] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-300 border-t-zinc-900" />
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F8F7]">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-200 border-t-emerald-500" />
             </div>
         );
     }
@@ -47,45 +46,14 @@ export default function SuccessPage({ params }: { params: Promise<{ id: string }
     }
 
     return (
-        <div className="space-y-6 max-w-3xl mx-auto">
-            <div className="flex items-center gap-2 text-emerald-600">
-                <CheckCircle2 className="h-5 w-5" />
-                <span className="text-sm font-black uppercase tracking-widest">Génération réussie</span>
-            </div>
-
-            <div>
-            
-                <p className="text-sm text-zinc-500 mt-1">
-                    Format {video.options?.aspectRatio || "16:9"}{video.script?.totalDuration ? ` · ${Math.round(video.script.totalDuration)}s` : ""}
-                </p>
-            </div>
-
-            <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none overflow-hidden">
-                <div className="aspect-video bg-zinc-900">
-                    <video src={video.videoUrl} controls autoPlay className="w-full h-full object-contain" poster={video.thumbnailUrl} />
-                </div>
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                   <div className="flex gap-2 shrink-0">
-                        <Button asChild className="bg-zinc-900 hover:bg-zinc-700 text-white font-bold rounded-xl h-9 px-4 text-sm">
-                            <a href={video.videoUrl} download={`video-${video.id}.mp4`}>
-                                <Download className="h-4 w-4 mr-1.5" /> Télécharger
-                            </a>
-                        </Button>
-                        <Button variant="outline" className="rounded-xl h-9 w-9 border-zinc-200 p-0">
-                            <Share2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-2 gap-3">
-                <Button asChild variant="outline" className="rounded-xl h-11 font-bold border-zinc-200">
-                    <Link href="/generate"><Plus className="h-4 w-4 mr-2" /> Nouvelle vidéo</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-xl h-11 font-bold border-zinc-200">
-                    <Link href="/videos"><Video className="h-4 w-4 mr-2" /> Ma bibliothèque</Link>
-                </Button>
-            </div>
+        <div className="min-h-screen bg-[#0E0E10]">
+            <VideoSuccessModal
+                videoUrl={video.videoUrl}
+                thumbnailUrl={video.thumbnailUrl}
+                videoId={video.id}
+                aspectRatio={video.options?.aspectRatio}
+                duration={video.script?.totalDuration}
+            />
         </div>
     );
 }

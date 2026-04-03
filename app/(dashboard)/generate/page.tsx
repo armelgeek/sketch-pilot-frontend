@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { videosService } from "@/src/services/videos-service";
 import type { VideoIdea } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { cn } from "@/src/lib/utils";
 
@@ -64,9 +65,26 @@ export default function GenerateContentPage() {
   const { progress: realProgress, message: realMessage, isFinished, videoId: generatedVideoId, error: jobError } =
     useVideoProgress(jobId);
 
+  const { startProgress, updateProgress, stopProgress } = useSSEProgress();
+
+  // Sync SSE progress → global overlay
+  useEffect(() => {
+    if (generating && jobId) {
+      updateProgress(realProgress, realMessage);
+    }
+  }, [realProgress, realMessage, generating, jobId, updateProgress]);
+
   const handleGenerate = async () => {
     try {
       setGenerating(true);
+      startProgress({
+        title: "Génération du script",
+        onCancel: () => {
+          setGenerating(false);
+          setJobId(undefined);
+          stopProgress();
+        },
+      });
       const selectedPrompt = prompts.find((p) => p.id === selectedPromptId);
       const options: any = {
         promptId: selectedPromptId,
@@ -93,6 +111,7 @@ export default function GenerateContentPage() {
     } catch (error: any) {
       setError(error.message || "Failed to start generation");
       setGenerating(false);
+      stopProgress();
     }
   };
 
@@ -148,14 +167,13 @@ export default function GenerateContentPage() {
 
   useEffect(() => {
     if (isFinished && jobId && generatedVideoId) {
+      stopProgress();
       setTimeout(() => { router.push(`/generate/${generatedVideoId}/script`); }, 1000);
     } else if (isFinished && jobError) {
       setGenerating(false);
+      stopProgress();
     }
-  }, [isFinished, jobId, generatedVideoId, jobError, router]);
-
-  const currentProgress = generating ? realProgress : 0;
-  const currentMessage = generating ? realMessage : "";
+  }, [isFinished, jobId, generatedVideoId, jobError, router, stopProgress]);
 
   if (loading) {
     return (
@@ -178,8 +196,7 @@ export default function GenerateContentPage() {
         </div>
       )}
 
-      {!generating && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-6", generating && "pointer-events-none opacity-60")}>
           {/* Script column */}
           <div className="lg:col-span-2 space-y-4">
             <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
@@ -416,38 +433,6 @@ export default function GenerateContentPage() {
             </Card>
           </div>
         </div>
-      )}
-
-      {generating && (
-        <div className="flex justify-center py-12">
-          <Card className="w-full max-w-xl bg-white border border-zinc-100 rounded-2xl shadow-none">
-            <CardContent className="p-12 flex flex-col items-center gap-8">
-              <div className="relative h-44 w-44">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" fill="none" className="stroke-zinc-100" strokeWidth="7" />
-                  <circle
-                    cx="50" cy="50" r="42" fill="none"
-                    className="stroke-zinc-900"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 42}`}
-                    strokeDashoffset={`${2 * Math.PI * 42 * (1 - currentProgress / 100)}`}
-                    style={{ transition: "stroke-dashoffset 1s ease-out" }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black tracking-tighter text-zinc-900">{currentProgress}%</span>
-                  {currentMessage && <span className="text-[10px] font-semibold text-zinc-400 text-center max-w-[80px] mt-1">{currentMessage}</span>}
-                </div>
-              </div>
-              <div className="text-center space-y-2">
-                <p className="font-black text-zinc-900">Génération en cours…</p>
-                <p className="text-sm text-zinc-400 font-medium">L'IA travaille sur votre vidéo</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
