@@ -222,7 +222,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                     <p className="text-zinc-500 font-medium">
                         {realMessage || "Notre IA concocte vos scènes et vos visuels. Patientez quelques instants."}
                     </p>
-                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden border border-zinc-200 dark:border-zinc-700/50">
+                    <div className="w-full bg-zinc-100 rounded-full h-3 overflow-hidden border border-zinc-200">
                         <div
                             className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full transition-all duration-500 ease-out"
                             style={{ width: `${realProgress}%` }}
@@ -243,10 +243,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
     }
 
     return (
-        <div className="relative min-h-screen mt-12">
-            <div className="mesh-gradient" />
-
-            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 relative z-10">
+        <div className="space-y-6 pb-24">
+            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
                 {error && (
                     <div className="mb-6 bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl text-sm font-medium text-center shadow-lg">
                         {error}
@@ -262,10 +260,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 {!generating && (
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-3">
-                                Étape 2 sur 3
-                            </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                            <h1 className="text-2xl font-black tracking-tight text-zinc-900">
                                 Storyboard
                             </h1>
                             <p className="text-zinc-500 font-medium mt-1">Affinez chaque scène avant l'animation</p>
@@ -346,12 +341,12 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                 </div>
                                 <div className="flex-1 min-w-full md:min-w-0">
                                     <div className="flex items-center justify-between mb-1 gap-4">
-                                        <p className="font-bold text-xs text-emerald-900 dark:text-emerald-100 uppercase tracking-wider truncate">
+                                        <p className="font-bold text-xs text-emerald-900 uppercase tracking-wider truncate">
                                             {currentMessage || "Génération en cours..."}
                                         </p>
-                                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 shrink-0">{currentProgress}%</span>
+                                        <span className="text-xs font-black text-emerald-600 shrink-0">{currentProgress}%</span>
                                     </div>
-                                    <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                                    <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
                                         <div
                                             className="bg-emerald-500 h-full transition-all duration-700 ease-out"
                                             style={{ width: `${currentProgress}%` }}
@@ -369,7 +364,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                     </Button>
                                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                         <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
-                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">En direct</span>
+                                        <span className="text-[10px] font-bold text-emerald-600 uppercase">En direct</span>
                                     </div>
                                 </div>
                             </div>
@@ -381,7 +376,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 {(storyboardView === "script" || visualsGenerated || (generating && !isScriptMissing)) && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Sub-view tabs */}
-                        <div className="flex gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-800/50 w-fit rounded-2xl border border-zinc-200 dark:border-zinc-700/50 backdrop-blur-sm">
+                        <div className="flex gap-2 p-1.5 bg-zinc-100 w-fit rounded-2xl border border-zinc-200 backdrop-blur-sm">
                             <button
                                 onClick={() => setStoryboardView("script")}
                                 className={cn(
@@ -412,8 +407,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Scene list sidebar */}
                                 <div className="lg:col-span-1">
-                                    <Card className="glass-pill border-none shadow-xl overflow-hidden">
-                                        <CardHeader className="border-b border-zinc-200/50 dark:border-zinc-700/50 bg-white/30 dark:bg-black/20">
+                                    <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden">
+                                        <CardHeader className="border-b border-zinc-200/50 bg-white/30">
                                             <CardTitle className="text-xs uppercase tracking-widest text-zinc-500">Scènes</CardTitle>
                                         </CardHeader>
                                         <CardContent className="p-0 max-h-[600px] overflow-y-auto">
@@ -426,13 +421,13 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                         className={cn(
                                                             "w-full text-left px-5 py-4 text-sm border-b border-zinc-100 dark:border-zinc-800/50 last:border-b-0 transition-all duration-300",
                                                             selectedScene === currentId
-                                                                ? "bg-emerald-500/10 dark:bg-emerald-500/20 border-l-4 border-l-emerald-500"
-                                                                : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                                                ? "bg-emerald-500/10 border-l-4 border-l-emerald-500"
+                                                                : "hover:bg-zinc-50"
                                                         )}
                                                     >
                                                         <div className="flex items-center justify-between mb-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span className={cn("font-bold", selectedScene === currentId ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-900 dark:text-zinc-100")}>
+                                                                <span className={cn("font-bold", selectedScene === currentId ? "text-emerald-600" : "text-zinc-900")}>
                                                                     Scène {i + 1}
                                                                 </span>
                                                                 {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />}
@@ -469,10 +464,10 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
 
                                                     <AccordionItem
                                                         value={currentId}
-                                                        className="glass-pill border-none px-6 rounded-2xl shadow-lg transition-all"
+                                                        className="bg-white border border-zinc-100 px-6 rounded-2xl shadow-none transition-all"
                                                     >
                                                         <AccordionTrigger className="hover:no-underline py-4">
-                                                            <span className="font-bold text-zinc-700 dark:text-zinc-300 text-left flex items-center gap-2">
+                                                            <span className="font-bold text-zinc-700 text-left flex items-center gap-2">
                                                                 Scène {i + 1}
                                                                 {(currentSceneIndex === i || repromptIndex === i) && <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />}
                                                                 <span className="text-zinc-500 font-medium break-words leading-tight pl-1">— {(sceneEdits[currentId]?.narration || scene.narration || scene.text || scene.content || "").substring(0, 40)}...</span>
@@ -493,7 +488,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                                     <Textarea
                                                                         value={sceneEdits[currentId]?.imagePrompt ?? (scene.imagePrompt || scene.prompt || "")}
                                                                         onChange={(e) => updateScene(currentId, 'imagePrompt', e.target.value)}
-                                                                        className="min-h-[80px] resize-none text-sm font-medium bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
+                                                                        className="min-h-[80px] resize-none text-sm font-medium bg-emerald-50/50 border-emerald-200"
                                                                         placeholder="Prompt utilisé pour générer le visuel..."
                                                                     />
                                                                 </div>
@@ -541,7 +536,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                         : "border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
                                                 )}
                                             >
-                                                <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 flex items-center justify-center relative overflow-hidden">
+                                                <div className="aspect-video bg-zinc-200 flex items-center justify-center relative overflow-hidden">
                                                     {scene.thumbnailUrl || scene.imageUrl ? (
                                                         <img src={scene.thumbnailUrl || scene.imageUrl} alt={scene.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                                     ) : (
@@ -553,7 +548,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                     {(currentSceneIndex === i || repromptIndex === i) && (
                                                         <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 z-10 animate-in fade-in duration-300 transition-all">
                                                             <Wand2 className="h-8 w-8 text-emerald-500 animate-bounce" />
-                                                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-pulse italic">GÉNÉRATION...</p>
+                                                            <p className="text-[10px] font-bold text-emerald-600 animate-pulse italic">GÉNÉRATION...</p>
                                                         </div>
                                                     )}
 
@@ -574,7 +569,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         const isGeneratingThis = regeneratingSceneId === selectedScene;
 
                                         return (
-                                            <div className="relative aspect-video rounded-xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden border border-zinc-200 dark:border-zinc-800 group shadow-lg">
+                                            <div className="relative aspect-video rounded-xl bg-zinc-100 overflow-hidden border border-zinc-200 group shadow-lg">
                                                 {/* Action Bar / Overlay on hover */}
                                                 <div className="absolute top-0 right-0 p-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Button
@@ -590,7 +585,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                 </div>
 
                                                 {isGeneratingThis ? (
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-sm z-10">
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-100/80 backdrop-blur-sm z-10">
                                                         <Wand2 className="h-8 w-8 text-emerald-500 animate-pulse mb-3" />
                                                         <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Création de la nouvelle image...</p>
                                                     </div>
@@ -618,11 +613,11 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                         if (!activeScene) return null;
 
                                         return (
-                                            <Card className="glass-pill border-none shadow-lg overflow-hidden mt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                                <CardHeader className="py-3 px-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20">
+                                            <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden mt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                <CardHeader className="py-3 px-4 border-b border-zinc-200 bg-zinc-50/50">
                                                     <div className="flex items-center gap-2">
                                                         <Zap className="h-4 w-4 text-emerald-500" />
-                                                        <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">Ajuster le Visuel</h3>
+                                                        <h3 className="text-sm font-bold text-zinc-700 uppercase tracking-wider">Ajuster le Visuel</h3>
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="p-4 space-y-4">
@@ -632,7 +627,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                             <Textarea
                                                                 value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
                                                                 onChange={(e) => updateScene(selectedScene, 'imagePrompt', e.target.value)}
-                                                                className="min-h-[100px] bg-zinc-50/20 dark:bg-zinc-950/20 border-zinc-200 dark:border-zinc-800 focus:border-emerald-500/50 focus:ring-emerald-500/20 text-sm font-medium transition-all"
+                                                                className="min-h-[100px] bg-zinc-50/20 border-zinc-200 focus:border-emerald-500/50 focus:ring-emerald-500/20 text-sm font-medium transition-all"
                                                                 placeholder="Décrivez ce que vous voulez voir dans cette scène (ex: ajouter un chapeau rouge, ambiance plus sombre...)"
                                                             />
                                                         </div>
@@ -666,17 +661,17 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                 {(generating && isScriptMissing) && (
                     <div className="flex justify-center animate-in fade-in zoom-in-95 duration-700">
                         <div className="w-full max-w-2xl px-4 lg:px-0">
-                            <Card className="glass-pill border-none shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden relative group">
+                            <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden relative group">
                                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
-                                <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8 relative z-10">
+                                <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8">
                                     {/* High-tech Circular progress */}
                                     <div className="relative h-48 w-48 animate-float">
-                                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/10 dark:border-emerald-500/5" />
+                                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/10" />
                                         <svg className="h-full w-full -rotate-90 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" viewBox="0 0 100 100">
                                             <circle
                                                 cx="50" cy="50" r="44"
                                                 fill="none"
-                                                className="stroke-zinc-100 dark:stroke-zinc-800/50"
+                                                className="stroke-zinc-100"
                                                 strokeWidth="6"
                                             />
                                             <circle
@@ -691,7 +686,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
+                                            <span className="text-4xl font-black text-emerald-600 tracking-tighter">
                                                 {currentProgress}%
                                             </span>
                                             <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mt-1">Status</span>
@@ -699,11 +694,11 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                     </div>
 
                                     <div className="text-center space-y-3">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 animate-pulse">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 animate-pulse">
                                             <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                             Live Status
                                         </div>
-                                        <p className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200">{currentMessage}</p>
+                                        <p className="text-2xl font-bold tracking-tight text-zinc-800">{currentMessage}</p>
                                         {jobError && (
                                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-xl text-sm font-medium">
                                                 {jobError}
@@ -717,7 +712,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                     </div>
 
                                     {/* Micro-activity bar */}
-                                    <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-4">
+                                    <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden mt-4">
                                         <div className="h-full bg-emerald-500 animate-[loading_2s_infinite]" style={{ width: '30%' }} />
                                     </div>
 
@@ -737,8 +732,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
             {/* Insertion Dialog/Modal */}
             {isInserting && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <Card className="w-full max-w-lg shadow-2xl border-emerald-500/20 overflow-hidden">
-                        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900">
+                    <Card className="w-full max-w-lg shadow-none border border-zinc-100 overflow-hidden">
+                        <CardHeader className="bg-emerald-50/50 border-b border-emerald-100">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Sparkles className="h-5 w-5 text-emerald-500" />
                                 Nouvelle Scène IA

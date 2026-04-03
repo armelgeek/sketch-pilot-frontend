@@ -266,10 +266,8 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     }
 
     return (
-        <div className="relative min-h-screen mt-12">
-            <div className="mesh-gradient" />
-
-            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 relative z-10">
+        <div className="space-y-6 pb-24">
+            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
                 {error && (
                     <div className="mb-6 bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl text-sm font-medium text-center shadow-lg">
                         {error}
@@ -284,10 +282,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 {/* Main Header */}
                 {!generating && (
                     <div className="text-center space-y-2 mb-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 mb-3">
-                            Étape 3 sur 3
-                        </div>
-                        <h1 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                        <h1 className="text-2xl font-black tracking-tight text-zinc-900">
                             Vidéo &amp; Audio
                         </h1>
                         <p className="text-zinc-500 text-lg">Dernier réglages avant la production finale</p>
@@ -300,9 +295,9 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div className="space-y-6">
                                 {/* Global Narrator Voice */}
-                                <Card className="p-5 bg-white/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
+                                <Card className="p-5 bg-white border-zinc-200 rounded-2xl shadow-sm">
                                     <div className="flex items-center gap-3 mb-5">
-                                        <div className="h-10 w-10 rounded-full bg-zinc-900 dark:bg-zinc-50 flex items-center justify-center text-zinc-50 dark:text-zinc-900">
+                                        <div className="h-10 w-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-50">
                                             <Volume2 className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -313,7 +308,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
 
                                     <div className="space-y-4">
                                         <Select value={kokoroVoicePreset} onValueChange={setKokoroVoicePreset}>
-                                            <SelectTrigger className="w-full h-12 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-xl">
+                                            <SelectTrigger className="w-full h-12 bg-white border-zinc-200 rounded-xl">
                                                 <SelectValue placeholder="Choisir une voix" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl">
@@ -322,7 +317,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                                         <div className="flex items-center gap-2">
                                                             <span>{voice.gender === 'female' ? '👩' : '👨'}</span>
                                                             <span className="font-medium">{voice.name}</span>
-                                                            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold">
+                                                            <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-500 font-bold">
                                                                 {voice.language.split('-')[0]}
                                                             </span>
                                                         </div>
@@ -340,7 +335,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                             </div>
 
                             {/* Music panel */}
-                            <Card className="glass-pill border-none shadow-xl">
+                            <Card className="bg-white border border-zinc-100 shadow-none">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-base">
                                         <Music className="h-4 w-4" /> Musique de fond
@@ -354,8 +349,8 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                             className={cn(
                                                 "w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors",
                                                 selectedMusicId === "none"
-                                                    ? "bg-zinc-900 text-zinc-50 border-zinc-900 dark:bg-zinc-50 dark:text-zinc-900 dark:border-zinc-50"
-                                                    : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                    ? "bg-zinc-900 text-zinc-50 border-zinc-900"
+                                                    : "border-zinc-200 hover:bg-zinc-50"
                                             )}
                                         >
                                             <span className="font-medium">Aucune musique</span>
@@ -367,8 +362,8 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                                 className={cn(
                                                     "w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors",
                                                     selectedMusicId === track.id
-                                                        ? "bg-zinc-900 text-zinc-50 border-zinc-900 dark:bg-zinc-50 dark:text-zinc-900 dark:border-zinc-50"
-                                                        : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        ? "bg-zinc-900 text-zinc-50 border-zinc-900"
+                                                        : "border-zinc-200 hover:bg-zinc-50"
                                                 )}
                                             >
                                                 <div className="flex flex-col items-start gap-0.5">
@@ -391,13 +386,13 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                         <div className="flex items-center justify-center gap-4">
                                             <button
                                                 onClick={() => handleSkip('prev')}
-                                                className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                                                className="text-zinc-400 hover:text-zinc-700 transition-colors"
                                             >
                                                 <SkipBack className="h-5 w-5" />
                                             </button>
                                             <button
                                                 onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                                                className="rounded-full bg-zinc-900 border border-transparent dark:bg-zinc-50 p-3 text-zinc-50 dark:text-zinc-900 hover:scale-105 active:scale-95 transition-all shadow-md"
+                                                className="rounded-full bg-zinc-900 border border-transparent p-3 text-zinc-50 hover:scale-105 active:scale-95 transition-all shadow-md"
                                             >
                                                 {isPlayingAudio ? (
                                                     <div className="h-5 w-5 flex items-center justify-center gap-1">
@@ -410,13 +405,13 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                             </button>
                                             <button
                                                 onClick={() => handleSkip('next')}
-                                                className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                                                className="text-zinc-400 hover:text-zinc-700 transition-colors"
                                             >
                                                 <SkipForward className="h-5 w-5" />
                                             </button>
                                         </div>
                                         {isPlayingAudio && (
-                                            <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                            <div className="w-full h-1.5 bg-zinc-200 rounded-full overflow-hidden">
                                                 <div className="h-full bg-emerald-500 animate-[loading_10s_linear_infinite]" style={{ width: '100%' }} />
                                             </div>
                                         )}
@@ -425,7 +420,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                             </Card>
 
                             {/* Volume panel */}
-                            <Card className="glass-pill border-none shadow-xl">
+                            <Card className="bg-white border border-zinc-100 shadow-none">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-base">
                                         <Volume2 className="h-4 w-4" /> Volumes
@@ -471,7 +466,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                             </Card>
 
                             {/* Captions configuration & Preview */}
-                            <Card className="glass-pill border-none shadow-xl overflow-hidden">
+                            <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden">
                                 <CardHeader className="pb-2">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="flex items-center gap-2 text-base">
@@ -481,7 +476,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                             onClick={() => setShowCaptions(!showCaptions)}
                                             className={cn(
                                                 "relative w-10 h-5 rounded-full transition-colors cursor-pointer",
-                                                showCaptions ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"
+                                                showCaptions ? "bg-emerald-500" : "bg-zinc-300"
                                             )}
                                         >
                                             <div className={cn(
@@ -513,8 +508,8 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                                             className={cn(
                                                                 "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-all text-left flex items-center justify-between",
                                                                 captionStyle === s.id
-                                                                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900"
-                                                                    : "bg-zinc-50 border-zinc-200 text-zinc-600 hover:border-zinc-400 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400"
+                                                                    ? "bg-zinc-900 text-white border-zinc-900"
+                                                                    : "bg-zinc-50 border-zinc-200 text-zinc-600 hover:border-zinc-400"
                                                             )}
                                                         >
                                                             {s.label}
@@ -584,7 +579,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                             <div className="pt-2">
                                                 <button
                                                     onClick={() => setShowAdvancedCaptions(!showAdvancedCaptions)}
-                                                    className="w-full py-1.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center justify-center gap-1 transition-colors uppercase tracking-widest border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                                                    className="w-full py-1.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-600 flex items-center justify-center gap-1 transition-colors uppercase tracking-widest border border-dashed border-zinc-200 rounded-lg hover:bg-zinc-50"
                                                 >
                                                     {showAdvancedCaptions ? "Moins d'options ▲" : "Plus d'options de style ▼"}
                                                 </button>
@@ -630,7 +625,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                                                         onClick={() => setHighlightColor(color)}
                                                                         className={cn(
                                                                             "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110",
-                                                                            highlightColor === color ? "border-zinc-900 dark:border-white scale-110" : "border-transparent"
+                                                                            highlightColor === color ? "border-zinc-900 scale-110" : "border-transparent"
                                                                         )}
                                                                         style={{ backgroundColor: color }}
                                                                     />
@@ -643,7 +638,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                         </>
                                     ) : (
                                         <div className="py-8 flex flex-col items-center justify-center text-center gap-2 opacity-50 grayscale">
-                                            <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                            <div className="p-3 rounded-full bg-zinc-100">
                                                 <Type className="h-6 w-6 text-zinc-400" />
                                             </div>
                                             <div className="text-xs font-medium text-zinc-500">Sous-titres désactivés</div>
@@ -659,7 +654,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                 <Button
                                     onClick={() => window.open(activeVideo.videoUrl, '_blank')}
                                     variant="outline"
-                                    className="w-full py-6 rounded-2xl border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all font-bold group"
+                                    className="w-full py-6 rounded-2xl border-emerald-500/30 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all font-bold group"
                                 >
                                     <ExternalLink className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                                     Voir la vidéo finale
@@ -669,7 +664,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                             <Button
                                 onClick={handleAssemble}
                                 disabled={generating && !isFinished}
-                                className="w-full py-7 rounded-2xl bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 hover:scale-[1.01] active:scale-95 transition-all shadow-xl font-black text-lg group overflow-hidden relative"
+                                className="w-full py-7 rounded-2xl bg-zinc-900 text-zinc-50 hover:scale-[1.01] active:scale-95 transition-all shadow-none font-black text-lg group overflow-hidden relative"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 {generating && !isFinished ? (
@@ -700,17 +695,17 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                 {generating && (
                     <div className="flex justify-center animate-in fade-in zoom-in-95 duration-700">
                         <div className="w-full max-w-2xl px-4 lg:px-0">
-                            <Card className="glass-pill border-none shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden relative group">
+                            <Card className="bg-white border border-zinc-100 shadow-none overflow-hidden relative group">
                                 <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
-                                <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8 relative z-10">
+                                <CardContent className="p-10 lg:p-16 flex flex-col items-center gap-8">
                                     {/* High-tech Circular progress */}
                                     <div className="relative h-48 w-48 animate-float">
-                                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/10 dark:border-emerald-500/5" />
+                                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/10" />
                                         <svg className="h-full w-full -rotate-90 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" viewBox="0 0 100 100">
                                             <circle
                                                 cx="50" cy="50" r="44"
                                                 fill="none"
-                                                className="stroke-zinc-100 dark:stroke-zinc-800/50"
+                                                className="stroke-zinc-100"
                                                 strokeWidth="6"
                                             />
                                             <circle
@@ -725,7 +720,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
+                                            <span className="text-4xl font-black text-emerald-600 tracking-tighter">
                                                 {currentProgress}%
                                             </span>
                                             <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mt-1">Status</span>
@@ -733,11 +728,11 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                     </div>
 
                                     <div className="text-center space-y-3">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 animate-pulse">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold uppercase tracking-widest border border-emerald-500/20 animate-pulse">
                                             <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                             Live Status
                                         </div>
-                                        <p className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200">{currentMessage}</p>
+                                        <p className="text-2xl font-bold tracking-tight text-zinc-800">{currentMessage}</p>
                                         {jobError && (
                                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-xl text-sm font-medium">
                                                 {jobError}
@@ -751,7 +746,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                                     </div>
 
                                     {/* Micro-activity bar */}
-                                    <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-4">
+                                    <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden mt-4">
                                         <div className="h-full bg-emerald-500 animate-[loading_2s_infinite]" style={{ width: '30%' }} />
                                     </div>
                                 </CardContent>
