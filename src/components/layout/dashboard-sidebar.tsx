@@ -85,7 +85,7 @@ export function DashboardSidebar() {
         <div className="mx-3 mt-3">
           <Link
             href="/subscription"
-            className="flex items-center gap-2.5 rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-3 py-2.5 hover:bg-amber-500/[0.12] transition-colors group"
+            className="flex items-center gap-2.5 rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-3 py-2.5 hover:bg-amber-500/[0.12] transition-colors"
           >
             <div className="h-7 w-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
               <Coins className="h-4 w-4" />
