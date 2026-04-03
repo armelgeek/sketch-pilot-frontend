@@ -39,7 +39,7 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
     const step = EDIT_ROUTE[video.status];
     const editPath = step ? `/generate/${video.id}/${step}` : null;
 
-    const dateStr = (video as any).createdAt || (video as any).created_at;
+    const dateStr = video.createdAt || video.created_at;
     const date = dateStr
         ? new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
         : "Récemment";

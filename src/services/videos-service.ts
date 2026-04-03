@@ -26,6 +26,8 @@ export interface Video {
     scenes?: any[];
     options?: any;
     title?: string;
+    createdAt?: string;
+    created_at?: string;
 }
 
 export interface VideoGenerationOptions {
