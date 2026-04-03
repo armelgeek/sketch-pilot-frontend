@@ -15,8 +15,10 @@ import { Slider } from "@/src/components/ui/slider";
 import { cn } from "@/src/lib/utils";
 import { videosService, type Video } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { ScriptEditor } from "@/src/components/organisms/script-editor";
+import { VideoSuccessModal } from "@/src/components/ui/video-success-modal";
 
 // ─── Singleton service ────────────────────────────────────────────────────────
 const adminService = new AdminService();
@@ -74,6 +76,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     const [activeVideo, setActiveVideo] = useState<Video | null>(null);
     const [activeTab, setActiveTab] = useState<StudioTab>("script");
     const [showProductionModal, setShowProductionModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [productionStep, setProductionStep] = useState<0 | 1 | 2>(0);
     const [selectedScene, setSelectedScene] = useState<string>("s1");
     const [error, setError] = useState<string | null>(null);
@@ -147,6 +150,22 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
         error: assembleError
     } = useVideoProgress(assembleJobId ?? undefined);
 
+    const { startProgress, updateProgress, stopProgress } = useSSEProgress();
+
+    // Sync visual generation progress → global overlay
+    useEffect(() => {
+        if (generating && jobId) {
+            updateProgress(realProgress, realMessage);
+        }
+    }, [realProgress, realMessage, generating, jobId, updateProgress]);
+
+    // Sync assembly progress → global overlay
+    useEffect(() => {
+        if (assembling && assembleJobId) {
+            updateProgress(assembleProgress, assembleMessage);
+        }
+    }, [assembleProgress, assembleMessage, assembling, assembleJobId, updateProgress]);
+
     // ─── Derived values ───────────────────────────────────────────────────────
     const displayScenes = useMemo(() =>
         activeVideo
@@ -163,7 +182,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     const activeScene = displayScenes[activeSceneIndex] ?? null;
 
     const isScriptMissing = !activeVideo?.script && !activeVideo?.scenes?.length;
-    const showLoadingState = !activeVideo || (generating && isScriptMissing);
+    const showLoadingState = !activeVideo;
 
     // ─── Filmstrip scroll helpers ─────────────────────────────────────────────
     const checkFilmstripScroll = useCallback(() => {
@@ -279,14 +298,15 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     // ─── Job finished ─────────────────────────────────────────────────────────
     useEffect(() => {
         if (!isFinished || !jobId) return;
-        if (jobError) { setGenerating(false); return; }
+        if (jobError) { setGenerating(false); stopProgress(); return; }
         videosService.getById(resolvedParams.id).then(updated => {
             setActiveVideo(updated);
             setVisualsGenerated(true);
             setGenerating(false);
+            stopProgress();
             setActiveTab("storyboard");
         });
-    }, [isFinished, jobId, jobError, resolvedParams.id]);
+    }, [isFinished, jobId, jobError, resolvedParams.id, stopProgress]);
 
     // ─── Reprompt finished ────────────────────────────────────────────────────
     useEffect(() => {
@@ -310,25 +330,35 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     // ─── Assemble finished ────────────────────────────────────────────────────
     useEffect(() => {
         if (!isAssembleFinished || !assembleJobId) return;
-        if (assembleError) { setAssembling(false); return; }
-        const timer = window.setTimeout(
-            () => router.push(`/generate/${resolvedParams.id}/success`), 800
-        );
-        return () => window.clearTimeout(timer);
-    }, [isAssembleFinished, assembleJobId, assembleError, router, resolvedParams.id]);
+        if (assembleError) { setAssembling(false); stopProgress(); return; }
+        stopProgress();
+        videosService.getById(resolvedParams.id).then(updated => {
+            setActiveVideo(updated);
+            setAssembling(false);
+            setShowSuccessModal(true);
+        });
+    }, [isAssembleFinished, assembleJobId, assembleError, resolvedParams.id, stopProgress]);
 
     // ─── Actions ──────────────────────────────────────────────────────────────
     const handleAnimate = async () => {
         if (!activeVideo) return;
         try {
             setGenerating(true);
-            setActiveTab("storyboard");
+            startProgress({
+                title: "Génération des visuels",
+                onCancel: () => {
+                    cancelVideo(activeVideo.id);
+                    setGenerating(false);
+                    stopProgress();
+                },
+            });
             const response = await videosService.generateScenes(activeVideo.id);
             setJobId(response.jobId);
             setError(null);
         } catch (err: any) {
             setError(err.message || "Erreur lors du démarrage de la génération des visuels");
             setGenerating(false);
+            stopProgress();
         }
     };
 
@@ -361,6 +391,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
         if (!activeVideo) return;
         try {
             setAssembling(true);
+            startProgress({ title: "Assemblage final" });
             const nVol = audioOptions.voiceVolume / 100;
             const mVol = audioOptions.musicVolume / 100;
 
@@ -388,6 +419,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
         } catch (err: any) {
             setError(err.message || "Erreur lors de l'assemblage de la vidéo finale");
             setAssembling(false);
+            stopProgress();
         }
     };
 
@@ -460,77 +492,18 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     const effectiveStepId: StudioTab = showProductionModal ? "production" : activeTab;
     const effectiveStepIndex = STEPS.findIndex(s => s.id === effectiveStepId);
 
-    // ─── Loading screen ───────────────────────────────────────────────────────
+    // ─── Loading screen (initial page load only) ──────────────────────────────
     if (showLoadingState) {
         return (
-            <div className="min-h-[calc(100vh-56px)] bg-[#F8F8F7] flex flex-col items-center justify-center gap-8 px-4">
-                <div className="relative h-36 w-36">
-                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" fill="none" className="stroke-zinc-100" strokeWidth="5" />
-                        <circle cx="50" cy="50" r="42" fill="none" className="stroke-emerald-500" strokeWidth="6"
-                            strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * 42}`}
-                            strokeDashoffset={`${2 * Math.PI * 42 * (1 - realProgress / 100)}`}
-                            style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-black text-zinc-900 tracking-tight tabular-nums">{realProgress}%</span>
-                        <Film className="h-4 w-4 text-emerald-500 mt-1 animate-pulse" />
-                    </div>
-                </div>
-                <div className="text-center space-y-2 max-w-xs">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-[10px] font-black uppercase tracking-widest">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {activeVideo?.status === "queued" ? "En file" : "Génération"}
-                    </span>
-                    <h2 className="text-lg font-black text-zinc-900 mt-2">
-                        {activeVideo?.status === "queued" ? "Dans la file d'attente…" : "Création du storyboard…"}
-                    </h2>
-                    <p className="text-zinc-400 text-sm leading-relaxed">
-                        {realMessage || "L'IA prépare vos scènes et visuels."}
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    // ─── Assembly screen ──────────────────────────────────────────────────────
-    if (assembling) {
-        return (
-            <div className="min-h-[calc(100vh-56px)] bg-[#F8F8F7] flex flex-col items-center justify-center gap-8 px-4">
-                <div className="relative h-36 w-36">
-                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" fill="none" className="stroke-zinc-100" strokeWidth="5" />
-                        <circle cx="50" cy="50" r="42" fill="none" className="stroke-violet-500" strokeWidth="6"
-                            strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * 42}`}
-                            strokeDashoffset={`${2 * Math.PI * 42 * (1 - assembleProgress / 100)}`}
-                            style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-black text-zinc-900 tabular-nums">{assembleProgress}%</span>
-                        <Zap className="h-4 w-4 text-violet-500 mt-1 animate-bounce" />
-                    </div>
-                </div>
-                <div className="text-center space-y-2 max-w-xs">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-600 text-[10px] font-black uppercase tracking-widest">
-                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
-                        Assemblage final
-                    </span>
-                    <h2 className="text-lg font-black text-zinc-900 mt-2">Finalisation de votre vidéo</h2>
-                    <p className="text-zinc-400 text-sm">{assembleMessage || "Voix, musique et captions en cours…"}</p>
-                </div>
-                {assembleError && (
-                    <p className="text-red-500 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-xl">
-                        {assembleError}
-                    </p>
-                )}
+            <div className="min-h-[calc(100vh-56px)] bg-[#F8F8F7] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-200 border-t-emerald-500" />
             </div>
         );
     }
 
     // ─── Main render ──────────────────────────────────────────────────────────
     return (
+        <>
         <div className="flex flex-col bg-[#F8F8F7]" style={{ minHeight: "calc(100vh - 56px)" }}>
 
             {/* ── Top bar ──────────────────────────────────────────────────── */}
@@ -614,9 +587,11 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                         className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-lg h-8 px-4 text-xs gap-1.5 shrink-0 shadow-sm shadow-emerald-200/60 transition-all">
                         {activeTab === "storyboard" && visualsGenerated
                             ? <><Play className="h-3.5 w-3.5" /> Production</>
-                            : activeTab === "script" && !visualsGenerated
-                                ? <><Wand2 className="h-3.5 w-3.5" /> Animer</>
-                                : <>Suivant <ChevronRight className="h-3.5 w-3.5 -mr-0.5" /></>}
+                            : activeTab === "script" && visualsGenerated
+                                ? <><Film className="h-3.5 w-3.5" /> Storyboard <ChevronRight className="h-3.5 w-3.5 -mr-0.5" /></>
+                                : activeTab === "script"
+                                    ? <><Wand2 className="h-3.5 w-3.5" /> Générer les visuels</>
+                                    : <>Suivant <ChevronRight className="h-3.5 w-3.5 -mr-0.5" /></>}
                     </Button>
                 </div>
             </header>
@@ -635,82 +610,37 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 </div>
             )}
 
-            {/* ── Generation progress bar ───────────────────────────────────── */}
-            {generating && !isScriptMissing && (
-                <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50 border-b border-emerald-100 shrink-0">
-                    <Loader2 className="h-3 w-3 text-emerald-500 animate-spin shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <div className="flex justify-between mb-1">
-                            <span className="text-[10px] font-semibold text-emerald-700 truncate">
-                                {realMessage || "Génération…"}
-                            </span>
-                            <span className="text-[10px] font-black text-emerald-600 ml-2 shrink-0 tabular-nums">
-                                {realProgress}%
-                            </span>
-                        </div>
-                        <div className="h-0.5 bg-emerald-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-emerald-500 transition-all duration-700 rounded-full"
-                                style={{ width: `${realProgress}%` }} />
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => activeVideo && cancelVideo(activeVideo.id)}
-                        className="text-[10px] font-semibold text-red-500 border border-red-200 rounded-md px-2 py-0.5 hover:bg-red-50 transition-colors shrink-0">
-                        Stop
-                    </button>
-                </div>
-            )}
-
             {/* ── Body ──────────────────────────────────────────────────────── */}
             <div className="flex overflow-hidden  flex-1">
                 <div className="flex-1 overflow-hidden flex flex-col">
 
                     {/* ══ SCRIPT TAB ════════════════════════════════════════ */}
                     {activeTab === "script" && (
-                        <div className="flex flex-col h-full">
-                            <div className="px-5 pt-4 pb-3.5 border-b border-zinc-200/80 shrink-0 bg-white">
-                                <div className="flex items-center gap-2">
-                                    <span className="h-5 w-5 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">
-                                        1
-                                    </span>
-                                    <div>
-                                        <p className="text-xs font-bold text-zinc-800 leading-none">Validation du Script</p>
-                                        <p className="text-[10px] text-zinc-400 mt-0.5">Éditez la narration de chaque scène</p>
-                                    </div>
+                        <div className="flex flex-col h-full bg-[#0E0E10]">
+                            {/* Sub-header */}
+                            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800 shrink-0">
+                                <div>
+                                    <p className="text-xs font-bold text-zinc-200 leading-none">Script & Prompts visuels</p>
+                                    <p className="text-[10px] text-zinc-500 mt-0.5">
+                                        {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
+                                        {" · "}Éditez la narration et les prompts avant de générer les visuels
+                                    </p>
                                 </div>
+                                <button
+                                    onClick={handleSaveScript}
+                                    className="text-[10px] text-zinc-500 hover:text-emerald-400 transition-colors font-bold uppercase tracking-widest">
+                                    Sauvegarder
+                                </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto py-5 px-5">
                                 <div className="max-w-2xl mx-auto">
-                                    <ScriptEditor scenes={displayScenes} onScenesChange={onScenesChange} />
+                                    <ScriptEditor
+                                        scenes={displayScenes}
+                                        onScenesChange={onScenesChange}
+                                        showImagePrompt
+                                    />
                                 </div>
-                            </div>
-
-                            <div className="shrink-0 px-4 py-2.5 border-t border-zinc-200/80 bg-white flex items-center justify-between">
-                                <button
-                                    onClick={handleSaveScript}
-                                    className="text-[11px] text-zinc-400 hover:text-zinc-600 transition-colors font-medium">
-                                    Sauvegarder
-                                </button>
-                                {!visualsGenerated ? (
-                                    <Button
-                                        onClick={handleAnimate}
-                                        disabled={generating}
-                                        className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-lg h-8 px-4 text-xs gap-1.5 shadow-sm shadow-emerald-200/60">
-                                        <Wand2 className="h-3.5 w-3.5" />
-                                        Générer les visuels
-                                        <ChevronRight className="h-3.5 w-3.5 -mr-0.5" />
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        onClick={() => setActiveTab("storyboard")}
-                                        className="bg-zinc-900 hover:bg-zinc-700 text-white font-bold rounded-lg h-8 px-4 text-xs gap-1.5">
-                                        <Film className="h-3.5 w-3.5" />
-                                        Voir le storyboard
-                                        <ChevronRight className="h-3.5 w-3.5 -mr-0.5" />
-                                    </Button>
-                                )}
                             </div>
                         </div>
                     )}
@@ -1320,6 +1250,19 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 </div>
             )}
         </div>
+
+        {/* ── Success modal ──────────────────────────────────────────────── */}
+        {showSuccessModal && activeVideo?.videoUrl && (
+            <VideoSuccessModal
+                videoUrl={activeVideo.videoUrl}
+                thumbnailUrl={activeVideo.thumbnailUrl}
+                videoId={activeVideo.id}
+                aspectRatio={activeVideo.options?.aspectRatio}
+                duration={activeVideo.script?.totalDuration}
+                onClose={() => setShowSuccessModal(false)}
+            />
+        )}
+        </>
     );
 }
 
