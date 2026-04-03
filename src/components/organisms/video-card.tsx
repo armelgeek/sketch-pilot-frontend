@@ -58,8 +58,8 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                 {video.thumbnailUrl ? (
                     <img
                         src={video.thumbnailUrl}
-                        alt={video.topic}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        alt={video.title || video.topic}
+                        className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : isProcessing ? (
                     <div className="flex flex-col items-center gap-2 text-emerald-500">
@@ -107,8 +107,8 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
 
             <CardContent className="p-6">
                 <div className="flex flex-col gap-1 mb-4">
-                    <h3 className="font-black text-lg leading-tight truncate text-zinc-900 dark:text-zinc-100">
-                        {video.topic}
+                    <h3 className="font-semibold text-lg line-clamp-2 transition-colors duration-200 group-hover:text-primary leading-tight text-zinc-900 dark:text-zinc-100">
+                        {video.title || video.topic}
                     </h3>
                     <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                         <Clock className="h-3 w-3" />

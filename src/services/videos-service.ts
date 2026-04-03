@@ -25,6 +25,7 @@ export interface Video {
     script?: VideoScript;
     scenes?: any[];
     options?: any;
+    title?: string;
 }
 
 export interface VideoGenerationOptions {
