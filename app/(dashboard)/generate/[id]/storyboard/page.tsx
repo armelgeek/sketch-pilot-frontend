@@ -429,52 +429,6 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
             {/* Studio body */}
             <div className="flex flex-1 overflow-hidden">
 
-                {/* Filmstrip */}
-                <aside className="w-48 bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden shrink-0">
-                    <div className="px-3 py-2 border-b border-zinc-800">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                            {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
-                        </span>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        {displayScenes.map((scene: any, i: number) => {
-                            const sId = scene.id || `s${i + 1}`;
-                            const isAct = selectedScene === sId;
-                            const isGen = currentSceneIndex === i || repromptIndex === i;
-                            return (
-                                <button key={sId} onClick={() => setSelectedScene(sId)}
-                                    className={cn("w-full text-left group border-b border-zinc-800/50 transition-all",
-                                        isAct ? "bg-zinc-800 border-l-2 border-l-emerald-500" : "hover:bg-zinc-800/40")}>
-                                    <div className="relative aspect-video bg-zinc-800 overflow-hidden">
-                                        {scene.thumbnailUrl || scene.imageUrl
-                                            ? <img src={scene.thumbnailUrl || scene.imageUrl} alt={`S${i + 1}`}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                            : <div className="absolute inset-0 flex items-center justify-center"><Film className="h-4 w-4 text-zinc-700" /></div>}
-                                        {isGen && (
-                                            <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
-                                                <Loader2 className="h-3.5 w-3.5 text-emerald-400 animate-spin" />
-                                            </div>
-                                        )}
-                                        <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] font-black px-1.5 py-0.5 rounded">{i + 1}</div>
-                                        {scene.imageUrl && <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-                                    </div>
-                                    <div className="px-2 py-1.5">
-                                        <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed">
-                                            {sceneEdits[sId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}
-                                        </p>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                        {!generating && (
-                            <button onClick={() => { setInsertIndex(displayScenes.length); setIsInserting(true); }}
-                                className="w-full flex items-center justify-center gap-1.5 py-3 text-zinc-700 hover:text-emerald-400 border-t border-zinc-800 hover:bg-zinc-800/40 transition-colors text-[9px] font-black uppercase tracking-wider">
-                                <Plus className="h-3 w-3" /> Scène
-                            </button>
-                        )}
-                    </div>
-                </aside>
-
                 {/* Main content */}
                 <div className="flex-1 bg-[#0F0F0F] overflow-hidden flex flex-col">
 
@@ -526,134 +480,183 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
                     {/* ── STORYBOARD TAB ── */}
                     {activeTab === "storyboard" && (
-                        <div className="flex flex-col h-full">
-                            {/* Step header */}
-                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">2</span>
-                                    <div>
-                                        <p className="text-sm font-black text-white leading-none">Storyboard</p>
-                                        <p className="text-[11px] text-zinc-600 mt-0.5">Vérifiez et ajustez les visuels de chaque scène</p>
-                                    </div>
+                        <div className="flex h-full">
+                            {/* Filmstrip - light mode, only visible in storyboard step */}
+                            <aside className="w-48 bg-[#FAFAFA] border-r border-zinc-200 flex flex-col overflow-hidden shrink-0">
+                                <div className="px-3 py-2 border-b border-zinc-200">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                                        {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
+                                    </span>
                                 </div>
-                            </div>
-
-                            {/* Scene viewer */}
-                            <div className="flex-1 overflow-y-auto py-4 px-5">
-                                {activeScene ? (
-                                    <div className="space-y-4 max-w-2xl mx-auto">
-                                        {/* Canvas */}
-                                        <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 group shadow-2xl">
-                                            {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
-                                                <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
-                                                    <Wand2 className="h-8 w-8 text-emerald-400 animate-bounce" />
-                                                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest animate-pulse">Génération...</p>
+                                <div className="flex-1 overflow-y-auto">
+                                    {displayScenes.map((scene: any, i: number) => {
+                                        const sId = scene.id || `s${i + 1}`;
+                                        const isAct = selectedScene === sId;
+                                        const isGen = currentSceneIndex === i || repromptIndex === i;
+                                        return (
+                                            <button key={sId} onClick={() => setSelectedScene(sId)}
+                                                className={cn("w-full text-left group border-b border-zinc-200/70 transition-all",
+                                                    isAct ? "bg-zinc-100 border-l-2 border-l-emerald-500" : "hover:bg-zinc-50")}>
+                                                <div className="relative aspect-video bg-zinc-100 overflow-hidden">
+                                                    {scene.thumbnailUrl || scene.imageUrl
+                                                        ? <img src={scene.thumbnailUrl || scene.imageUrl} alt={`S${i + 1}`}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        : <div className="absolute inset-0 flex items-center justify-center"><Film className="h-4 w-4 text-zinc-300" /></div>}
+                                                    {isGen && (
+                                                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
+                                                            <Loader2 className="h-3.5 w-3.5 text-emerald-600 animate-spin" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-black px-1.5 py-0.5 rounded">{i + 1}</div>
+                                                    {scene.imageUrl && <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />}
                                                 </div>
-                                            )}
-                                            {regeneratingSceneId === selectedScene && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
-                                                    <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
+                                                <div className="px-2 py-1.5">
+                                                    <p className="text-[10px] text-zinc-600 line-clamp-2 leading-relaxed">
+                                                        {sceneEdits[sId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}
+                                                    </p>
                                                 </div>
-                                            )}
-                                            {activeScene.imageUrl
-                                                ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
-                                                : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                                                    <Film className="h-16 w-16 mb-3 opacity-20" />
-                                                    <p className="text-xs">Cliquez sur &quot;Générer les visuels&quot; à l&apos;étape précédente</p>
-                                                  </div>}
-                                            {activeScene.narration && (
-                                                <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
-                                                    <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg font-medium border border-white/10">
-                                                        {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 70)}...
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded uppercase">
-                                                S{activeSceneIndex + 1}/{displayScenes.length}
-                                            </div>
-                                            {activeScene.imageUrl && (
-                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                        disabled={!!regeneratingSceneId || generating}
-                                                        className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
-                                                        <RefreshCw className={cn("h-3.5 w-3.5", regeneratingSceneId === selectedScene && "animate-spin")} />
-                                                        Régénérer (5 🪙)
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Adjuster */}
-                                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                                            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
-                                                <Zap className="h-3.5 w-3.5 text-emerald-400" />
-                                                <span className="text-xs font-black text-zinc-300 uppercase tracking-wider">Ajuster la scène</span>
-                                                <div className="flex-1" />
-                                                <span className="text-[10px] text-zinc-600">S{activeSceneIndex + 1}/{displayScenes.length}</span>
-                                            </div>
-                                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
-                                                    <Textarea value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
-                                                        onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
-                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                        placeholder="Texte de narration..." />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Prompt visuel (IA)</label>
-                                                    <Textarea value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
-                                                        onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
-                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                        placeholder="Décrivez le visuel..." />
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between px-4 pb-4">
-                                                <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
-                                                    className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-300 transition-colors font-medium">
-                                                    <Plus className="h-3.5 w-3.5" /> Insérer avant
-                                                </button>
-                                                <Button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                    disabled={!!regeneratingSceneId || generating} size="sm"
-                                                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
-                                                    {regeneratingSceneId === selectedScene
-                                                        ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                                        : <Sparkles className="h-3.5 w-3.5" />}
-                                                    Appliquer & Régénérer
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-48">
-                                        <p className="text-zinc-700 text-sm">Sélectionnez une scène dans le panneau gauche</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Bottom navigation */}
-                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setActiveTab("script")}
-                                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
-                                        <ChevronLeft className="h-3.5 w-3.5" /> Script
-                                    </button>
-                                    {visualsGenerated && (
-                                        <>
-                                            <span className="text-zinc-800">·</span>
-                                            <button onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
-                                                className="text-xs text-zinc-600 hover:text-orange-400 transition-colors font-medium flex items-center gap-1">
-                                                <RotateCcw className="h-3 w-3" /> Tout régénérer
                                             </button>
-                                        </>
+                                        );
+                                    })}
+                                    {!generating && (
+                                        <button onClick={() => { setInsertIndex(displayScenes.length); setIsInserting(true); }}
+                                            className="w-full flex items-center justify-center gap-1.5 py-3 text-zinc-400 hover:text-emerald-500 border-t border-zinc-200 hover:bg-zinc-50 transition-colors text-[9px] font-black uppercase tracking-wider">
+                                            <Plus className="h-3 w-3" /> Scène
+                                        </button>
                                     )}
                                 </div>
-                                {visualsGenerated && (
-                                    <Button onClick={() => setActiveTab("production")}
-                                        className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
-                                        Production
-                                        <ChevronRight className="h-4 w-4 -mr-1" />
-                                    </Button>
-                                )}
+                            </aside>
+
+                            {/* Main storyboard content */}
+                            <div className="flex flex-col flex-1 overflow-hidden">
+                                {/* Step header */}
+                                <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">2</span>
+                                        <div>
+                                            <p className="text-sm font-black text-white leading-none">Storyboard</p>
+                                            <p className="text-[11px] text-zinc-600 mt-0.5">Vérifiez et ajustez les visuels de chaque scène</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Scene viewer */}
+                                <div className="flex-1 overflow-y-auto py-4 px-5">
+                                    {activeScene ? (
+                                        <div className="space-y-4 max-w-2xl mx-auto">
+                                            {/* Canvas */}
+                                            <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 group shadow-2xl">
+                                                {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
+                                                    <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
+                                                        <Wand2 className="h-8 w-8 text-emerald-400 animate-bounce" />
+                                                        <p className="text-xs font-black text-emerald-400 uppercase tracking-widest animate-pulse">Génération...</p>
+                                                    </div>
+                                                )}
+                                                {regeneratingSceneId === selectedScene && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+                                                        <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
+                                                    </div>
+                                                )}
+                                                {activeScene.imageUrl
+                                                    ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
+                                                    : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
+                                                        <Film className="h-16 w-16 mb-3 opacity-20" />
+                                                        <p className="text-xs">Cliquez sur &quot;Générer les visuels&quot; à l&apos;étape précédente</p>
+                                                      </div>}
+                                                {activeScene.narration && (
+                                                    <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+                                                        <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg font-medium border border-white/10">
+                                                            {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 70)}...
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded uppercase">
+                                                    S{activeSceneIndex + 1}/{displayScenes.length}
+                                                </div>
+                                                {activeScene.imageUrl && (
+                                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
+                                                            disabled={!!regeneratingSceneId || generating}
+                                                            className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+                                                            <RefreshCw className={cn("h-3.5 w-3.5", regeneratingSceneId === selectedScene && "animate-spin")} />
+                                                            Régénérer (5 🪙)
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Adjuster */}
+                                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                                <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
+                                                    <Zap className="h-3.5 w-3.5 text-emerald-400" />
+                                                    <span className="text-xs font-black text-zinc-300 uppercase tracking-wider">Ajuster la scène</span>
+                                                    <div className="flex-1" />
+                                                    <span className="text-[10px] text-zinc-600">S{activeSceneIndex + 1}/{displayScenes.length}</span>
+                                                </div>
+                                                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
+                                                        <Textarea value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
+                                                            onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
+                                                            className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
+                                                            placeholder="Texte de narration..." />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Prompt visuel (IA)</label>
+                                                        <Textarea value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
+                                                            onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
+                                                            className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
+                                                            placeholder="Décrivez le visuel..." />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between px-4 pb-4">
+                                                    <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
+                                                        className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-300 transition-colors font-medium">
+                                                        <Plus className="h-3.5 w-3.5" /> Insérer avant
+                                                    </button>
+                                                    <Button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
+                                                        disabled={!!regeneratingSceneId || generating} size="sm"
+                                                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
+                                                        {regeneratingSceneId === selectedScene
+                                                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                                            : <Sparkles className="h-3.5 w-3.5" />}
+                                                        Appliquer & Régénérer
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-48">
+                                            <p className="text-zinc-700 text-sm">Sélectionnez une scène dans le panneau gauche</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Bottom navigation */}
+                                <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setActiveTab("script")}
+                                            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                            <ChevronLeft className="h-3.5 w-3.5" /> Script
+                                        </button>
+                                        {visualsGenerated && (
+                                            <>
+                                                <span className="text-zinc-800">·</span>
+                                                <button onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
+                                                    className="text-xs text-zinc-600 hover:text-orange-400 transition-colors font-medium flex items-center gap-1">
+                                                    <RotateCcw className="h-3 w-3" /> Tout régénérer
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                    {visualsGenerated && (
+                                        <Button onClick={() => setActiveTab("production")}
+                                            className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                            Production
+                                            <ChevronRight className="h-4 w-4 -mr-1" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
