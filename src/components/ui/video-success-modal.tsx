@@ -56,8 +56,8 @@ export function VideoSuccessModal({
 
     useEffect(() => {
         // Small delay so the modal renders first, then confetti fires on top
-        const t = setTimeout(fireConfetti, 120);
-        return () => clearTimeout(t);
+        const confettiTimer = setTimeout(fireConfetti, 120);
+        return () => clearTimeout(confettiTimer);
     }, [fireConfetti]);
 
     const handleShare = async () => {
@@ -74,11 +74,11 @@ export function VideoSuccessModal({
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            // clipboard unavailable — no silent failure
+            // Clipboard API unavailable in this context
         }
     };
 
-    const meta = [
+    const metaText = [
         aspectRatio,
         duration ? `${Math.round(duration)}s` : null,
     ].filter(Boolean).join(" · ");
@@ -111,8 +111,8 @@ export function VideoSuccessModal({
                             Vidéo générée !
                         </span>
                     </div>
-                    {meta && (
-                        <span className="text-xs text-zinc-400 font-medium">{meta}</span>
+                    {metaText && (
+                        <span className="text-xs text-zinc-400 font-medium">{metaText}</span>
                     )}
                 </div>
 

@@ -72,7 +72,10 @@ export function ScriptEditor({ scenes, onScenesChange, showImagePrompt = false }
                 >
                     {/* Number + connector */}
                     <div className="flex flex-col items-center shrink-0 pt-3.5">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-black border border-zinc-700">
+                        <div
+                            className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-black border border-zinc-700"
+                            aria-label={`Scène ${index + 1}`}
+                        >
                             {index + 1}
                         </div>
                         {index < editingScenes.length - 1 && (

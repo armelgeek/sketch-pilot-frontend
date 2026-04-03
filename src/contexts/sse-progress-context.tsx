@@ -60,6 +60,9 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
 
 export function useSSEProgress() {
     const ctx = useContext(SSEProgressContext);
-    if (!ctx) throw new Error("useSSEProgress must be used within SSEProgressProvider");
+    if (!ctx) throw new Error(
+        "useSSEProgress must be used within an SSEProgressProvider. " +
+        "Ensure SSEProgressProvider wraps your component tree."
+    );
     return ctx;
 }

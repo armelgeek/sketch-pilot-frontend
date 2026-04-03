@@ -527,7 +527,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                         const isActive = effectiveStepId === id;
                         const isCompleted = effectiveStepIndex > index;
                         const locked =
-                            (id === "storyboard" && !visualsGenerated) ||
+                            (id === "storyboard" && !visualsGenerated && !generating) ||
                             (id === "production" && !visualsGenerated);
 
                         return (

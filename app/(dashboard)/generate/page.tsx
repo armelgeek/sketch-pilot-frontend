@@ -67,7 +67,7 @@ export default function GenerateContentPage() {
 
   const { startProgress, updateProgress, stopProgress } = useSSEProgress();
 
-  // Sync SSE progress → global overlay
+  // Sync SSE progress → global overlay (overlay is started in handleGenerate)
   useEffect(() => {
     if (generating && jobId) {
       updateProgress(realProgress, realMessage);
