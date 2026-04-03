@@ -166,9 +166,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-4 relative">
-      <div className="mesh-gradient opacity-20 pointer-events-none" />
-
-      {/* Logo + Skip */}
+{/* Logo + Skip */}
       <div className="w-full max-w-3xl flex items-center justify-between mb-10 relative z-10">
         <div className="flex items-center gap-2.5 font-black text-xl text-zinc-900">
           <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-zinc-900 text-white shadow-md text-base">
