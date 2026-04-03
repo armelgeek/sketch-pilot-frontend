@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "@/src/lib/auth-client";
 import { DashboardSidebar } from "@/src/components/layout/dashboard-sidebar";
+import { DashboardHeader } from "@/src/components/layout/dashboard-header";
 import { AdminSidebar } from "@/src/components/admin/admin-sidebar";
 import { AdminHeader } from "@/src/components/admin/admin-header";
 
@@ -67,14 +68,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  const isStudio = pathname?.startsWith("/generate/");
+
   return (
     <div className="flex min-h-screen bg-[#FAFAFA]">
       <DashboardSidebar />
-      <main className="flex-1 overflow-auto min-w-0">
-        <div className="mx-auto max-w-5xl px-6 py-8">
-          {children}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <DashboardHeader />
+        <main className="flex-1 overflow-auto">
+          {isStudio ? (
+            children
+          ) : (
+            <div className="mx-auto max-w-5xl px-6 py-8">
+              {children}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
