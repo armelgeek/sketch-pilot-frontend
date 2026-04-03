@@ -382,8 +382,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                 className={cn(
                                     "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
                                     storyboardView === "script"
-                                        ? "bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                                        : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                                        ? "bg-white text-emerald-600 shadow-sm"
+                                        : "text-zinc-500 hover:text-zinc-700"
                                 )}
                             >
                                 <FileText className="h-4 w-4" />
@@ -394,8 +394,8 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                 className={cn(
                                     "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
                                     storyboardView === "visuals"
-                                        ? "bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                                        : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                                        ? "bg-white text-emerald-600 shadow-sm"
+                                        : "text-zinc-500 hover:text-zinc-700"
                                 )}
                             >
                                 <Image className="h-4 w-4" aria-hidden="true" /> Aperçu Visuel
@@ -419,7 +419,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                         key={currentId}
                                                         onClick={() => setSelectedScene(currentId)}
                                                         className={cn(
-                                                            "w-full text-left px-5 py-4 text-sm border-b border-zinc-100 dark:border-zinc-800/50 last:border-b-0 transition-all duration-300",
+                                                            "w-full text-left px-5 py-4 text-sm border-b border-zinc-100 last:border-b-0 transition-all duration-300",
                                                             selectedScene === currentId
                                                                 ? "bg-emerald-500/10 border-l-4 border-l-emerald-500"
                                                                 : "hover:bg-zinc-50"
@@ -533,7 +533,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                     "w-full rounded-2xl border-2 overflow-hidden text-left transition-all duration-300 group",
                                                     selectedScene === currentId
                                                         ? "border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]"
-                                                        : "border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+                                                        : "border-transparent hover:border-zinc-200"
                                                 )}
                                             >
                                                 <div className="aspect-video bg-zinc-200 flex items-center justify-center relative overflow-hidden">
@@ -587,7 +587,7 @@ export default function StoryboardPage({ params }: { params: Promise<{ id: strin
                                                 {isGeneratingThis ? (
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-100/80 backdrop-blur-sm z-10">
                                                         <Wand2 className="h-8 w-8 text-emerald-500 animate-pulse mb-3" />
-                                                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Création de la nouvelle image...</p>
+                                                        <p className="text-sm font-semibold text-zinc-700">Création de la nouvelle image...</p>
                                                     </div>
                                                 ) : activeScene?.imageUrl ? (
                                                     <img src={activeScene.imageUrl} className="w-full h-full object-cover" />
