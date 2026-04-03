@@ -416,7 +416,9 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                         className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-sm gap-1.5 shrink-0">
                         {activeTab === "storyboard" && visualsGenerated
                             ? <><Play className="h-4 w-4" /> Vidéo</>
-                            : <>Suivant <ChevronRight className="h-4 w-4 -mr-1" /></>}
+                            : activeTab === "script" && !visualsGenerated
+                                ? <><Wand2 className="h-4 w-4" /> Animer</>
+                                : <>Suivant <ChevronRight className="h-4 w-4 -mr-1" /></>}
                     </Button>
                 </div>
             </div>
@@ -736,17 +738,20 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
             {/* ── PRODUCTION MODAL ── */}
             {showProductionModal && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm"
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowProductionModal(false); }}
+                    onKeyDown={(e) => { if (e.key === "Escape") setShowProductionModal(false); }}
+                    role="dialog" aria-modal="true" aria-labelledby="production-modal-title">
                     <div className="w-full max-w-4xl bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                         {/* Modal header */}
                         <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-200 shrink-0">
                             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">3</div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black text-zinc-900 leading-none">Production</p>
+                                <p id="production-modal-title" className="text-sm font-black text-zinc-900 leading-none">Production</p>
                                 <p className="text-[11px] text-zinc-500 mt-0.5">Voix · Musique · Sous-titres</p>
                             </div>
-                            <button onClick={() => setShowProductionModal(false)}
+                            <button onClick={() => setShowProductionModal(false)} aria-label="Fermer"
                                 className="h-8 w-8 flex items-center justify-center rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
                                 ✕
                             </button>
