@@ -28,6 +28,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
     const [activeVideo, setActiveVideo] = useState<Video | null>(null);
     const [activeTab, setActiveTab] = useState<StudioTab>("script");
+    const [showProductionModal, setShowProductionModal] = useState(false);
     const [selectedScene, setSelectedScene] = useState<string>("s1");
 
     const [generating, setGenerating] = useState(false);
@@ -326,16 +327,15 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
         { id: "production", label: "Vidéo",      Icon: Settings2, description: "Voix & Musique"      },
     ];
 
-    const stepIndex = STEPS.findIndex(s => s.id === activeTab);
+    const effectiveStepId: StudioTab = showProductionModal ? "production" : activeTab;
+    const effectiveStepIndex = STEPS.findIndex(s => s.id === effectiveStepId);
 
     const handleNext = () => {
         if (activeTab === "script") {
             if (visualsGenerated) setActiveTab("storyboard");
             else handleAnimate();
         } else if (activeTab === "storyboard") {
-            setActiveTab("production");
-        } else {
-            handleAssemble();
+            setShowProductionModal(true);
         }
     };
 
@@ -366,16 +366,22 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 {/* Center: Step wizard */}
                 <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0">
                     {STEPS.map(({ id, label }, index) => {
-                        const isActive = activeTab === id;
-                        const isCompleted = stepIndex > index;
-                        const locked = id === "storyboard" && !visualsGenerated && !generating;
+                        const isActive = effectiveStepId === id;
+                        const isCompleted = effectiveStepIndex > index;
+                        const locked = (id === "storyboard" && !visualsGenerated && !generating) || (id === "production" && !visualsGenerated);
                         return (
                             <div key={id} className="flex items-center">
                                 {index > 0 && (
                                     <div className={cn("h-px w-10 transition-colors duration-300", isCompleted ? "bg-emerald-400" : "bg-zinc-200")} />
                                 )}
                                 <button
-                                    onClick={() => !locked && setActiveTab(id)}
+                                    onClick={() => {
+                                        if (id === "production") {
+                                            if (!locked) setShowProductionModal(true);
+                                        } else {
+                                            if (!locked) { setActiveTab(id); setShowProductionModal(false); }
+                                        }
+                                    }}
                                     title={locked ? "Générez les visuels d'abord" : label}
                                     disabled={locked}
                                     className="flex flex-col items-center gap-0.5 px-1">
@@ -408,7 +414,9 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                     )}
                     <Button onClick={handleNext} disabled={generating || assembling}
                         className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-sm gap-1.5 shrink-0">
-                        {activeTab === "production" ? <><Zap className="h-4 w-4" /> Lancer</> : <>Suivant <ChevronRight className="h-4 w-4 -mr-1" /></>}
+                        {activeTab === "storyboard" && visualsGenerated
+                            ? <><Play className="h-4 w-4" /> Vidéo</>
+                            : <>Suivant <ChevronRight className="h-4 w-4 -mr-1" /></>}
                     </Button>
                 </div>
             </div>
@@ -660,7 +668,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         <ChevronLeft className="h-3.5 w-3.5" /> Contenu
                                     </button>
                                     {visualsGenerated && (
-                                        <Button onClick={() => setActiveTab("production")}
+                                        <Button onClick={() => setShowProductionModal(true)}
                                             className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
                                             Vidéo <ChevronRight className="h-4 w-4 -mr-1" />
                                         </Button>
@@ -712,7 +720,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         </Button>
                                     ) : (
                                         <Button
-                                            onClick={() => setActiveTab("production")}
+                                            onClick={() => setShowProductionModal(true)}
                                             className="w-full font-black rounded-xl h-11 text-sm gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white border-0 shadow-md shadow-emerald-200">
                                             <Play className="h-4 w-4" />
                                             Passer en Production
@@ -723,27 +731,34 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                         </div>
                     )}
 
-                    {/* ── PRODUCTION TAB ── */}
-                    {activeTab === "production" && (
-                        <div className="flex flex-col h-full">
-                            {/* Step header */}
-                            <div className="px-6 pt-5 pb-4 border-b border-zinc-200 shrink-0 bg-white">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">3</span>
-                                    <div>
-                                        <p className="text-sm font-black text-zinc-900 leading-none">Production</p>
-                                        <p className="text-[11px] text-zinc-500 mt-0.5">Voix narrative · Musique de fond · Sous-titres</p>
-                                    </div>
-                                </div>
-                            </div>
+                </div>
+            </div>
 
-                            {/* Config grid */}
-                            <div className="flex-1 overflow-y-auto py-6 px-5">
-                                <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* ── PRODUCTION MODAL ── */}
+            {showProductionModal && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
+                    <div className="w-full max-w-4xl bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+                        {/* Modal header */}
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-200 shrink-0">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">3</div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black text-zinc-900 leading-none">Production</p>
+                                <p className="text-[11px] text-zinc-500 mt-0.5">Voix · Musique · Sous-titres</p>
+                            </div>
+                            <button onClick={() => setShowProductionModal(false)}
+                                className="h-8 w-8 flex items-center justify-center rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Modal body */}
+                        <div className="overflow-y-auto p-5">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                                 {/* Voice */}
-                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
-                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200">
+                                <div className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden">
+                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200 bg-white">
                                         <div className="h-7 w-7 rounded-lg bg-blue-50 flex items-center justify-center">
                                             <Mic className="h-3.5 w-3.5 text-blue-500" />
                                         </div>
@@ -754,7 +769,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                     </div>
                                     <div className="p-4 space-y-4">
                                         <Select value={kokoroVoicePreset} onValueChange={setKokoroVoicePreset}>
-                                            <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-xl h-10">
+                                            <SelectTrigger className="bg-white border-zinc-200 text-zinc-900 rounded-xl h-10">
                                                 <SelectValue placeholder="Choisir une voix" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl bg-white border-zinc-200">
@@ -769,7 +784,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <div className="space-y-3 pt-1">
+                                        <div className="space-y-3">
                                             <div className="space-y-1.5">
                                                 <div className="flex justify-between text-xs">
                                                     <span className="text-zinc-500">🎙️ Voix</span>
@@ -785,13 +800,13 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                 <Slider min={0} max={100} step={5} value={musicVolume} onChange={(e) => setMusicVolume(parseInt(e.target.value))} />
                                             </div>
                                         </div>
-                                        <p className="text-[10px] text-zinc-400 italic pt-3 border-t border-zinc-100 leading-relaxed">L'IA applique le ducking automatique pour garder la voix audible.</p>
+                                        <p className="text-[10px] text-zinc-400 italic pt-2 border-t border-zinc-200 leading-relaxed">L'IA applique le ducking automatique pour garder la voix audible.</p>
                                     </div>
                                 </div>
 
                                 {/* Music */}
-                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
-                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200">
+                                <div className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden">
+                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200 bg-white">
                                         <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                                             <Music className="h-3.5 w-3.5 text-amber-500" />
                                         </div>
@@ -801,10 +816,10 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         </div>
                                     </div>
                                     <div className="p-3 space-y-2">
-                                        <div className="max-h-52 overflow-y-auto space-y-1 pr-0.5">
+                                        <div className="max-h-48 overflow-y-auto space-y-1">
                                             <button onClick={() => setSelectedMusicId("none")}
                                                 className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors text-left",
-                                                    selectedMusicId === "none" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>
+                                                    selectedMusicId === "none" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50")}>
                                                 <div className={cn("h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center",
                                                     selectedMusicId === "none" ? "border-emerald-500 bg-emerald-500" : "border-zinc-300")}>
                                                     {selectedMusicId === "none" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -814,7 +829,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                             {musicTracks.map((t: any) => (
                                                 <button key={t.id} onClick={() => { setSelectedMusicId(t.id); setIsPlayingAudio(true); }}
                                                     className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs border transition-colors text-left",
-                                                        selectedMusicId === t.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>
+                                                        selectedMusicId === t.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50")}>
                                                     <div className={cn("h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center",
                                                         selectedMusicId === t.id ? "border-emerald-500 bg-emerald-500" : "border-zinc-300")}>
                                                         {selectedMusicId === t.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -833,11 +848,11 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                 </button>
                                             ))}
                                         </div>
-                                        <div className="flex items-center justify-center gap-3 pt-2 border-t border-zinc-100">
+                                        <div className="flex items-center justify-center gap-3 pt-2 border-t border-zinc-200">
                                             <button onClick={() => handleSkip("prev")} className="text-zinc-400 hover:text-zinc-700 transition-colors"><SkipBack className="h-4 w-4" /></button>
                                             <button onClick={() => setIsPlayingAudio(!isPlayingAudio)} disabled={selectedMusicId === "none"}
                                                 className={cn("h-9 w-9 rounded-full border flex items-center justify-center transition-all",
-                                                    selectedMusicId !== "none" ? "bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-emerald-400 hover:text-emerald-600" : "bg-zinc-50 border-zinc-100 text-zinc-300 cursor-not-allowed")}>
+                                                    selectedMusicId !== "none" ? "bg-white border-zinc-200 text-zinc-700 hover:border-emerald-400 hover:text-emerald-600" : "bg-zinc-50 border-zinc-100 text-zinc-300 cursor-not-allowed")}>
                                                 {isPlayingAudio
                                                     ? <div className="flex gap-0.5"><div className="w-1 h-3.5 bg-current rounded-sm animate-pulse" /><div className="w-1 h-3.5 bg-current rounded-sm animate-pulse" style={{ animationDelay: "0.15s" }} /></div>
                                                     : <Play className="h-4 w-4 fill-current ml-0.5" />}
@@ -849,8 +864,8 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                 </div>
 
                                 {/* Captions */}
-                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
-                                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200">
+                                <div className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-white">
                                         <div className="flex items-center gap-2.5">
                                             <div className="h-7 w-7 rounded-lg bg-pink-50 flex items-center justify-center">
                                                 <Type className="h-3.5 w-3.5 text-pink-500" />
@@ -875,7 +890,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                     ].map(s => (
                                                         <button key={s.id} onClick={() => setCaptionStyle(s.id)}
                                                             className={cn("flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all",
-                                                                captionStyle === s.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900")}>
+                                                                captionStyle === s.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900")}>
                                                             {s.l} {captionStyle === s.id && <Check className="h-3 w-3" />}
                                                         </button>
                                                     ))}
@@ -909,7 +924,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                         <div>
                                                             <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 block">Taille</label>
                                                             <Select value={fontSize.toString()} onValueChange={v => setFontSize(parseInt(v))}>
-                                                                <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                <SelectTrigger className="bg-white border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
                                                                 <SelectContent className="bg-white border-zinc-200">
                                                                     <SelectItem value="32">Petit</SelectItem>
                                                                     <SelectItem value="48">Normal</SelectItem>
@@ -921,7 +936,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                         <div>
                                                             <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 block">Position</label>
                                                             <Select value={captionPosition} onValueChange={setCaptionPosition}>
-                                                                <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                <SelectTrigger className="bg-white border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
                                                                 <SelectContent className="bg-white border-zinc-200">
                                                                     <SelectItem value="bottom">Bas</SelectItem>
                                                                     <SelectItem value="center">Centre</SelectItem>
@@ -951,25 +966,25 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         </div>
                                     )}
                                 </div>
-                                </div>
-                            </div>
 
-                            {/* Bottom action bar */}
-                            <div className="shrink-0 px-5 py-3 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
-                                <button onClick={() => setActiveTab("storyboard")}
-                                    className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
-                                    <ChevronLeft className="h-3.5 w-3.5" /> Storyboard
-                                </button>
-                                <Button onClick={handleAssemble} disabled={assembling}
-                                    className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
-                                    <Zap className="h-4 w-4 fill-current" />
-                                    Lancer le rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
-                                </Button>
                             </div>
                         </div>
-                    )}
+
+                        {/* Modal footer */}
+                        <div className="shrink-0 px-5 py-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between gap-3">
+                            <button onClick={() => setShowProductionModal(false)}
+                                className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
+                                <ChevronLeft className="h-3.5 w-3.5" /> Storyboard
+                            </button>
+                            <Button onClick={handleAssemble} disabled={assembling}
+                                className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-10 px-6 text-sm gap-2 shrink-0">
+                                <Zap className="h-4 w-4 fill-current" />
+                                Lancer le rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Insert dialog */}
             {isInserting && (
