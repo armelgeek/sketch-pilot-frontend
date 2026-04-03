@@ -126,7 +126,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
             }
             setGenerating(false);
         } catch {
-            setError("Erreur lors de l'insertion");
+            setError("Erreur lors de l'insertion de la scène");
             setGenerating(false);
         }
     };
@@ -140,7 +140,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
             setJobId(response.jobId);
             setError(null);
         } catch (error: any) {
-            setError(error.message || "Erreur lors du démarrage");
+            setError(error.message || "Erreur lors du démarrage de la génération des visuels");
             setGenerating(false);
         }
     };
@@ -161,7 +161,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     const handleSaveScript = async () => {
         if (!activeVideo) return;
         try { await videosService.update(activeVideo.id, { script: activeVideo.script, scenes: activeVideo.script?.scenes || [] }); }
-        catch (err: any) { setError(err.message || "Erreur de sauvegarde"); }
+        catch (err: any) { setError(err.message || "Erreur lors de la sauvegarde du script"); }
     };
 
     const handleAssemble = async () => {
@@ -183,7 +183,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 assCaptions: { enabled: showCaptions, style: captionStyle as any, fontSize, highlightColor, position: captionPosition as any }
             });
             setAssembleJobId(r.jobId); setError(null);
-        } catch (err: any) { setError(err.message || "Erreur d'assemblage"); setAssembling(false); }
+        } catch (err: any) { setError(err.message || "Erreur lors de l'assemblage de la vidéo finale"); setAssembling(false); }
     };
 
     const handleSkip = (dir: "next" | "prev") => {

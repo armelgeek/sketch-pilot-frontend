@@ -16,7 +16,9 @@ import { useSession, signOut } from "@/src/lib/auth-client";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
 import { cn } from "@/src/lib/utils";
 
-const NAV_LABELS: Record<string, { title: string; icon: React.FC<any> }> = {
+import type { LucideIcon } from "lucide-react";
+
+const NAV_LABELS: Record<string, { title: string; icon: LucideIcon }> = {
     "/dashboard": { title: "Dashboard", icon: LayoutDashboard },
     "/generate": { title: "Studio", icon: Clapperboard },
     "/videos": { title: "Mes Vidéos", icon: Video },
@@ -24,7 +26,7 @@ const NAV_LABELS: Record<string, { title: string; icon: React.FC<any> }> = {
     "/subscription": { title: "Abonnement", icon: Zap },
 };
 
-function getPageInfo(pathname: string | null) {
+function getPageInfo(pathname: string | null): { title: string; Icon: LucideIcon } {
     if (!pathname) return { title: "Dashboard", Icon: LayoutDashboard };
     for (const [key, val] of Object.entries(NAV_LABELS)) {
         if (pathname === key || (key !== "/dashboard" && pathname.startsWith(key))) {
@@ -45,6 +47,7 @@ export function DashboardHeader() {
     const userName = session.user?.name || session.user?.email || "User";
     const userInitials = userName
         .split(" ")
+        .filter((n: string) => n.length > 0)
         .map((n: string) => n[0])
         .join("")
         .toUpperCase()
