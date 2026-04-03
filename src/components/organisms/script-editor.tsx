@@ -77,7 +77,7 @@ export function ScriptEditor({ scenes, onScenesChange }: ScriptEditorProps) {
                             {index + 1}
                         </div>
                         {index < editingScenes.length - 1 && (
-                            <div className="w-px flex-1 min-h-[32px] bg-zinc-800 mt-1" />
+                            <div className="w-px flex-1 min-h-8 bg-zinc-800 mt-1" />
                         )}
                     </div>
 

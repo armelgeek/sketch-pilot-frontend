@@ -391,24 +391,6 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 </div>
 
                 <div className="h-4 w-px bg-zinc-800" />
-                {/* CTA */}
-                {activeTab !== "production" ? (
-                    !visualsGenerated
-                        ? <Button onClick={handleAnimate} disabled={generating} size="sm"
-                            className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5 shrink-0">
-                            <Wand2 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Générer visuels</span>
-                          </Button>
-                        : <Button onClick={() => setActiveTab("production")} size="sm"
-                            className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-8 px-4 text-xs gap-1.5 shrink-0">
-                            <Settings2 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Production</span><ChevronRight className="h-3.5 w-3.5" />
-                          </Button>
-                ) : (
-                    <Button onClick={handleAssemble} disabled={assembling} size="sm"
-                        className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-8 px-4 text-xs gap-1.5 shrink-0">
-                        <Zap className="h-3.5 w-3.5 fill-current" />
-                        <span className="hidden sm:inline">Rendre ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)</span>
-                    </Button>
-                )}
                 {(promptsUrl || activeVideo?.options?.promptsUrl) && (
                     <button onClick={() => window.open(promptsUrl || activeVideo?.options?.promptsUrl, "_blank")}
                         className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0" title="Prompts JSON">
@@ -494,176 +476,205 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                 </aside>
 
                 {/* Main content */}
-                <div className="flex-1 bg-[#0F0F0F] overflow-y-auto">
+                <div className="flex-1 bg-[#0F0F0F] overflow-hidden flex flex-col">
 
                     {/* ── SCRIPT TAB ── */}
                     {activeTab === "script" && (
-                        <div className="p-6 max-w-3xl mx-auto">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-sm font-black text-white">Validation du Script</h2>
-                                    <p className="text-xs text-zinc-600 mt-0.5">Éditez la narration avant de générer les visuels</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button onClick={handleSaveScript} size="sm" variant="outline"
-                                        className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 rounded-xl h-8 px-3 text-xs">
-                                        Sauvegarder
-                                    </Button>
-                                    {!visualsGenerated && (
-                                        <Button onClick={handleAnimate} disabled={generating} size="sm"
-                                            className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
-                                            <Wand2 className="h-3.5 w-3.5" /> Générer les visuels
-                                        </Button>
-                                    )}
+                        <div className="flex flex-col h-full">
+                            {/* Step header */}
+                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">1</span>
+                                    <div>
+                                        <p className="text-sm font-black text-white leading-none">Validation du Script</p>
+                                        <p className="text-[11px] text-zinc-600 mt-0.5">Éditez la narration de chaque scène</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="[&_.glass-pill]:bg-zinc-900 [&_.glass-pill]:border-zinc-800 [&_textarea]:bg-zinc-800 [&_textarea]:text-zinc-200 [&_textarea]:border-zinc-700">
-                                <ScriptEditor scenes={displayScenes} onScenesChange={onScenesChange} />
+
+                            {/* Scenes list */}
+                            <div className="flex-1 overflow-y-auto py-4 px-5">
+                                <div className="max-w-2xl mx-auto">
+                                    <ScriptEditor scenes={displayScenes} onScenesChange={onScenesChange} />
+                                </div>
+                            </div>
+
+                            {/* Bottom action bar */}
+                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                                <button onClick={handleSaveScript}
+                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                    Sauvegarder
+                                </button>
+                                {!visualsGenerated ? (
+                                    <Button onClick={handleAnimate} disabled={generating}
+                                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                        <Wand2 className="h-4 w-4" />
+                                        Générer les visuels
+                                        <ChevronRight className="h-4 w-4 -mr-1" />
+                                    </Button>
+                                ) : (
+                                    <Button onClick={() => setActiveTab("storyboard")}
+                                        className="bg-zinc-800 hover:bg-zinc-700 text-emerald-400 font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0 border border-zinc-700">
+                                        <Film className="h-4 w-4" />
+                                        Voir le storyboard
+                                        <ChevronRight className="h-4 w-4 -mr-1" />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {/* ── STORYBOARD TAB ── */}
                     {activeTab === "storyboard" && (
-                        <div className="p-6">
-                            {activeScene ? (
-                                <div className="space-y-4 max-w-3xl mx-auto">
-                                    {/* Canvas */}
-                                    <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 group shadow-2xl">
-                                        {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
-                                            <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
-                                                <Wand2 className="h-8 w-8 text-emerald-400 animate-bounce" />
-                                                <p className="text-xs font-black text-emerald-400 uppercase tracking-widest animate-pulse">Génération...</p>
+                        <div className="flex flex-col h-full">
+                            {/* Step header */}
+                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">2</span>
+                                    <div>
+                                        <p className="text-sm font-black text-white leading-none">Storyboard</p>
+                                        <p className="text-[11px] text-zinc-600 mt-0.5">Vérifiez et ajustez les visuels de chaque scène</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Scene viewer */}
+                            <div className="flex-1 overflow-y-auto py-4 px-5">
+                                {activeScene ? (
+                                    <div className="space-y-4 max-w-2xl mx-auto">
+                                        {/* Canvas */}
+                                        <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 group shadow-2xl">
+                                            {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
+                                                <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
+                                                    <Wand2 className="h-8 w-8 text-emerald-400 animate-bounce" />
+                                                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest animate-pulse">Génération...</p>
+                                                </div>
+                                            )}
+                                            {regeneratingSceneId === selectedScene && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+                                                    <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
+                                                </div>
+                                            )}
+                                            {activeScene.imageUrl
+                                                ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
+                                                : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
+                                                    <Film className="h-16 w-16 mb-3 opacity-20" />
+                                                    <p className="text-xs">Cliquez sur &quot;Générer les visuels&quot; à l&apos;étape précédente</p>
+                                                  </div>}
+                                            {activeScene.narration && (
+                                                <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+                                                    <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg font-medium border border-white/10">
+                                                        {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 70)}...
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded uppercase">
+                                                S{activeSceneIndex + 1}/{displayScenes.length}
                                             </div>
-                                        )}
-                                        {regeneratingSceneId === selectedScene && (
-                                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
-                                                <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
-                                            </div>
-                                        )}
-                                        {activeScene.imageUrl
-                                            ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
-                                            : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                                                <Film className="h-16 w-16 mb-3 opacity-20" />
-                                                <p className="text-xs">Cliquez sur "Générer les visuels"</p>
-                                              </div>}
-                                        {activeScene.narration && (
-                                            <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
-                                                <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg font-medium border border-white/10">
-                                                    {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 70)}...
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded uppercase">
-                                            S{activeSceneIndex + 1}/{displayScenes.length}
+                                            {activeScene.imageUrl && (
+                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
+                                                        disabled={!!regeneratingSceneId || generating}
+                                                        className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+                                                        <RefreshCw className={cn("h-3.5 w-3.5", regeneratingSceneId === selectedScene && "animate-spin")} />
+                                                        Régénérer (5 🪙)
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                        {activeScene.imageUrl && (
-                                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                    disabled={!!regeneratingSceneId || generating}
-                                                    className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
-                                                    <RefreshCw className={cn("h-3.5 w-3.5", regeneratingSceneId === selectedScene && "animate-spin")} />
-                                                    Régénérer (5 🪙)
+
+                                        {/* Adjuster */}
+                                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
+                                                <Zap className="h-3.5 w-3.5 text-emerald-400" />
+                                                <span className="text-xs font-black text-zinc-300 uppercase tracking-wider">Ajuster la scène</span>
+                                                <div className="flex-1" />
+                                                <span className="text-[10px] text-zinc-600">S{activeSceneIndex + 1}/{displayScenes.length}</span>
+                                            </div>
+                                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
+                                                    <Textarea value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
+                                                        onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
+                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
+                                                        placeholder="Texte de narration..." />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Prompt visuel (IA)</label>
+                                                    <Textarea value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
+                                                        onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
+                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
+                                                        placeholder="Décrivez le visuel..." />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between px-4 pb-4">
+                                                <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
+                                                    className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-300 transition-colors font-medium">
+                                                    <Plus className="h-3.5 w-3.5" /> Insérer avant
                                                 </button>
+                                                <Button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
+                                                    disabled={!!regeneratingSceneId || generating} size="sm"
+                                                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
+                                                    {regeneratingSceneId === selectedScene
+                                                        ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                                        : <Sparkles className="h-3.5 w-3.5" />}
+                                                    Appliquer & Régénérer
+                                                </Button>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* Adjuster */}
-                                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                                        <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
-                                            <Zap className="h-3.5 w-3.5 text-emerald-400" />
-                                            <span className="text-xs font-black text-zinc-300 uppercase tracking-wider">Ajuster la scène</span>
-                                            <div className="flex-1" />
-                                            <span className="text-[10px] text-zinc-600">S{activeSceneIndex + 1}/{displayScenes.length}</span>
-                                        </div>
-                                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
-                                                <Textarea value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
-                                                    onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
-                                                    className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                    placeholder="Texte de narration..." />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Prompt visuel (IA)</label>
-                                                <Textarea value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
-                                                    onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
-                                                    className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                    placeholder="Décrivez le visuel..." />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between px-4 pb-4">
-                                            <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
-                                                className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-300 transition-colors font-medium">
-                                                <Plus className="h-3.5 w-3.5" /> Insérer avant
-                                            </button>
-                                            <Button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                disabled={!!regeneratingSceneId || generating} size="sm"
-                                                className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
-                                                {regeneratingSceneId === selectedScene
-                                                    ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                                    : <Sparkles className="h-3.5 w-3.5" />}
-                                                Appliquer & Régénérer
-                                            </Button>
                                         </div>
                                     </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-48">
+                                        <p className="text-zinc-700 text-sm">Sélectionnez une scène dans le panneau gauche</p>
+                                    </div>
+                                )}
+                            </div>
 
-                                    {/* Controls */}
+                            {/* Bottom navigation */}
+                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setActiveTab("script")}
+                                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                        <ChevronLeft className="h-3.5 w-3.5" /> Script
+                                    </button>
                                     {visualsGenerated && (
-                                        <div className="flex items-center justify-between p-3.5 bg-zinc-900 border border-zinc-800 rounded-xl">
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={async () => {
-                                                        if (confirm("Régénérer tout le script ?")) {
-                                                            const j = await rescriptVideo(activeVideo!.id);
-                                                            if (j) { setJobId(j); setVisualsGenerated(false); setActiveVideo(prev => prev ? { ...prev, script: undefined, scenes: [] } : null); }
-                                                        }
-                                                    }}
-                                                    className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-purple-500/10 transition-colors">
-                                                    <Sparkles className="h-3.5 w-3.5" /> Re-Script
-                                                </button>
-                                                <button
-                                                    onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
-                                                    className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-orange-500/10 transition-colors">
-                                                    <RotateCcw className="h-3.5 w-3.5" /> Restart
-                                                </button>
-                                                <button onClick={handleAnimate} disabled={generating}
-                                                    className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors">
-                                                    <RefreshCw className="h-3.5 w-3.5" /> Tout régénérer
-                                                </button>
-                                            </div>
-                                            <Button onClick={() => setActiveTab("production")} size="sm"
-                                                className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-8 px-4 text-xs gap-1.5">
-                                                Production <ChevronRight className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
+                                        <>
+                                            <span className="text-zinc-800">·</span>
+                                            <button onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
+                                                className="text-xs text-zinc-600 hover:text-orange-400 transition-colors font-medium flex items-center gap-1">
+                                                <RotateCcw className="h-3 w-3" /> Tout régénérer
+                                            </button>
+                                        </>
                                     )}
                                 </div>
-                            ) : (
-                                <div className="flex items-center justify-center h-64">
-                                    <p className="text-zinc-700 text-sm">Sélectionnez une scène dans le panneau gauche</p>
-                                </div>
-                            )}
+                                {visualsGenerated && (
+                                    <Button onClick={() => setActiveTab("production")}
+                                        className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                        Production
+                                        <ChevronRight className="h-4 w-4 -mr-1" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     )}
 
                     {/* ── PRODUCTION TAB ── */}
                     {activeTab === "production" && (
-                        <div className="p-6 max-w-5xl mx-auto space-y-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-sm font-black text-white">Configuration de la Production</h2>
-                                    <p className="text-xs text-zinc-600 mt-0.5">Voix narrative · Musique de fond · Sous-titres</p>
+                        <div className="flex flex-col h-full">
+                            {/* Step header */}
+                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500 text-white text-[9px] font-black shrink-0">3</span>
+                                    <div>
+                                        <p className="text-sm font-black text-white leading-none">Production</p>
+                                        <p className="text-[11px] text-zinc-600 mt-0.5">Voix narrative · Musique de fond · Sous-titres</p>
+                                    </div>
                                 </div>
-                                <Button onClick={handleAssemble} disabled={assembling}
-                                    className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-sm gap-2">
-                                    <Zap className="h-4 w-4 fill-current" />
-                                    Rendre la vidéo ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
-                                </Button>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            {/* Config grid */}
+                            <div className="flex-1 overflow-y-auto py-4 px-5">
+                                <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                                 {/* Voice */}
                                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
@@ -875,17 +886,19 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                         </div>
                                     )}
                                 </div>
+                                </div>
                             </div>
 
-                            {/* Render CTA */}
-                            <div className="bg-gradient-to-r from-violet-500/10 to-pink-500/5 border border-violet-500/20 rounded-2xl p-5 flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-sm font-black text-zinc-100">Prêt à finaliser votre vidéo ?</p>
-                                    <p className="text-xs text-zinc-500 mt-0.5">Coût : {activeVideo?.options?.resolution === "1080p" ? "10" : "5"} crédits.</p>
-                                </div>
+                            {/* Bottom action bar */}
+                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                                <button onClick={() => setActiveTab("storyboard")}
+                                    className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                    <ChevronLeft className="h-3.5 w-3.5" /> Storyboard
+                                </button>
                                 <Button onClick={handleAssemble} disabled={assembling}
-                                    className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl px-6 gap-2 shrink-0">
-                                    <Zap className="h-4 w-4 fill-current" /> Lancer le rendu
+                                    className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                    <Zap className="h-4 w-4 fill-current" />
+                                    Lancer le rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
                                 </Button>
                             </div>
                         </div>
