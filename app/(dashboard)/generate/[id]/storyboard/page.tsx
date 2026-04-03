@@ -320,11 +320,13 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     }
 
     // ─── Main Studio ──────────────────────────────────────────────────────
-    const TABS: { id: StudioTab; label: string; Icon: any }[] = [
-        { id: "script",     label: "Script",     Icon: FileText  },
-        { id: "storyboard", label: "Storyboard", Icon: Film      },
-        { id: "production", label: "Production", Icon: Settings2 },
+    const STEPS: { id: StudioTab; label: string; Icon: any; description: string }[] = [
+        { id: "script",     label: "Script",     Icon: FileText,  description: "Éditez la narration" },
+        { id: "storyboard", label: "Storyboard", Icon: Film,      description: "Visuels générés"     },
+        { id: "production", label: "Production", Icon: Settings2, description: "Voix & Musique"      },
     ];
+
+    const stepIndex = STEPS.findIndex(s => s.id === activeTab);
 
     return (
         <div className="flex flex-col bg-zinc-950" style={{ minHeight: "calc(100vh - 56px)" }}>
@@ -349,24 +351,45 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                     </span>
                 )}
                 <div className="flex-1" />
-                {/* Tabs */}
-                <div className="flex items-center gap-0.5 bg-zinc-900 rounded-xl p-1 border border-zinc-800">
-                    {TABS.map(({ id, label, Icon }) => {
+
+                {/* Step wizard */}
+                <div className="flex items-center gap-0">
+                    {STEPS.map(({ id, label, Icon }, index) => {
                         const isActive = activeTab === id;
+                        const isCompleted = stepIndex > index;
                         const locked = id === "storyboard" && !visualsGenerated && !generating;
                         return (
-                            <button key={id} onClick={() => !locked && setActiveTab(id)}
-                                title={locked ? "Générez les visuels d'abord" : label}
-                                className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                                    isActive ? "bg-emerald-500 text-white shadow"
-                                    : locked  ? "text-zinc-700 cursor-not-allowed"
-                                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800")}>
-                                <Icon className="h-3.5 w-3.5" />
-                                <span className="hidden sm:inline">{label}</span>
-                            </button>
+                            <div key={id} className="flex items-center">
+                                {index > 0 && (
+                                    <div className={cn("h-px w-5 transition-colors duration-300", isCompleted ? "bg-emerald-500" : "bg-zinc-800")} />
+                                )}
+                                <button
+                                    onClick={() => !locked && setActiveTab(id)}
+                                    title={locked ? "Générez les visuels d'abord" : label}
+                                    className={cn(
+                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
+                                        isActive
+                                            ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
+                                            : locked
+                                            ? "text-zinc-700 cursor-not-allowed"
+                                            : isCompleted
+                                            ? "text-emerald-400 hover:bg-zinc-800"
+                                            : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                                    )}>
+                                    <div className={cn(
+                                        "h-4 w-4 rounded-full text-[8px] flex items-center justify-center font-black shrink-0",
+                                        isActive ? "bg-white/25 text-white" : isCompleted ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                                    )}>
+                                        {isCompleted ? <Check className="h-2.5 w-2.5" /> : <span>{index + 1}</span>}
+                                    </div>
+                                    <Icon className="h-3.5 w-3.5 hidden sm:block" />
+                                    <span className="hidden md:inline">{label}</span>
+                                </button>
+                            </div>
                         );
                     })}
                 </div>
+
                 <div className="h-4 w-px bg-zinc-800" />
                 {/* CTA */}
                 {activeTab !== "production" ? (
