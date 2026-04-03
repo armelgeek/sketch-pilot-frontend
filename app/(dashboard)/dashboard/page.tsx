@@ -3,21 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Video,
-  Play,
-  Pencil,
-  Clock,
-  ArrowRight,
-  Image as ImageIcon,
-  Sparkles,
-  UserSquare2,
-  Coins,
-} from "lucide-react";
+import { Plus, Video, ArrowRight, Sparkles, UserSquare2, Coins, ChevronRight } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { useSession } from "@/src/lib/auth-client";
 import { videosService, type Video as ApiVideo } from "@/src/services/videos-service";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
@@ -34,177 +22,139 @@ export default function DashboardPage() {
   const { data: modelsData, isLoading: modelsLoading } = useAdminModels();
   const models: any[] = modelsData?.data || [];
 
+  const firstName = session?.user?.name?.split(" ")[0] || "là";
+
   useEffect(() => {
-    // Fetch recent videos
     videosService.getAll()
       .then((all) => setRecentVideos(all.slice(0, 3)))
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setVideosLoading(false));
   }, []);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-      {/* Title & Description */}
-      <div className="space-y-1">
-        <h1 className="text-4xl font-black tracking-tight text-zinc-900">
-          Dashboard
-        </h1>
-        <p className="text-zinc-500 font-medium">
-          Aperçu de {session?.user?.name || "votre compte"}
-        </p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-zinc-900">
+            Bonjour, {firstName} 👋
+          </h1>
+          <p className="text-sm text-zinc-500 mt-0.5">Voici un aperçu de votre activité.</p>
+        </div>
+        <Button
+          onClick={() => router.push("/generate")}
+          className="bg-zinc-900 hover:bg-zinc-700 text-white rounded-xl h-10 px-5 font-bold text-sm shadow-sm"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle vidéo
+        </Button>
       </div>
 
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Thumbnails"
-          value={recentVideos.length.toString()}
-          description="Total generated"
-          icon={<ImageIcon className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Generations"
-          value={recentVideos.filter(v => v.status === 'completed').length.toString()}
-          description="All completed projects"
-          icon={<Sparkles className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Credits"
-          value={subLoading ? "..." : (subscriptionStatus?.remainingCredits ?? 0).toString()}
-          description="Available"
-          icon={<Coins className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Avatars"
-          value={modelsLoading ? "..." : (modelsData?.total ?? 0).toString()}
-          description="Your library"
-          icon={<UserSquare2 className="h-5 w-5" />}
-        />
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Vidéos" value={videosLoading ? "—" : recentVideos.length.toString()} icon={<Video className="h-4 w-4" />} href="/videos" />
+        <StatCard label="Terminées" value={videosLoading ? "—" : recentVideos.filter(v => v.status === "completed").length.toString()} icon={<Sparkles className="h-4 w-4" />} href="/videos" />
+        <StatCard label="Crédits" value={subLoading ? "—" : (subscriptionStatus?.remainingCredits ?? 0).toString()} icon={<Coins className="h-4 w-4" />} href="/subscription" />
+        <StatCard label="Personnages" value={modelsLoading ? "—" : (modelsData?.total ?? 0).toString()} icon={<UserSquare2 className="h-4 w-4" />} href="/admin/models" />
       </div>
 
-      {/* Your Persons Grid */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-            Your Persons
-          </h2>
-          <Link href="/admin/models" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors flex items-center gap-1">
-            View All <ArrowRight className="h-4 w-4" />
+      {/* Characters */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Personnages</h2>
+          <Link href="/admin/models" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
+            Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-
         {modelsLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="aspect-square rounded-2xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
-            ))}
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
+            {[1, 2, 3, 4].map(i => <div key={i} className="aspect-square rounded-2xl bg-zinc-100 animate-pulse" />)}
           </div>
-        ) : !models || models.length === 0 ? (
-          <div className="py-10 text-center bg-zinc-50 dark:bg-zinc-900/40 rounded-3xl border-2 border-dashed border-zinc-100 dark:border-zinc-800">
-            <p className="text-zinc-400 font-medium text-sm">No personas created yet</p>
+        ) : models.length === 0 ? (
+          <div className="py-8 text-center border-2 border-dashed border-zinc-100 rounded-2xl">
+            <p className="text-sm text-zinc-400 mb-3">Aucun personnage créé</p>
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => router.push("/admin/models/new")}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> Créer
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {models.slice(0, 6).map((model: any) => (
-              <Link
-                key={model.id}
-                href={`/admin/models/${model.id}`}
-                className="group relative aspect-square rounded-2xl overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-800 hover:ring-2 hover:ring-black dark:hover:ring-white transition-all"
-              >
-                <img
-                  src={model.images?.[0]}
-                  alt={model.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-[10px] font-black text-white truncate">{model.name}</p>
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
+            {models.slice(0, 8).map((model: any) => (
+              <Link key={model.id} href={`/admin/models/${model.id}`} className="group relative aspect-square rounded-2xl overflow-hidden ring-1 ring-zinc-200 hover:ring-2 hover:ring-zinc-900 transition-all">
+                <img src={model.images?.[0]} alt={model.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+                  <p className="text-[9px] font-black text-white truncate">{model.name}</p>
                 </div>
               </Link>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Recent Generations Grid */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black tracking-tight">Recent Generations</h2>
-          <Link href="/videos" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors flex items-center gap-1">
-            View All <ArrowRight className="h-4 w-4" />
+      {/* Recent videos */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Récents</h2>
+          <Link href="/videos" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
+            Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-
         {videosLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="aspect-video rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <div key={i} className="aspect-video rounded-2xl bg-zinc-100 animate-pulse" />)}
           </div>
         ) : recentVideos.length === 0 ? (
-          <Card className="bg-zinc-50/50 dark:bg-zinc-900/50 border-dashed border-2 border-zinc-200 dark:border-zinc-800 rounded-3xl">
-            <CardContent className="py-20 flex flex-col items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                <Video className="h-8 w-8" />
+          <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
+            <CardContent className="py-16 flex flex-col items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-zinc-100 flex items-center justify-center">
+                <Video className="h-5 w-5 text-zinc-400" />
               </div>
-              <p className="text-zinc-500 font-medium">No generations found</p>
-              <Button asChild className="bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold">
-                <Link href="/generate">Create Thumbnail</Link>
+              <p className="text-sm text-zinc-500">Aucune vidéo générée pour l&apos;instant.</p>
+              <Button asChild className="bg-zinc-900 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm">
+                <Link href="/generate">Créer ma première vidéo</Link>
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentVideos.map(video => (
-              <VideoCard key={video.id} video={video} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {recentVideos.map(video => <VideoCard key={video.id} video={video} />)}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Call to Action for Upgrade */}
-      <Card className="bg-linear-to-r from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-200 text-white dark:text-black overflow-hidden relative rounded-4xl border-none shadow-2xl">
-        <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 dark:text-emerald-600">
-              <Sparkles className="h-5 w-5 fill-current" />
-              <span className="text-sm font-black uppercase tracking-widest">Premium Content</span>
-            </div>
-            <h3 className="text-2xl font-black tracking-tight">Upgrade to Pro</h3>
-            <p className="opacity-70 font-medium max-w-md">Unlock all features and boost your thumbnails with high-end AI generation.</p>
+      {/* Upgrade CTA */}
+      {(!subscriptionStatus?.planName || subscriptionStatus.planName === "Free") && (
+        <div className="flex items-center justify-between p-5 bg-zinc-900 rounded-2xl text-white">
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-1">Passez à Pro</p>
+            <p className="font-bold">Débloquez toutes les fonctionnalités IA</p>
           </div>
-          <Button asChild className="bg-emerald-500 hover:bg-emerald-400 text-white dark:text-zinc-50 rounded-2xl h-14 px-10 font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">
-            <Link href="/subscription">Upgrade</Link>
+          <Button asChild className="bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black h-9 px-5 text-sm">
+            <Link href="/subscription">
+              Upgrade <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Link>
           </Button>
-        </CardContent>
-        {/* Subtle pattern background */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-white to-transparent dark:from-black"></div>
         </div>
-      </Card>
-
+      )}
     </div>
   );
 }
 
-function StatCard({ title, value, description, icon }: { title: string; value: string; description: string; icon: React.ReactNode }) {
+function StatCard({ label, value, icon, href }: { label: string; value: string; icon: React.ReactNode; href: string }) {
   return (
-    <Card className="bg-white dark:bg-zinc-950/40 border-none shadow-sm hover:shadow-md transition-all group rounded-3xl overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-800">
-      <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="h-10 w-10 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50 transition-colors">
-            {icon}
+    <Link href={href} className="block group">
+      <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none hover:border-zinc-300 transition-colors">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-8 w-8 rounded-xl bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:text-zinc-700 transition-colors">
+              {icon}
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
           </div>
-          <span className="text-zinc-400">
-            <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </span>
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider">{title}</h3>
-          <div className="text-3xl font-black tracking-tighter">{value}</div>
-          <p className="text-[10px] text-zinc-400 font-medium italic">{description}</p>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="text-2xl font-black tracking-tight text-zinc-900">{value}</div>
+          <p className="text-xs text-zinc-400 font-medium mt-0.5">{label}</p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
