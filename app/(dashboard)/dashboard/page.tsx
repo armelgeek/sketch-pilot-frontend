@@ -138,7 +138,7 @@ export default function DashboardPage() {
                   <Tooltip
                     cursor={{ fill: "#f4f4f5" }}
                     contentStyle={{ border: "none", borderRadius: 12, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
-                    formatter={(value, name) => [value, name === "total" ? "Total" : "Terminées"]}
+                    formatter={(value) => [value, "Vidéos"]}
                   />
                   <Bar dataKey="total" radius={[6, 6, 0, 0]}>
                     {activityData.map((_, idx) => (
