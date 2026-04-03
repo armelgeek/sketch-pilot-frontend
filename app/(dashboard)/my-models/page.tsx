@@ -78,19 +78,19 @@ export default function MyModelsPage() {
     };
 
     return (
-        <div className="min-h-screen pb-20 space-y-8">
+        <div className="space-y-6 pb-20">
             {/* Header */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                            <Library className="h-6 w-6 text-white" />
+                        <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                            <Library className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
+                            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-zinc-900">
                                 Ma Bibliothèque
                             </h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <p className="text-sm text-zinc-500">
                                 Gérez vos modèles de personnages personnalisés
                             </p>
                         </div>
@@ -113,12 +113,12 @@ export default function MyModelsPage() {
 
             {/* Error Message */}
             {error && (
-                <Card className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl">
+                <Card className="p-4 bg-red-50 border border-red-200 rounded-xl">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                         <div>
-                            <h3 className="font-bold text-red-800 dark:text-red-200">Erreur</h3>
-                            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                            <h3 className="font-bold text-red-800">Erreur</h3>
+                            <p className="text-sm text-red-700">{error}</p>
                         </div>
                     </div>
                 </Card>
@@ -130,7 +130,7 @@ export default function MyModelsPage() {
                     placeholder="Rechercher par nom ou description..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="rounded-xl h-11 border-zinc-200 dark:border-zinc-800"
+                    className="rounded-xl h-11 border-zinc-200"
                 />
 
                 {/* Tag Filter */}
@@ -148,7 +148,7 @@ export default function MyModelsPage() {
                                     className={`cursor-pointer transition-colors rounded-full ${
                                         selectedTags.includes(tag)
                                             ? "bg-emerald-600 text-white"
-                                            : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500"
+                                            : "bg-white text-zinc-700 border-zinc-200 hover:border-emerald-500"
                                     }`}
                                     onClick={() => {
                                         setSelectedTags(prev =>
@@ -173,12 +173,12 @@ export default function MyModelsPage() {
                     <p className="text-zinc-500">Chargement de votre bibliothèque...</p>
                 </div>
             ) : filteredModels.length === 0 ? (
-                <Card className="p-12 text-center rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                    <Library className="h-12 w-12 text-zinc-300 dark:text-zinc-700 mx-auto mb-4" />
-                    <h3 className="text-lg font-black text-zinc-600 dark:text-zinc-300 mb-2">
+                <Card className="p-12 text-center rounded-2xl border-2 border-dashed border-zinc-200">
+                    <Library className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-black text-zinc-600 mb-2">
                         {models.length === 0 ? "Aucun modèle créé" : "Aucun résultat"}
                     </h3>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-xs mx-auto">
+                    <p className="text-sm text-zinc-500 mb-6 max-w-xs mx-auto">
                         {models.length === 0
                             ? "Créez votre premier modèle personnalisé pour organiser et réutiliser vos personnages."
                             : "Essayez de modifier votre recherche ou vos filtres."}
@@ -230,9 +230,9 @@ export default function MyModelsPage() {
             </Dialog>
 
             {/* Additional Info */}
-            <Card className="p-6 bg-linear-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
-                <h3 className="font-bold text-emerald-900 dark:text-emerald-100 mb-3">💡 Conseils d&apos;utilisation</h3>
-                <ul className="space-y-2 text-sm text-emerald-800 dark:text-emerald-200">
+            <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl">
+                <h3 className="font-bold text-emerald-900 mb-3">💡 Conseils d&apos;utilisation</h3>
+                <ul className="space-y-2 text-sm text-emerald-800">
                     <li>✅ <strong>Prompt verrouillé</strong>: Assurez la cohérence en ajoutant des traits invariants</li>
                     <li>✅ <strong>Voix assignée</strong>: La voix sera automatiquement appliquée aux vidéos utilisant ce modèle</li>
                     <li>✅ <strong>Tags</strong>: Organisez vos modèles par style, genre ou projet</li>
