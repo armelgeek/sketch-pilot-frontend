@@ -6,7 +6,7 @@ import {
     ChevronRight, FileText, Play, RefreshCw, Wand2, Loader2,
     ChevronLeft, Zap, Sparkles, Music, SkipBack, SkipForward,
     Type, Eye, Check, Settings2, FileJson, RotateCcw,
-    Plus, Film, Mic, AlertCircle
+    Plus, Film, Mic, AlertCircle, Home
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
@@ -263,10 +263,10 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     // ─── Full-screen loading ──────────────────────────────────────────────
     if (showLoadingState) {
         return (
-            <div className="min-h-[calc(100vh-56px)] bg-zinc-950 flex flex-col items-center justify-center gap-10 px-4">
+            <div className="min-h-[calc(100vh-56px)] bg-[#FAFAFA] flex flex-col items-center justify-center gap-10 px-4">
                 <div className="relative h-40 w-40">
                     <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="44" fill="none" className="stroke-zinc-800" strokeWidth="6" />
+                        <circle cx="50" cy="50" r="44" fill="none" className="stroke-zinc-200" strokeWidth="6" />
                         <circle cx="50" cy="50" r="44" fill="none" className="stroke-emerald-500" strokeWidth="8"
                             strokeLinecap="round"
                             strokeDasharray={`${2 * Math.PI * 44}`}
@@ -274,15 +274,15 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                             style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black text-emerald-400 tracking-tighter">{realProgress}%</span>
-                        <Film className="h-5 w-5 text-zinc-600 mt-1 animate-pulse" />
+                        <span className="text-3xl font-black text-emerald-600 tracking-tighter">{realProgress}%</span>
+                        <Film className="h-5 w-5 text-zinc-400 mt-1 animate-pulse" />
                     </div>
                 </div>
                 <div className="text-center space-y-3 max-w-sm">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Génération
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold uppercase tracking-widest">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Génération
                     </div>
-                    <h2 className="text-xl font-black text-white">{activeVideo?.status === "queued" ? "Dans la file d'attente..." : "Création du storyboard..."}</h2>
+                    <h2 className="text-xl font-black text-zinc-900">{activeVideo?.status === "queued" ? "Dans la file d'attente..." : "Création du storyboard..."}</h2>
                     <p className="text-zinc-500 text-sm">{realMessage || "L'IA prépare vos scènes et visuels."}</p>
                 </div>
             </div>
@@ -292,10 +292,10 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     // ─── Assembly overlay ─────────────────────────────────────────────────
     if (assembling) {
         return (
-            <div className="min-h-[calc(100vh-56px)] bg-zinc-950 flex flex-col items-center justify-center gap-10 px-4">
+            <div className="min-h-[calc(100vh-56px)] bg-[#FAFAFA] flex flex-col items-center justify-center gap-10 px-4">
                 <div className="relative h-40 w-40">
                     <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="44" fill="none" className="stroke-zinc-800" strokeWidth="6" />
+                        <circle cx="50" cy="50" r="44" fill="none" className="stroke-zinc-200" strokeWidth="6" />
                         <circle cx="50" cy="50" r="44" fill="none" className="stroke-violet-500" strokeWidth="8"
                             strokeLinecap="round"
                             strokeDasharray={`${2 * Math.PI * 44}`}
@@ -303,218 +303,186 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                             style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black text-violet-400">{assembleProgress}%</span>
-                        <Zap className="h-5 w-5 text-zinc-600 mt-1 animate-bounce" />
+                        <span className="text-3xl font-black text-violet-600">{assembleProgress}%</span>
+                        <Zap className="h-5 w-5 text-zinc-400 mt-1 animate-bounce" />
                     </div>
                 </div>
                 <div className="text-center space-y-3 max-w-sm">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-bold uppercase tracking-widest">
-                        <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" /> Assemblage final
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-600 text-xs font-bold uppercase tracking-widest">
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" /> Assemblage final
                     </div>
-                    <h2 className="text-xl font-black text-white">Finalisation de votre vidéo</h2>
+                    <h2 className="text-xl font-black text-zinc-900">Finalisation de votre vidéo</h2>
                     <p className="text-zinc-500 text-sm">{assembleMessage || "Voix, musique et captions en cours..."}</p>
                 </div>
-                {assembleError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm">{assembleError}</div>}
+                {assembleError && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{assembleError}</div>}
             </div>
         );
     }
 
     // ─── Main Studio ──────────────────────────────────────────────────────
     const STEPS: { id: StudioTab; label: string; Icon: any; description: string }[] = [
-        { id: "script",     label: "Script",     Icon: FileText,  description: "Éditez la narration" },
+        { id: "script",     label: "Contenu",    Icon: FileText,  description: "Éditez la narration" },
         { id: "storyboard", label: "Storyboard", Icon: Film,      description: "Visuels générés"     },
-        { id: "production", label: "Production", Icon: Settings2, description: "Voix & Musique"      },
+        { id: "production", label: "Vidéo",      Icon: Settings2, description: "Voix & Musique"      },
     ];
 
     const stepIndex = STEPS.findIndex(s => s.id === activeTab);
 
+    const handleNext = () => {
+        if (activeTab === "script") {
+            if (visualsGenerated) setActiveTab("storyboard");
+            else handleAnimate();
+        } else if (activeTab === "storyboard") {
+            setActiveTab("production");
+        } else {
+            handleAssemble();
+        }
+    };
+
     return (
-        <div className="flex flex-col bg-zinc-950" style={{ minHeight: "calc(100vh - 56px)" }}>
+        <div className="flex flex-col bg-[#FAFAFA]" style={{ minHeight: "calc(100vh - 56px)" }}>
 
             {/* Studio top bar */}
-            <div className="flex items-center gap-3 px-4 h-12 border-b border-zinc-800 bg-zinc-950 shrink-0">
-                <button onClick={() => router.push("/videos")}
-                    className="flex items-center gap-1 text-zinc-500 hover:text-zinc-200 text-xs font-medium transition-colors shrink-0">
-                    <ChevronLeft className="h-3.5 w-3.5" /> Retour
-                </button>
-                <div className="h-4 w-px bg-zinc-800" />
-                <Film className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                <span className="text-xs font-bold text-zinc-300 truncate max-w-[180px]">
-                    {activeVideo?.title || activeVideo?.topic || "Sans titre"}
-                </span>
-                {activeVideo?.status && (
-                    <span className={cn("text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0",
-                        activeVideo.status === "completed" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                        : activeVideo.status === "failed"  ? "text-red-400 bg-red-500/10 border-red-500/20"
-                        : "text-amber-400 bg-amber-500/10 border-amber-500/20")}>
-                        {activeVideo.status}
+            <div className="flex items-center px-4 h-14 border-b border-zinc-200 bg-white shrink-0 relative">
+                {/* Left: home + title */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <button onClick={() => router.push("/videos")}
+                        className="h-8 w-8 flex items-center justify-center rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-500 hover:text-zinc-900 transition-colors shrink-0">
+                        <Home className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm font-bold text-zinc-900 truncate max-w-[200px]">
+                        {activeVideo?.title || activeVideo?.topic || "Sans titre"}
                     </span>
-                )}
-                <div className="flex-1" />
+                    {activeVideo?.status && (
+                        <span className={cn("text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0",
+                            activeVideo.status === "completed" ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                            : activeVideo.status === "failed"  ? "text-red-700 bg-red-50 border-red-200"
+                            : "text-amber-700 bg-amber-50 border-amber-200")}>
+                            {activeVideo.status}
+                        </span>
+                    )}
+                </div>
 
-                {/* Step wizard */}
-                <div className="flex items-center gap-0">
-                    {STEPS.map(({ id, label, Icon }, index) => {
+                {/* Center: Step wizard */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0">
+                    {STEPS.map(({ id, label }, index) => {
                         const isActive = activeTab === id;
                         const isCompleted = stepIndex > index;
                         const locked = id === "storyboard" && !visualsGenerated && !generating;
                         return (
                             <div key={id} className="flex items-center">
                                 {index > 0 && (
-                                    <div className={cn("h-px w-5 transition-colors duration-300", isCompleted ? "bg-emerald-500" : "bg-zinc-800")} />
+                                    <div className={cn("h-px w-10 transition-colors duration-300", isCompleted ? "bg-emerald-400" : "bg-zinc-200")} />
                                 )}
                                 <button
                                     onClick={() => !locked && setActiveTab(id)}
                                     title={locked ? "Générez les visuels d'abord" : label}
-                                    className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
-                                        isActive
-                                            ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
-                                            : locked
-                                            ? "text-zinc-700 cursor-not-allowed"
-                                            : isCompleted
-                                            ? "text-emerald-400 hover:bg-zinc-800"
-                                            : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                                    )}>
+                                    disabled={locked}
+                                    className="flex flex-col items-center gap-0.5 px-1">
                                     <div className={cn(
-                                        "h-4 w-4 rounded-full text-[8px] flex items-center justify-center font-black shrink-0",
-                                        isActive ? "bg-white/25 text-white" : isCompleted ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
+                                        "h-7 w-7 rounded-full text-xs flex items-center justify-center font-black border-2 transition-all duration-200",
+                                        isActive    ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200"
+                                        : isCompleted ? "bg-emerald-500 border-emerald-500 text-white"
+                                        : locked      ? "bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed"
+                                        : "bg-white border-zinc-300 text-zinc-500 hover:border-emerald-400"
                                     )}>
-                                        {isCompleted ? <Check className="h-2.5 w-2.5" /> : <span>{index + 1}</span>}
+                                        {isCompleted ? <Check className="h-3.5 w-3.5" /> : <span>{index + 1}</span>}
                                     </div>
-                                    <Icon className="h-3.5 w-3.5 hidden sm:block" />
-                                    <span className="hidden md:inline">{label}</span>
+                                    <span className={cn("text-[10px] font-semibold whitespace-nowrap",
+                                        isActive ? "text-emerald-600" : isCompleted ? "text-emerald-500" : "text-zinc-400")}>
+                                        {label}
+                                    </span>
                                 </button>
                             </div>
                         );
                     })}
                 </div>
 
-                <div className="h-4 w-px bg-zinc-800" />
-                {(promptsUrl || activeVideo?.options?.promptsUrl) && (
-                    <button onClick={() => window.open(promptsUrl || activeVideo?.options?.promptsUrl, "_blank")}
-                        className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0" title="Prompts JSON">
-                        <FileJson className="h-4 w-4" />
-                    </button>
-                )}
+                {/* Right: actions */}
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                    {(promptsUrl || activeVideo?.options?.promptsUrl) && (
+                        <button onClick={() => window.open(promptsUrl || activeVideo?.options?.promptsUrl, "_blank")}
+                            className="text-zinc-400 hover:text-zinc-600 transition-colors shrink-0" title="Prompts JSON">
+                            <FileJson className="h-4 w-4" />
+                        </button>
+                    )}
+                    <Button onClick={handleNext} disabled={generating || assembling}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-sm gap-1.5 shrink-0">
+                        {activeTab === "production" ? <><Zap className="h-4 w-4" /> Lancer</> : <>Suivant <ChevronRight className="h-4 w-4 -mr-1" /></>}
+                    </Button>
+                </div>
             </div>
 
             {/* Error */}
             {error && (
-                <div className="flex items-center gap-3 px-5 py-2 bg-red-500/10 border-b border-red-500/20 text-red-400 text-xs shrink-0">
+                <div className="flex items-center gap-3 px-5 py-2 bg-red-50 border-b border-red-200 text-red-600 text-xs shrink-0">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1">{error}</span>
-                    <button onClick={() => setError(null)} className="text-red-500 hover:text-red-300">✕</button>
+                    <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">✕</button>
                 </div>
             )}
 
             {/* Generation progress */}
             {generating && !isScriptMissing && (
-                <div className="flex items-center gap-4 px-5 py-2 bg-emerald-500/5 border-b border-emerald-500/10 shrink-0">
-                    <Loader2 className="h-3.5 w-3.5 text-emerald-400 animate-spin shrink-0" />
+                <div className="flex items-center gap-4 px-5 py-2 bg-emerald-50 border-b border-emerald-200 shrink-0">
+                    <Loader2 className="h-3.5 w-3.5 text-emerald-600 animate-spin shrink-0" />
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between mb-1">
-                            <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider truncate">{realMessage || "Génération..."}</span>
-                            <span className="text-[10px] font-black text-emerald-400 ml-2 shrink-0">{realProgress}%</span>
+                            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider truncate">{realMessage || "Génération..."}</span>
+                            <span className="text-[10px] font-black text-emerald-600 ml-2 shrink-0">{realProgress}%</span>
                         </div>
-                        <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-1 bg-emerald-100 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${realProgress}%` }} />
                         </div>
                     </div>
                     <button onClick={() => cancelVideo(activeVideo!.id)}
-                        className="text-[10px] font-bold text-red-400 border border-red-500/20 rounded-lg px-2 py-1 hover:bg-red-500/10 transition-colors shrink-0">Stop</button>
+                        className="text-[10px] font-bold text-red-600 border border-red-200 rounded-lg px-2 py-1 hover:bg-red-50 transition-colors shrink-0">Stop</button>
                 </div>
             )}
 
             {/* Studio body */}
             <div className="flex flex-1 overflow-hidden">
 
-                {/* Filmstrip */}
-                <aside className="w-48 bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden shrink-0">
-                    <div className="px-3 py-2 border-b border-zinc-800">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                            {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
-                        </span>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        {displayScenes.map((scene: any, i: number) => {
-                            const sId = scene.id || `s${i + 1}`;
-                            const isAct = selectedScene === sId;
-                            const isGen = currentSceneIndex === i || repromptIndex === i;
-                            return (
-                                <button key={sId} onClick={() => setSelectedScene(sId)}
-                                    className={cn("w-full text-left group border-b border-zinc-800/50 transition-all",
-                                        isAct ? "bg-zinc-800 border-l-2 border-l-emerald-500" : "hover:bg-zinc-800/40")}>
-                                    <div className="relative aspect-video bg-zinc-800 overflow-hidden">
-                                        {scene.thumbnailUrl || scene.imageUrl
-                                            ? <img src={scene.thumbnailUrl || scene.imageUrl} alt={`S${i + 1}`}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                            : <div className="absolute inset-0 flex items-center justify-center"><Film className="h-4 w-4 text-zinc-700" /></div>}
-                                        {isGen && (
-                                            <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
-                                                <Loader2 className="h-3.5 w-3.5 text-emerald-400 animate-spin" />
-                                            </div>
-                                        )}
-                                        <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] font-black px-1.5 py-0.5 rounded">{i + 1}</div>
-                                        {scene.imageUrl && <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-                                    </div>
-                                    <div className="px-2 py-1.5">
-                                        <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed">
-                                            {sceneEdits[sId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}
-                                        </p>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                        {!generating && (
-                            <button onClick={() => { setInsertIndex(displayScenes.length); setIsInserting(true); }}
-                                className="w-full flex items-center justify-center gap-1.5 py-3 text-zinc-700 hover:text-emerald-400 border-t border-zinc-800 hover:bg-zinc-800/40 transition-colors text-[9px] font-black uppercase tracking-wider">
-                                <Plus className="h-3 w-3" /> Scène
-                            </button>
-                        )}
-                    </div>
-                </aside>
-
                 {/* Main content */}
-                <div className="flex-1 bg-[#0F0F0F] overflow-hidden flex flex-col">
+                <div className="flex-1 bg-[#FAFAFA] overflow-hidden flex flex-col">
 
                     {/* ── SCRIPT TAB ── */}
                     {activeTab === "script" && (
                         <div className="flex flex-col h-full">
                             {/* Step header */}
-                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                            <div className="px-6 pt-5 pb-4 border-b border-zinc-200 shrink-0 bg-white">
                                 <div className="flex items-center gap-2.5">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">1</span>
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">1</span>
                                     <div>
-                                        <p className="text-sm font-black text-white leading-none">Validation du Script</p>
-                                        <p className="text-[11px] text-zinc-600 mt-0.5">Éditez la narration de chaque scène</p>
+                                        <p className="text-sm font-black text-zinc-900 leading-none">Validation du Script</p>
+                                        <p className="text-[11px] text-zinc-500 mt-0.5">Éditez la narration de chaque scène</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Scenes list */}
-                            <div className="flex-1 overflow-y-auto py-4 px-5">
+                            <div className="flex-1 overflow-y-auto py-6 px-5">
                                 <div className="max-w-2xl mx-auto">
                                     <ScriptEditor scenes={displayScenes} onScenesChange={onScenesChange} />
                                 </div>
                             </div>
 
                             {/* Bottom action bar */}
-                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                            <div className="shrink-0 px-5 py-3 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
                                 <button onClick={handleSaveScript}
-                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                    className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors font-medium">
                                     Sauvegarder
                                 </button>
                                 {!visualsGenerated ? (
                                     <Button onClick={handleAnimate} disabled={generating}
-                                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                        className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
                                         <Wand2 className="h-4 w-4" />
                                         Générer les visuels
                                         <ChevronRight className="h-4 w-4 -mr-1" />
                                     </Button>
                                 ) : (
                                     <Button onClick={() => setActiveTab("storyboard")}
-                                        className="bg-zinc-800 hover:bg-zinc-700 text-emerald-400 font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0 border border-zinc-700">
+                                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0 border border-emerald-200">
                                         <Film className="h-4 w-4" />
                                         Voir le storyboard
                                         <ChevronRight className="h-4 w-4 -mr-1" />
@@ -526,135 +494,232 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
                     {/* ── STORYBOARD TAB ── */}
                     {activeTab === "storyboard" && (
-                        <div className="flex flex-col h-full">
-                            {/* Step header */}
-                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">2</span>
+                        <div className="flex h-full overflow-hidden">
+
+                            {/* LEFT PANEL: Settings + Scene list */}
+                            <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col overflow-hidden shrink-0">
+                                {/* Settings */}
+                                <div className="p-4 border-b border-zinc-200 space-y-3">
                                     <div>
-                                        <p className="text-sm font-black text-white leading-none">Storyboard</p>
-                                        <p className="text-[11px] text-zinc-600 mt-0.5">Vérifiez et ajustez les visuels de chaque scène</p>
+                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 block">Voix Narrative</label>
+                                        <Select value={kokoroVoicePreset} onValueChange={setKokoroVoicePreset}>
+                                            <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-xl h-9 text-xs">
+                                                <SelectValue placeholder="Choisir une voix" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white border-zinc-200 rounded-xl">
+                                                {availableVoices.map((v: any) => (
+                                                    <SelectItem key={v.id} value={v.presetId} className="text-zinc-900 text-xs">
+                                                        {v.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 block">Musique de fond</label>
+                                        <Select value={selectedMusicId} onValueChange={setSelectedMusicId}>
+                                            <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-xl h-9 text-xs">
+                                                <SelectValue placeholder="Aucune musique" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white border-zinc-200 rounded-xl">
+                                                <SelectItem value="none" className="text-zinc-900 text-xs">Aucune musique</SelectItem>
+                                                {musicTracks.map((t: any) => (
+                                                    <SelectItem key={t.id} value={t.id} className="text-zinc-900 text-xs">{t.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Scene viewer */}
-                            <div className="flex-1 overflow-y-auto py-4 px-5">
-                                {activeScene ? (
-                                    <div className="space-y-4 max-w-2xl mx-auto">
-                                        {/* Canvas */}
-                                        <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-800 group shadow-2xl">
-                                            {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
-                                                <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
-                                                    <Wand2 className="h-8 w-8 text-emerald-400 animate-bounce" />
-                                                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest animate-pulse">Génération...</p>
-                                                </div>
-                                            )}
-                                            {regeneratingSceneId === selectedScene && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
-                                                    <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
-                                                </div>
-                                            )}
-                                            {activeScene.imageUrl
-                                                ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
-                                                : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                                                    <Film className="h-16 w-16 mb-3 opacity-20" />
-                                                    <p className="text-xs">Cliquez sur &quot;Générer les visuels&quot; à l&apos;étape précédente</p>
-                                                  </div>}
-                                            {activeScene.narration && (
-                                                <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
-                                                    <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg font-medium border border-white/10">
-                                                        {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 70)}...
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded uppercase">
-                                                S{activeSceneIndex + 1}/{displayScenes.length}
-                                            </div>
-                                            {activeScene.imageUrl && (
-                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                        disabled={!!regeneratingSceneId || generating}
-                                                        className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
-                                                        <RefreshCw className={cn("h-3.5 w-3.5", regeneratingSceneId === selectedScene && "animate-spin")} />
-                                                        Régénérer (5 🪙)
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Adjuster */}
-                                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                                            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
-                                                <Zap className="h-3.5 w-3.5 text-emerald-400" />
-                                                <span className="text-xs font-black text-zinc-300 uppercase tracking-wider">Ajuster la scène</span>
-                                                <div className="flex-1" />
-                                                <span className="text-[10px] text-zinc-600">S{activeSceneIndex + 1}/{displayScenes.length}</span>
-                                            </div>
-                                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
-                                                    <Textarea value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
-                                                        onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
-                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                        placeholder="Texte de narration..." />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Prompt visuel (IA)</label>
-                                                    <Textarea value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
-                                                        onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
-                                                        className="min-h-[80px] bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-emerald-500/50 text-sm resize-none"
-                                                        placeholder="Décrivez le visuel..." />
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between px-4 pb-4">
-                                                <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
-                                                    className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-300 transition-colors font-medium">
-                                                    <Plus className="h-3.5 w-3.5" /> Insérer avant
-                                                </button>
-                                                <Button onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
-                                                    disabled={!!regeneratingSceneId || generating} size="sm"
-                                                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl h-8 px-4 text-xs gap-1.5">
-                                                    {regeneratingSceneId === selectedScene
-                                                        ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                                        : <Sparkles className="h-3.5 w-3.5" />}
-                                                    Appliquer & Régénérer
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-48">
-                                        <p className="text-zinc-700 text-sm">Sélectionnez une scène dans le panneau gauche</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Bottom navigation */}
-                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setActiveTab("script")}
-                                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
-                                        <ChevronLeft className="h-3.5 w-3.5" /> Script
+                                {/* Scene list header */}
+                                <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200">
+                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                                        {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
+                                    </span>
+                                    <button className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 px-2 py-1 rounded-lg transition-colors flex items-center gap-1">
+                                        Export
                                     </button>
-                                    {visualsGenerated && (
-                                        <>
-                                            <span className="text-zinc-800">·</span>
-                                            <button onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
-                                                className="text-xs text-zinc-600 hover:text-orange-400 transition-colors font-medium flex items-center gap-1">
-                                                <RotateCcw className="h-3 w-3" /> Tout régénérer
+                                </div>
+
+                                {/* Scene thumbnails */}
+                                <div className="flex-1 overflow-y-auto">
+                                    {displayScenes.map((scene: any, i: number) => {
+                                        const sId = scene.id || `s${i + 1}`;
+                                        const isAct = selectedScene === sId;
+                                        const isGen = currentSceneIndex === i || repromptIndex === i;
+                                        return (
+                                            <button key={sId} onClick={() => setSelectedScene(sId)}
+                                                className={cn(
+                                                    "w-full text-left group border-b border-zinc-100 transition-all p-2",
+                                                    isAct ? "bg-emerald-50 border-l-4 border-l-emerald-500" : "hover:bg-zinc-50"
+                                                )}>
+                                                <div className="relative aspect-video bg-zinc-100 rounded-lg overflow-hidden">
+                                                    {scene.thumbnailUrl || scene.imageUrl
+                                                        ? <img src={scene.thumbnailUrl || scene.imageUrl} alt={`S${i + 1}`}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        : <div className="absolute inset-0 flex items-center justify-center">
+                                                            <Film className="h-5 w-5 text-zinc-300" />
+                                                          </div>}
+                                                    {isGen && (
+                                                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
+                                                            <Loader2 className="h-4 w-4 text-emerald-600 animate-spin" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                                                        {String(i + 1).padStart(2, "0")}
+                                                    </div>
+                                                    {scene.imageUrl && <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                                                </div>
+                                                <p className={cn("text-[10px] mt-1.5 line-clamp-2 leading-relaxed",
+                                                    isAct ? "text-emerald-700 font-medium" : "text-zinc-500")}>
+                                                    {sceneEdits[sId]?.narration ?? (scene.narration || scene.text || scene.content || "...")}
+                                                </p>
                                             </button>
-                                        </>
+                                        );
+                                    })}
+                                    {!generating && (
+                                        <button onClick={() => { setInsertIndex(displayScenes.length); setIsInserting(true); }}
+                                            className="w-full flex items-center justify-center gap-1.5 py-3 text-zinc-400 hover:text-emerald-600 border-t border-zinc-100 hover:bg-emerald-50 transition-colors text-[9px] font-black uppercase tracking-wider">
+                                            <Plus className="h-3 w-3" /> Scène
+                                        </button>
                                     )}
                                 </div>
-                                {visualsGenerated && (
-                                    <Button onClick={() => setActiveTab("production")}
-                                        className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
-                                        Production
-                                        <ChevronRight className="h-4 w-4 -mr-1" />
-                                    </Button>
-                                )}
+                            </aside>
+
+                            {/* CENTER: Main Canvas + Narration */}
+                            <div className="flex-1 flex flex-col overflow-hidden bg-[#FAFAFA]">
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    {activeScene ? (
+                                        <div className="max-w-3xl mx-auto space-y-4">
+                                            {/* Main canvas */}
+                                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-900 shadow-xl border border-zinc-200 group">
+                                                {(currentSceneIndex === activeSceneIndex || repromptIndex === activeSceneIndex) && (
+                                                    <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-20">
+                                                        <Wand2 className="h-10 w-10 text-emerald-400 animate-bounce" />
+                                                        <p className="text-sm font-black text-emerald-300 uppercase tracking-widest animate-pulse">Génération en cours...</p>
+                                                    </div>
+                                                )}
+                                                {regeneratingSceneId === selectedScene && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+                                                        <RefreshCw className="h-10 w-10 text-emerald-400 animate-spin" />
+                                                    </div>
+                                                )}
+                                                {activeScene.imageUrl
+                                                    ? <img src={activeScene.imageUrl} className="w-full h-full object-cover" alt="Scene" />
+                                                    : <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-600">
+                                                        <Film className="h-20 w-20 mb-4 opacity-20" />
+                                                        <p className="text-sm font-medium text-zinc-500">Générez les visuels depuis le panneau droit</p>
+                                                      </div>}
+                                                {activeScene.narration && (
+                                                    <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+                                                        <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-xl font-medium border border-white/10 shadow-lg">
+                                                            {(() => { const n = sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? ""; return n.length > 80 ? n.substring(0, 80) + "..." : n; })()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                                                    {String(activeSceneIndex + 1).padStart(2, "0")} / {String(displayScenes.length).padStart(2, "0")}
+                                                </div>
+                                            </div>
+
+                                            {/* Narration edit */}
+                                            <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-4">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">Narration</label>
+                                                <Textarea
+                                                    value={sceneEdits[selectedScene]?.narration ?? (activeScene.narration || activeScene.text || "")}
+                                                    onChange={(e) => updateScene(selectedScene, "narration", e.target.value)}
+                                                    className="min-h-[72px] bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-emerald-400 text-sm resize-none rounded-xl"
+                                                    placeholder="Texte de narration..." />
+                                            </div>
+
+                                            {/* Utility actions */}
+                                            <div className="flex items-center justify-between">
+                                                <button onClick={() => { setInsertIndex(activeSceneIndex); setIsInserting(true); }}
+                                                    className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-700 transition-colors font-medium">
+                                                    <Plus className="h-3.5 w-3.5" /> Insérer une scène avant
+                                                </button>
+                                                {visualsGenerated && (
+                                                    <button onClick={async () => { const j = await restartVideo(activeVideo!.id); if (j) { setJobId(j); setGenerating(true); } }}
+                                                        className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-orange-500 transition-colors font-medium">
+                                                        <RotateCcw className="h-3 w-3" /> Tout régénérer
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-48">
+                                            <p className="text-zinc-400 text-sm">Sélectionnez une scène dans le panneau gauche</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Bottom nav */}
+                                <div className="shrink-0 px-6 py-3 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
+                                    <button onClick={() => setActiveTab("script")}
+                                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
+                                        <ChevronLeft className="h-3.5 w-3.5" /> Contenu
+                                    </button>
+                                    {visualsGenerated && (
+                                        <Button onClick={() => setActiveTab("production")}
+                                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                            Vidéo <ChevronRight className="h-4 w-4 -mr-1" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
+
+                            {/* RIGHT PANEL: Prompt visuel + Actions */}
+                            <aside className="w-72 bg-white border-l border-zinc-200 flex flex-col overflow-y-auto shrink-0">
+                                <div className="p-5 space-y-5 flex-1">
+                                    {activeScene ? (
+                                        <>
+                                            {/* Image prompt */}
+                                            <div>
+                                                <h3 className="text-sm font-black text-zinc-900 mb-2">Prompt Visuel</h3>
+                                                <Textarea
+                                                    value={sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt || "")}
+                                                    onChange={(e) => updateScene(selectedScene, "imagePrompt", e.target.value)}
+                                                    className="min-h-[160px] bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-emerald-400 text-sm resize-none rounded-xl"
+                                                    placeholder="Décrivez le visuel de la scène..." />
+                                                <div className="text-[10px] text-zinc-400 text-right mt-1">
+                                                    {(sceneEdits[selectedScene]?.imagePrompt ?? (activeScene.imagePrompt || activeScene.prompt) ?? "").length} / 1000
+                                                </div>
+                                            </div>
+
+                                            {/* Regenerate */}
+                                            <Button
+                                                onClick={() => handleRegenerateImage(selectedScene, activeSceneIndex)}
+                                                disabled={!!regeneratingSceneId || generating}
+                                                className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-11 text-sm gap-2">
+                                                {regeneratingSceneId === selectedScene
+                                                    ? <RefreshCw className="h-4 w-4 animate-spin" />
+                                                    : <Sparkles className="h-4 w-4" />}
+                                                Régénérer (5 🪙)
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <p className="text-zinc-400 text-sm text-center pt-10">Sélectionnez une scène</p>
+                                    )}
+
+                                    {/* Animate / next step */}
+                                    {!visualsGenerated ? (
+                                        <Button
+                                            onClick={handleAnimate}
+                                            disabled={generating}
+                                            className="w-full font-black rounded-xl h-11 text-sm gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white border-0 shadow-md shadow-emerald-200">
+                                            <Wand2 className="h-4 w-4" />
+                                            {generating ? "Génération..." : "Générer les visuels"}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            onClick={() => setActiveTab("production")}
+                                            className="w-full font-black rounded-xl h-11 text-sm gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white border-0 shadow-md shadow-emerald-200">
+                                            <Play className="h-4 w-4" />
+                                            Passer en Production
+                                        </Button>
+                                    )}
+                                </div>
+                            </aside>
                         </div>
                     )}
 
@@ -662,43 +727,43 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                     {activeTab === "production" && (
                         <div className="flex flex-col h-full">
                             {/* Step header */}
-                            <div className="px-6 pt-5 pb-4 border-b border-zinc-800/60 shrink-0">
+                            <div className="px-6 pt-5 pb-4 border-b border-zinc-200 shrink-0 bg-white">
                                 <div className="flex items-center gap-2.5">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500 text-white text-[9px] font-black shrink-0">3</span>
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-[9px] font-black shrink-0">3</span>
                                     <div>
-                                        <p className="text-sm font-black text-white leading-none">Production</p>
-                                        <p className="text-[11px] text-zinc-600 mt-0.5">Voix narrative · Musique de fond · Sous-titres</p>
+                                        <p className="text-sm font-black text-zinc-900 leading-none">Production</p>
+                                        <p className="text-[11px] text-zinc-500 mt-0.5">Voix narrative · Musique de fond · Sous-titres</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Config grid */}
-                            <div className="flex-1 overflow-y-auto py-4 px-5">
+                            <div className="flex-1 overflow-y-auto py-6 px-5">
                                 <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                                 {/* Voice */}
-                                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-800">
-                                        <div className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                                            <Mic className="h-3.5 w-3.5 text-blue-400" />
+                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200">
+                                        <div className="h-7 w-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                                            <Mic className="h-3.5 w-3.5 text-blue-500" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-zinc-100">Voix Narrative</p>
-                                            <p className="text-[10px] text-zinc-600">Narration globale</p>
+                                            <p className="text-xs font-black text-zinc-900">Voix Narrative</p>
+                                            <p className="text-[10px] text-zinc-500">Narration globale</p>
                                         </div>
                                     </div>
                                     <div className="p-4 space-y-4">
                                         <Select value={kokoroVoicePreset} onValueChange={setKokoroVoicePreset}>
-                                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-200 rounded-xl h-10">
+                                            <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-xl h-10">
                                                 <SelectValue placeholder="Choisir une voix" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl bg-zinc-900 border-zinc-700">
+                                            <SelectContent className="rounded-xl bg-white border-zinc-200">
                                                 {availableVoices.map((v: any) => (
-                                                    <SelectItem key={v.id} value={v.presetId} className="text-zinc-200">
+                                                    <SelectItem key={v.id} value={v.presetId} className="text-zinc-900">
                                                         <div className="flex items-center gap-2">
                                                             <span>{v.gender === "female" ? "👩" : "👨"}</span>
                                                             <span className="font-medium">{v.name}</span>
-                                                            <span className="text-[9px] uppercase px-1 py-0.5 rounded bg-zinc-700 text-zinc-400 font-bold">{v.language?.split("-")[0]}</span>
+                                                            <span className="text-[9px] uppercase px-1 py-0.5 rounded bg-zinc-100 text-zinc-500 font-bold">{v.language?.split("-")[0]}</span>
                                                         </div>
                                                     </SelectItem>
                                                 ))}
@@ -708,40 +773,40 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                             <div className="space-y-1.5">
                                                 <div className="flex justify-between text-xs">
                                                     <span className="text-zinc-500">🎙️ Voix</span>
-                                                    <span className="font-black text-zinc-300">{voiceVolume}%</span>
+                                                    <span className="font-black text-zinc-900">{voiceVolume}%</span>
                                                 </div>
                                                 <Slider min={0} max={100} step={5} value={voiceVolume} onChange={(e) => setVoiceVolume(parseInt(e.target.value))} />
                                             </div>
                                             <div className="space-y-1.5">
                                                 <div className="flex justify-between text-xs">
                                                     <span className="text-zinc-500">🎵 Musique</span>
-                                                    <span className="font-black text-zinc-300">{musicVolume}%</span>
+                                                    <span className="font-black text-zinc-900">{musicVolume}%</span>
                                                 </div>
                                                 <Slider min={0} max={100} step={5} value={musicVolume} onChange={(e) => setMusicVolume(parseInt(e.target.value))} />
                                             </div>
                                         </div>
-                                        <p className="text-[10px] text-zinc-700 italic pt-3 border-t border-zinc-800 leading-relaxed">L'IA applique le ducking automatique pour garder la voix audible.</p>
+                                        <p className="text-[10px] text-zinc-400 italic pt-3 border-t border-zinc-100 leading-relaxed">L'IA applique le ducking automatique pour garder la voix audible.</p>
                                     </div>
                                 </div>
 
                                 {/* Music */}
-                                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-800">
-                                        <div className="h-7 w-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                                            <Music className="h-3.5 w-3.5 text-amber-400" />
+                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-zinc-200">
+                                        <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                                            <Music className="h-3.5 w-3.5 text-amber-500" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-zinc-100">Musique de fond</p>
-                                            <p className="text-[10px] text-zinc-600">{musicTracks.length} pistes</p>
+                                            <p className="text-xs font-black text-zinc-900">Musique de fond</p>
+                                            <p className="text-[10px] text-zinc-500">{musicTracks.length} pistes</p>
                                         </div>
                                     </div>
                                     <div className="p-3 space-y-2">
                                         <div className="max-h-52 overflow-y-auto space-y-1 pr-0.5">
                                             <button onClick={() => setSelectedMusicId("none")}
                                                 className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors text-left",
-                                                    selectedMusicId === "none" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-zinc-800 text-zinc-500 hover:bg-zinc-800")}>
+                                                    selectedMusicId === "none" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>
                                                 <div className={cn("h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center",
-                                                    selectedMusicId === "none" ? "border-emerald-500 bg-emerald-500" : "border-zinc-600")}>
+                                                    selectedMusicId === "none" ? "border-emerald-500 bg-emerald-500" : "border-zinc-300")}>
                                                     {selectedMusicId === "none" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                                 </div>
                                                 Aucune musique
@@ -749,74 +814,74 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                             {musicTracks.map((t: any) => (
                                                 <button key={t.id} onClick={() => { setSelectedMusicId(t.id); setIsPlayingAudio(true); }}
                                                     className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs border transition-colors text-left",
-                                                        selectedMusicId === t.id ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-zinc-800 text-zinc-500 hover:bg-zinc-800")}>
+                                                        selectedMusicId === t.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>
                                                     <div className={cn("h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center",
-                                                        selectedMusicId === t.id ? "border-emerald-500 bg-emerald-500" : "border-zinc-600")}>
+                                                        selectedMusicId === t.id ? "border-emerald-500 bg-emerald-500" : "border-zinc-300")}>
                                                         {selectedMusicId === t.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-bold truncate flex items-center gap-1">
                                                             {selectedMusicId === t.id && isPlayingAudio && (
                                                                 <span className="flex gap-0.5 mr-1">
-                                                                    {[1, 2, 3].map(b => <span key={b} className="w-0.5 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: `${b * 0.1}s` }} />)}
+                                                                    {[1, 2, 3].map(b => <span key={b} className="w-0.5 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: `${b * 0.1}s` }} />)}
                                                                 </span>
                                                             )}
                                                             {t.name}
                                                         </div>
-                                                        {t.tags && <div className="text-[9px] text-zinc-600 truncate">{t.tags.join(" · ")}</div>}
+                                                        {t.tags && <div className="text-[9px] text-zinc-400 truncate">{t.tags.join(" · ")}</div>}
                                                     </div>
                                                 </button>
                                             ))}
                                         </div>
-                                        <div className="flex items-center justify-center gap-3 pt-2 border-t border-zinc-800">
-                                            <button onClick={() => handleSkip("prev")} className="text-zinc-600 hover:text-zinc-300 transition-colors"><SkipBack className="h-4 w-4" /></button>
+                                        <div className="flex items-center justify-center gap-3 pt-2 border-t border-zinc-100">
+                                            <button onClick={() => handleSkip("prev")} className="text-zinc-400 hover:text-zinc-700 transition-colors"><SkipBack className="h-4 w-4" /></button>
                                             <button onClick={() => setIsPlayingAudio(!isPlayingAudio)} disabled={selectedMusicId === "none"}
                                                 className={cn("h-9 w-9 rounded-full border flex items-center justify-center transition-all",
-                                                    selectedMusicId !== "none" ? "bg-zinc-800 border-zinc-600 text-zinc-200 hover:border-emerald-500/50 hover:text-emerald-400" : "bg-zinc-900 border-zinc-800 text-zinc-700 cursor-not-allowed")}>
+                                                    selectedMusicId !== "none" ? "bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-emerald-400 hover:text-emerald-600" : "bg-zinc-50 border-zinc-100 text-zinc-300 cursor-not-allowed")}>
                                                 {isPlayingAudio
                                                     ? <div className="flex gap-0.5"><div className="w-1 h-3.5 bg-current rounded-sm animate-pulse" /><div className="w-1 h-3.5 bg-current rounded-sm animate-pulse" style={{ animationDelay: "0.15s" }} /></div>
                                                     : <Play className="h-4 w-4 fill-current ml-0.5" />}
                                             </button>
-                                            <button onClick={() => handleSkip("next")} className="text-zinc-600 hover:text-zinc-300 transition-colors"><SkipForward className="h-4 w-4" /></button>
+                                            <button onClick={() => handleSkip("next")} className="text-zinc-400 hover:text-zinc-700 transition-colors"><SkipForward className="h-4 w-4" /></button>
                                         </div>
-                                        {isPlayingAudio && <div className="h-0.5 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 animate-[loading_10s_linear_infinite]" style={{ width: "100%" }} /></div>}
+                                        {isPlayingAudio && <div className="h-0.5 bg-zinc-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 animate-[loading_10s_linear_infinite]" style={{ width: "100%" }} /></div>}
                                     </div>
                                 </div>
 
                                 {/* Captions */}
-                                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-                                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+                                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200">
                                         <div className="flex items-center gap-2.5">
-                                            <div className="h-7 w-7 rounded-lg bg-pink-500/15 flex items-center justify-center">
-                                                <Type className="h-3.5 w-3.5 text-pink-400" />
+                                            <div className="h-7 w-7 rounded-lg bg-pink-50 flex items-center justify-center">
+                                                <Type className="h-3.5 w-3.5 text-pink-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-black text-zinc-100">Sous-titres</p>
-                                                <p className="text-[10px] text-zinc-600">Style &amp; animation</p>
+                                                <p className="text-xs font-black text-zinc-900">Sous-titres</p>
+                                                <p className="text-[10px] text-zinc-500">Style &amp; animation</p>
                                             </div>
                                         </div>
                                         <button onClick={() => setShowCaptions(!showCaptions)}
-                                            className={cn("relative w-9 h-5 rounded-full transition-colors", showCaptions ? "bg-emerald-500" : "bg-zinc-700")}>
+                                            className={cn("relative w-9 h-5 rounded-full transition-colors", showCaptions ? "bg-emerald-500" : "bg-zinc-200")}>
                                             <div className={cn("absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm", showCaptions ? "translate-x-[18px]" : "translate-x-0.5")} />
                                         </button>
                                     </div>
                                     {showCaptions ? (
                                         <div className="p-4 space-y-3">
                                             <div>
-                                                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 block">Style</label>
+                                                <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">Style</label>
                                                 <div className="grid grid-cols-2 gap-1">
                                                     {[{id:"colored",l:"Coloré"},{id:"scaling",l:"Zoom"},{id:"bounce",l:"Rebond"},{id:"neon",l:"Néon"},
                                                       {id:"typewriter",l:"Machine"},{id:"karaoke",l:"Karaoké"},{id:"animated-background",l:"Bulle"},{id:"remotion",l:"Moderne"}
                                                     ].map(s => (
                                                         <button key={s.id} onClick={() => setCaptionStyle(s.id)}
                                                             className={cn("flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all",
-                                                                captionStyle === s.id ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300")}>
+                                                                captionStyle === s.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900")}>
                                                             {s.l} {captionStyle === s.id && <Check className="h-3 w-3" />}
                                                         </button>
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div className="relative aspect-video rounded-lg bg-zinc-950 overflow-hidden border border-zinc-800">
+                                            <div className="relative aspect-video rounded-lg bg-zinc-900 overflow-hidden border border-zinc-200">
                                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=60')] bg-cover bg-center opacity-25" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -835,17 +900,17 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                 </div>
                                             </div>
                                             <button onClick={() => setShowAdvancedCaptions(!showAdvancedCaptions)}
-                                                className="w-full text-[9px] font-bold text-zinc-700 hover:text-zinc-500 flex items-center justify-center gap-1 py-1.5 border border-dashed border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors uppercase tracking-widest">
+                                                className="w-full text-[9px] font-bold text-zinc-400 hover:text-zinc-600 flex items-center justify-center gap-1 py-1.5 border border-dashed border-zinc-200 rounded-lg hover:border-zinc-300 transition-colors uppercase tracking-widest">
                                                 {showAdvancedCaptions ? "Moins ▲" : "Avancé ▼"}
                                             </button>
                                             {showAdvancedCaptions && (
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div>
-                                                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 block">Taille</label>
+                                                            <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 block">Taille</label>
                                                             <Select value={fontSize.toString()} onValueChange={v => setFontSize(parseInt(v))}>
-                                                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
-                                                                <SelectContent className="bg-zinc-900 border-zinc-700">
+                                                                <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                <SelectContent className="bg-white border-zinc-200">
                                                                     <SelectItem value="32">Petit</SelectItem>
                                                                     <SelectItem value="48">Normal</SelectItem>
                                                                     <SelectItem value="64">Grand</SelectItem>
@@ -854,10 +919,10 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                             </Select>
                                                         </div>
                                                         <div>
-                                                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 block">Position</label>
+                                                            <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 block">Position</label>
                                                             <Select value={captionPosition} onValueChange={setCaptionPosition}>
-                                                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
-                                                                <SelectContent className="bg-zinc-900 border-zinc-700">
+                                                                <SelectTrigger className="bg-zinc-50 border-zinc-200 text-zinc-900 rounded-lg h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                <SelectContent className="bg-white border-zinc-200">
                                                                     <SelectItem value="bottom">Bas</SelectItem>
                                                                     <SelectItem value="center">Centre</SelectItem>
                                                                     <SelectItem value="top">Haut</SelectItem>
@@ -866,12 +931,12 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 block">Couleur</label>
+                                                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">Couleur</label>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {["#FFE135","#10B981","#3B82F6","#EC4899","#F97316","#FFFFFF"].map(c => (
                                                                 <button key={c} onClick={() => setHighlightColor(c)}
                                                                     className={cn("h-6 w-6 rounded-full border-2 transition-transform hover:scale-110",
-                                                                        highlightColor === c ? "border-white scale-110" : "border-transparent")}
+                                                                        highlightColor === c ? "border-zinc-900 scale-110" : "border-zinc-200")}
                                                                     style={{ backgroundColor: c }} />
                                                             ))}
                                                         </div>
@@ -880,9 +945,9 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-10 gap-2 opacity-30">
-                                            <Type className="h-7 w-7 text-zinc-600" />
-                                            <p className="text-xs text-zinc-600">Désactivés</p>
+                                        <div className="flex flex-col items-center justify-center py-10 gap-2 opacity-40">
+                                            <Type className="h-7 w-7 text-zinc-400" />
+                                            <p className="text-xs text-zinc-400">Désactivés</p>
                                         </div>
                                     )}
                                 </div>
@@ -890,13 +955,13 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                             </div>
 
                             {/* Bottom action bar */}
-                            <div className="shrink-0 px-5 py-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between gap-3">
+                            <div className="shrink-0 px-5 py-3 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
                                 <button onClick={() => setActiveTab("storyboard")}
-                                    className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium">
+                                    className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
                                     <ChevronLeft className="h-3.5 w-3.5" /> Storyboard
                                 </button>
                                 <Button onClick={handleAssemble} disabled={assembling}
-                                    className="bg-violet-500 hover:bg-violet-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
+                                    className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0">
                                     <Zap className="h-4 w-4 fill-current" />
                                     Lancer le rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
                                 </Button>
@@ -908,29 +973,29 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
 
             {/* Insert dialog */}
             {isInserting && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden shadow-2xl">
-                        <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800">
-                            <div className="h-8 w-8 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                                <Sparkles className="h-4 w-4 text-emerald-400" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-200">
+                            <div className="h-8 w-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                                <Sparkles className="h-4 w-4 text-emerald-500" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-zinc-100">Nouvelle Scène</h3>
-                                <p className="text-[10px] text-zinc-600">L'IA génère les prompts visuels automatiquement</p>
+                                <h3 className="text-sm font-black text-zinc-900">Nouvelle Scène</h3>
+                                <p className="text-[10px] text-zinc-500">L'IA génère les prompts visuels automatiquement</p>
                             </div>
-                            <button onClick={() => setIsInserting(false)} className="ml-auto text-zinc-600 hover:text-zinc-400">✕</button>
+                            <button onClick={() => setIsInserting(false)} className="ml-auto text-zinc-400 hover:text-zinc-700">✕</button>
                         </div>
                         <div className="p-5 space-y-4">
                             <div>
-                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1.5 block">Narration</label>
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 block">Narration</label>
                                 <Textarea placeholder="Ex: Le chat saute sur le canapé..."
                                     value={newNarration} onChange={(e) => setNewNarration(e.target.value)}
-                                    className="min-h-[100px] bg-zinc-800 border-zinc-700 text-zinc-200 resize-none focus:border-emerald-500/50" />
+                                    className="min-h-[100px] bg-zinc-50 border-zinc-200 text-zinc-900 resize-none focus:border-emerald-400" />
                             </div>
                             <div className="flex justify-end gap-2.5">
-                                <Button variant="ghost" onClick={() => setIsInserting(false)} className="text-zinc-500 hover:bg-zinc-800 rounded-xl">Annuler</Button>
+                                <Button variant="ghost" onClick={() => setIsInserting(false)} className="text-zinc-500 hover:bg-zinc-100 rounded-xl">Annuler</Button>
                                 <Button onClick={handleInsertScene} disabled={!newNarration || generating}
-                                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl px-5">
+                                    className="bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl px-5">
                                     {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Générer la scène"}
                                 </Button>
                             </div>
