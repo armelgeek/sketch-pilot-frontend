@@ -64,7 +64,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-950 selection:bg-amber-500/20 selection:text-amber-600 grain-overlay">
       <NavbarPublic />
 
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -76,27 +76,27 @@ export default function PricingPage() {
           </p>
 
           {/* Monthly/Annual toggle */}
-          <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-zinc-200 dark:border-zinc-800 p-1 bg-white dark:bg-zinc-900">
+          <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-zinc-200 p-1 bg-white">
             <button
               onClick={() => setBillingInterval("month")}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${
                 billingInterval === "month"
-                  ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
+                  ? "bg-zinc-900 text-zinc-50"
+                  : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
               Mensuel
             </button>
             <button
               onClick={() => setBillingInterval("year")}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${
                 billingInterval === "year"
-                  ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
+                  ? "bg-zinc-900 text-zinc-50"
+                  : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
               Annuel
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${billingInterval === "year" ? "bg-green-500 text-white" : "bg-green-100 text-green-700"}`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${billingInterval === "year" ? "bg-amber-500 text-white" : "bg-amber-100 text-amber-700"}`}>
                 -20%
               </span>
             </button>
@@ -110,7 +110,7 @@ export default function PricingPage() {
             return (
               <Card
                 key={plan.id}
-                className={plan.highlighted ? "ring-2 ring-zinc-900 dark:ring-zinc-50 relative" : ""}
+                className={plan.highlighted ? "ring-2 ring-amber-500 relative rounded-2xl" : "rounded-2xl"}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
