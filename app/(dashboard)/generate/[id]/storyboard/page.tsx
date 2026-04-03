@@ -482,7 +482,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                     </Button>
                                 ) : (
                                     <Button onClick={() => setActiveTab("storyboard")}
-                                        className="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0 border border-zinc-200">
+                                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black rounded-xl h-9 px-5 text-xs gap-2 shrink-0 border border-emerald-200">
                                         <Film className="h-4 w-4" />
                                         Voir le storyboard
                                         <ChevronRight className="h-4 w-4 -mr-1" />
@@ -613,8 +613,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                                                 {activeScene.narration && (
                                                     <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
                                                         <span className="bg-black/75 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-xl font-medium border border-white/10 shadow-lg">
-                                                            {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").substring(0, 80)}
-                                                            {(sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? "").length > 80 ? "..." : ""}
+                                                            {(() => { const n = sceneEdits[selectedScene]?.narration ?? activeScene.narration ?? ""; return n.length > 80 ? n.substring(0, 80) + "..." : n; })()}
                                                         </span>
                                                     </div>
                                                 )}
