@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Video, ArrowRight, Sparkles, UserSquare2, Coins, ChevronRight } from "lucide-react";
+import {
+  Plus, Video, ArrowRight, Sparkles, UserSquare2, Coins, ChevronRight,
+  TrendingUp, CheckCircle2, Clock, AlertCircle
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
+} from "recharts";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
 import { useSession } from "@/src/lib/auth-client";
 import { videosService, type Video as ApiVideo } from "@/src/services/videos-service";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
@@ -17,7 +23,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const { subscriptionStatus, isLoading: subLoading } = useSubscriptionManager();
 
-  const [recentVideos, setRecentVideos] = useState<ApiVideo[]>([]);
+  const [allVideos, setAllVideos] = useState<ApiVideo[]>([]);
   const [videosLoading, setVideosLoading] = useState(true);
   const { data: modelsData, isLoading: modelsLoading } = useAdminModels();
   const models: any[] = modelsData?.data || [];
@@ -26,10 +32,40 @@ export default function DashboardPage() {
 
   useEffect(() => {
     videosService.getAll()
-      .then((all) => setRecentVideos(all.slice(0, 3)))
+      .then((all) => setAllVideos(all))
       .catch(() => {})
       .finally(() => setVideosLoading(false));
   }, []);
+
+  const recentVideos = allVideos.slice(0, 3);
+  const completedCount = allVideos.filter(v => v.status === "completed").length;
+  const processingCount = allVideos.filter(v => v.status === "processing" || v.status === "queued").length;
+  const failedCount = allVideos.filter(v => v.status === "failed").length;
+
+  /* Build last-7-days bar chart data */
+  const activityData = useMemo(() => {
+    const days: { label: string; total: number; completed: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayKey = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short" });
+      const dayVideos = allVideos.filter((v) => {
+        const created = v.createdAt || v.created_at || "";
+        return created.startsWith(dayKey);
+      });
+      days.push({
+        label,
+        total: dayVideos.length,
+        completed: dayVideos.filter((v) => v.status === "completed").length,
+      });
+    }
+    return days;
+  }, [allVideos]);
+
+  const remainingCredits = subscriptionStatus?.remainingCredits ?? 0;
+  const totalCredits = subscriptionStatus?.totalCredits ?? 0;
+  const creditPct = totalCredits > 0 ? Math.round((remainingCredits / totalCredits) * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -52,11 +88,122 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Vidéos" value={videosLoading ? "—" : recentVideos.length.toString()} icon={<Video className="h-4 w-4" />} href="/videos" />
-        <StatCard label="Terminées" value={videosLoading ? "—" : recentVideos.filter(v => v.status === "completed").length.toString()} icon={<Sparkles className="h-4 w-4" />} href="/videos" />
-        <StatCard label="Crédits" value={subLoading ? "—" : (subscriptionStatus?.remainingCredits ?? 0).toString()} icon={<Coins className="h-4 w-4" />} href="/subscription" />
-        <StatCard label="Personnages" value={modelsLoading ? "—" : (modelsData?.total ?? 0).toString()} icon={<UserSquare2 className="h-4 w-4" />} href="/admin/models" />
+        <StatCard
+          label="Total vidéos"
+          value={videosLoading ? "—" : allVideos.length.toString()}
+          icon={<Video className="h-4 w-4" />}
+          href="/videos"
+          accent="zinc"
+        />
+        <StatCard
+          label="Terminées"
+          value={videosLoading ? "—" : completedCount.toString()}
+          icon={<CheckCircle2 className="h-4 w-4" />}
+          href="/videos"
+          accent="emerald"
+        />
+        <StatCard
+          label="Crédits restants"
+          value={subLoading ? "—" : remainingCredits.toString()}
+          icon={<Coins className="h-4 w-4" />}
+          href="/subscription"
+          accent="amber"
+          sub={subLoading || totalCredits === 0 ? undefined : `${creditPct}% restants`}
+        />
+        <StatCard
+          label="Personnages"
+          value={modelsLoading ? "—" : (modelsData?.total ?? 0).toString()}
+          icon={<UserSquare2 className="h-4 w-4" />}
+          href="/admin/models"
+          accent="violet"
+        />
       </div>
+
+      {/* Activity Chart + Status breakdown */}
+      {!videosLoading && allVideos.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Bar chart */}
+          <Card className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl shadow-none">
+            <CardHeader className="pb-2 pt-5 px-5">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-zinc-400" />
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Activité — 7 derniers jours</span>
+              </div>
+            </CardHeader>
+            <CardContent className="px-5 pb-5">
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={activityData} barSize={24} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    cursor={{ fill: "#f4f4f5" }}
+                    contentStyle={{ border: "none", borderRadius: 12, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
+                    formatter={(value) => [value, "Vidéos"]}
+                  />
+                  <Bar dataKey="total" radius={[6, 6, 0, 0]}>
+                    {activityData.map((_, idx) => (
+                      <Cell key={idx} fill={activityData[idx].total > 0 ? "#18181b" : "#e4e4e7"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Status breakdown */}
+          <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
+            <CardHeader className="pb-2 pt-5 px-5">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-zinc-400" />
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Répartition</span>
+              </div>
+            </CardHeader>
+            <CardContent className="px-5 pb-5 space-y-3">
+              <StatusRow icon={<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />} label="Terminées" count={completedCount} total={allVideos.length} color="bg-emerald-500" />
+              <StatusRow icon={<Clock className="h-3.5 w-3.5 text-blue-500" />} label="En cours" count={processingCount} total={allVideos.length} color="bg-blue-500" />
+              <StatusRow icon={<AlertCircle className="h-3.5 w-3.5 text-red-400" />} label="Échecs" count={failedCount} total={allVideos.length} color="bg-red-400" />
+              <StatusRow
+                icon={<Video className="h-3.5 w-3.5 text-zinc-400" />}
+                label="Brouillons"
+                count={allVideos.length - completedCount - processingCount - failedCount}
+                total={allVideos.length}
+                color="bg-zinc-300"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Credits usage bar */}
+      {!subLoading && totalCredits > 0 && (
+        <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Utilisation des crédits</p>
+                <p className="text-sm font-bold text-zinc-700 mt-0.5">
+                  {remainingCredits} / {totalCredits} crédits disponibles
+                  {subscriptionStatus?.planName && (
+                    <span className="ml-2 text-xs font-semibold text-zinc-400">— {subscriptionStatus.planName}</span>
+                  )}
+                </p>
+              </div>
+              <Link href="/subscription" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
+                Gérer <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="h-2.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${creditPct}%`,
+                  background: creditPct > 50 ? "#10b981" : creditPct > 20 ? "#f59e0b" : "#ef4444",
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Characters */}
       <section>
@@ -94,7 +241,7 @@ export default function DashboardPage() {
       {/* Recent videos */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Récents</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Vidéos récentes</h2>
           <Link href="/videos" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
             Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
@@ -140,21 +287,67 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ label, value, icon, href }: { label: string; value: string; icon: React.ReactNode; href: string }) {
+type Accent = "zinc" | "emerald" | "amber" | "violet";
+
+const accentMap: Record<Accent, { bg: string; text: string; iconBg: string }> = {
+  zinc:    { bg: "bg-zinc-50",    text: "text-zinc-500",   iconBg: "bg-zinc-100" },
+  emerald: { bg: "bg-emerald-50", text: "text-emerald-600", iconBg: "bg-emerald-100" },
+  amber:   { bg: "bg-amber-50",   text: "text-amber-600",  iconBg: "bg-amber-100" },
+  violet:  { bg: "bg-violet-50",  text: "text-violet-600", iconBg: "bg-violet-100" },
+};
+
+function StatCard({
+  label, value, icon, href, accent = "zinc", sub,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  href: string;
+  accent?: Accent;
+  sub?: string;
+}) {
+  const a = accentMap[accent];
   return (
     <Link href={href} className="block group">
-      <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none hover:border-zinc-300 transition-colors">
+      <Card className={`${a.bg} border-0 rounded-2xl shadow-none hover:shadow-sm transition-all`}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="h-8 w-8 rounded-xl bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:text-zinc-700 transition-colors">
+            <div className={`h-8 w-8 rounded-xl ${a.iconBg} flex items-center justify-center ${a.text}`}>
               {icon}
             </div>
             <ChevronRight className="h-3.5 w-3.5 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
           </div>
           <div className="text-2xl font-black tracking-tight text-zinc-900">{value}</div>
           <p className="text-xs text-zinc-400 font-medium mt-0.5">{label}</p>
+          {sub && <p className={`text-[10px] font-semibold mt-1 ${a.text}`}>{sub}</p>}
         </CardContent>
       </Card>
     </Link>
+  );
+}
+
+function StatusRow({
+  icon, label, count, total, color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  total: number;
+  color: string;
+}) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          {icon}
+          <span className="text-xs font-semibold text-zinc-600">{label}</span>
+        </div>
+        <span className="text-xs font-black text-zinc-700">{count}</span>
+      </div>
+      <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
   );
 }
