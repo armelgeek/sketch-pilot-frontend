@@ -34,6 +34,9 @@ export function ScriptEditor({ scenes, onScenesChange, showImagePrompt = false }
                     updated.text = value;
                     updated.content = value;
                 }
+                if (field === "imagePrompt") {
+                    updated.prompt = value;
+                }
                 return updated;
             }
             return s;

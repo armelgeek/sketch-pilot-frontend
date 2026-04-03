@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Download, Share2, Plus, Video, CheckCircle2 } from "lucide-react";
+import { X, Download, Share2, Plus, Video, CheckCircle2, Check } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import confetti from "canvas-confetti";
 
@@ -25,6 +25,7 @@ export function VideoSuccessModal({
 }: VideoSuccessModalProps) {
     const router = useRouter();
     const firedRef = useRef(false);
+    const [copied, setCopied] = useState(false);
 
     const fireConfetti = useCallback(() => {
         if (firedRef.current) return;
@@ -60,10 +61,20 @@ export function VideoSuccessModal({
     }, [fireConfetti]);
 
     const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({ url: videoUrl, title: "Ma vidéo" });
+                return;
+            } catch {
+                // user cancelled or API not supported — fall through to clipboard
+            }
+        }
         try {
-            await navigator.share?.({ url: videoUrl, title: "Ma vidéo" });
+            await navigator.clipboard.writeText(videoUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         } catch {
-            await navigator.clipboard?.writeText(videoUrl);
+            // clipboard unavailable — no silent failure
         }
     };
 
@@ -131,10 +142,13 @@ export function VideoSuccessModal({
                     <Button
                         onClick={handleShare}
                         variant="outline"
-                        className="h-10 w-10 p-0 rounded-xl border-zinc-200 shrink-0"
-                        aria-label="Partager"
+                        className="h-10 w-10 p-0 rounded-xl border-zinc-200 shrink-0 transition-colors"
+                        aria-label={copied ? "Lien copié !" : "Partager"}
+                        title={copied ? "Lien copié !" : "Partager"}
                     >
-                        <Share2 className="h-4 w-4" />
+                        {copied
+                            ? <Check className="h-4 w-4 text-emerald-500" />
+                            : <Share2 className="h-4 w-4" />}
                     </Button>
                     <div className="w-px h-6 bg-zinc-100 shrink-0" />
                     <Button
