@@ -251,7 +251,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     useEffect(() => {
         if (isFinished && jobId && !jobError) {
             setTimeout(() => {
-                router.push("/videos"); // Or directly to a specific complete page
+                router.push(`/generate/${resolvedParams.id}/success`);
             }, 1000);
         } else if (isFinished && jobError) {
             setGenerating(false);

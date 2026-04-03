@@ -1,12 +1,24 @@
-import type { Metadata } from "next";
+import { Barlow_Condensed, Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/src/components/providers";
 import { UtmCapturer } from "@/src/app/tracking";
 
-export const metadata: Metadata = {
-  title: "Sketch Pilot — Whiteboard Animation Platform",
+const headingFont = Barlow_Condensed({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["500", "600", "700", "800", "900"],
+});
+
+const bodyFont = Outfit({
+  subsets: ["latin"],
+  variable: "--font-body",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+export const metadata = {
+  title: "Sketch Pilot — AI Whiteboard Animation Platform",
   description:
-    "Générez des vidéos whiteboard captivantes avec une narration fluide et des personnages cohérents.",
+    "Turn any idea into a full faceless YouTube video. No camera. No editing. In 3 minutes.",
 };
 
 export default function RootLayout({
@@ -15,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <body className="antialiased font-sans">
+    <html lang="en">
+      <body className={`${headingFont.variable} ${bodyFont.variable} font-body antialiased bg-[#FAFAFA] text-zinc-950 selection:bg-[#F59E0B]/20 selection:text-[#F59E0B]`}>
         <Providers>
           <UtmCapturer />
           {children}

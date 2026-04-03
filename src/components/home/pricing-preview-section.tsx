@@ -1,124 +1,113 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/src/lib/utils";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
-import { STRIPE_PLANS } from "@/src/lib/stripe-plans";
-import { useSubscription } from "@/src/hooks/use-subscription";
-import { useSession } from "@/src/lib/auth-client";
 
 interface PricingPreviewSectionProps {
   isAuthenticated?: boolean;
 }
 
 export function PricingPreviewSection({ isAuthenticated }: PricingPreviewSectionProps) {
-  const router = useRouter();
-  const { data: session } = useSession();
-  const { upgradePlan, loading } = useSubscription();
-  const [error, setError] = useState<string | null>(null);
-  const displayPlans = STRIPE_PLANS;
-
-  const handleSubscribe = async (planId: string) => {
-    setError(null);
-
-    if (!session?.user) {
-      router.push("/register");
-      return;
-    }
-
-    try {
-      await upgradePlan(planId, "month");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Subscription failed");
-    }
-  };
-
-  if (displayPlans.length === 0) {
-    return null;
-  }
+  const plans = [
+    {
+      id: "free",
+      name: "Starter",
+      description: "Test the power of Sketch Pilot.",
+      price: "$0",
+      features: ["3 videos per month", "Watermark included", "720p export", "Basic niches access"],
+      highlighted: false,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      description: "For serious creators publishing weekly.",
+      price: "$19",
+      period: "/month",
+      features: ["Unlimited videos", "No watermark", "1080p / 4K export", "Priority rendering", "Premium Kokoro voices"],
+      highlighted: true,
+      badge: "Most Popular",
+    },
+    {
+      id: "studio",
+      name: "Studio",
+      description: "For agencies and mass automation.",
+      price: "$49",
+      period: "/month",
+      features: ["Everything in Pro", "Full API access", "Bulk generation", "Complete white label"],
+      highlighted: false,
+    },
+  ];
 
   return (
-    <section className="relative py-24 bg-white dark:bg-zinc-950 overflow-hidden border-y border-zinc-200/60 dark:border-zinc-800/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-900 dark:text-zinc-50">
-            Tarification <span className="text-emerald-600 dark:text-emerald-400">sans surprise</span>
+    <section className="relative py-32 bg-[#FAFAFA] overflow-hidden border-t border-zinc-100" id="pricing">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+        <div className="max-w-2xl mx-auto text-center mb-20">
+          <h2 className="text-sm font-black uppercase tracking-[0.4em] text-amber-500 mb-4">
+            Pricing
           </h2>
-          <p className="mt-2 text-lg text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium">
-            Choisissez le plan qui correspond à votre ambition. Pas de frais cachés,
-            commencez à créer dès aujourd&apos;hui.
+          <p className="text-4xl md:text-5xl font-heading font-extrabold tracking-tight text-zinc-950 mb-6">
+            Simple. Transparent. No surprises.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {displayPlans.map((plan) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {plans.map((plan) => (
             <div
               key={plan.id}
               className={cn(
-                "relative group flex flex-col p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900/50 border-2 transition-all duration-300",
+                "relative flex flex-col p-10 rounded-[2.5rem] transition-all duration-500",
                 plan.highlighted
-                  ? "border-emerald-600 dark:border-emerald-500 shadow-2xl shadow-emerald-500/10 scale-105 z-10"
-                  : "border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl"
+                  ? "bg-white border-2 border-amber-400 shadow-[0_20px_80px_-20px_rgba(245,158,11,0.2)] scale-100 md:scale-105 z-10"
+                  : "bg-white border border-zinc-200 hover:border-zinc-300 shadow-sm"
               )}
             >
-              {plan.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-500/20">
-                  Le plus populaire
+              {plan.badge && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                  <span className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase bg-amber-500 text-white px-5 py-2 rounded-full shadow-lg shadow-amber-500/20">
+                    <Sparkles className="h-3 w-3" />
+                    {plan.badge}
+                  </span>
                 </div>
               )}
 
               <div className="mb-8">
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-black text-zinc-900 dark:text-zinc-50 tracking-tighter">${plan.monthlyPrice}</span>
-                  <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">/mois</span>
+                <h3 className="text-2xl font-heading font-bold text-zinc-950 mb-3">{plan.name}</h3>
+                <p className="text-zinc-500 text-sm h-10">{plan.description}</p>
+                <div className="flex items-baseline gap-1 mt-6">
+                  <span className="text-5xl font-heading font-extrabold text-zinc-950">{plan.price}</span>
+                  {plan.period && <span className="text-xl font-bold text-zinc-500">{plan.period}</span>}
                 </div>
               </div>
 
-              <div className="space-y-4 mb-10 flex-grow">
-                {plan.features?.map((f: string) => (
-                  <div key={f} className="flex items-center gap-3 group/item">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      <Check className="h-3 w-3 transition-transform group-hover/item:scale-125" />
+              <div className="flex-1 space-y-4 mb-10">
+                {plan.features.map((feature, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className={cn(
+                      "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full",
+                      plan.highlighted ? "bg-amber-100 text-amber-600" : "bg-zinc-100 text-zinc-600"
+                    )}>
+                      <Check className="h-3 w-3" />
                     </div>
-                    <span className="text-sm font-bold text-zinc-600 dark:text-zinc-300">{f}</span>
+                    <span className="text-sm font-medium text-zinc-800">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              {error && (
-                <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mb-4 bg-red-50 dark:bg-red-950/20 p-2 rounded-xl text-center">{error}</p>
-              )}
-
-              <Button
+              <Link
+                href={isAuthenticated ? "/generate" : "/register"}
                 className={cn(
-                  "w-full h-14 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-lg",
+                  "w-full flex items-center justify-center gap-2 h-14 rounded-full font-bold transition-all active:scale-95 group",
                   plan.highlighted
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20"
-                    : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900"
+                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-[0_4px_20px_rgba(245,158,11,0.2)]"
+                    : "bg-zinc-950 text-white hover:bg-zinc-800"
                 )}
-                onClick={() => handleSubscribe(plan.id)}
-                disabled={loading}
               >
-                {loading ? "Chargement..." : "S'abonner maintenant"}
-              </Button>
+                {isAuthenticated ? "Upgrade" : "Get Started"}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <Link
-            href="/pricing"
-            className="group inline-flex items-center gap-2 text-sm font-black text-zinc-400 hover:text-emerald-600 transition-colors"
-          >
-            Curer tous les détails techniques
-            <div className="h-px w-8 bg-current transition-all group-hover:w-12" />
-          </Link>
         </div>
       </div>
     </section>

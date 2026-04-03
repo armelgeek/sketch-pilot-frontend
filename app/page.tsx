@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useSession } from "@/src/lib/auth-client";
 import { Footer } from "@/src/components/layout/footer";
 import { NavbarPublic } from "@/src/components/layout/navbar";
-import { useSession } from "@/src/lib/auth-client";
 import {
   HeroSection,
-  LiveDemoSection,
-  FeaturesSection,
-  HowItWorksSection,
-  GallerySection,
+  PlatformsTicker,
+  ProcessSection,
+  VoiceoverSection,
+  ConsistentCharacterSection,
   PricingPreviewSection,
-  TestimonialsSection,
   FAQSection,
   FinalCTASection,
 } from "@/src/components/home";
@@ -21,17 +18,17 @@ export default function HomePage() {
   const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-950 selection:bg-amber-500/20 selection:text-amber-600 grain-overlay">
       <NavbarPublic />
-      <HeroSection isAuthenticated={!!session?.user} />
-      <LiveDemoSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <GallerySection />
-      <PricingPreviewSection isAuthenticated={!!session?.user} />
-      <TestimonialsSection />
-      <FAQSection />
-      <FinalCTASection isAuthenticated={!!session?.user} />
+      <main>
+        <HeroSection isAuthenticated={!!session?.user} />
+        <PlatformsTicker />
+        <ProcessSection />
+        <VoiceoverSection />
+        <ConsistentCharacterSection />
+        <PricingPreviewSection isAuthenticated={!!session?.user} />
+        <FAQSection />
+      </main>
       <Footer />
     </div>
   );

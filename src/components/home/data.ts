@@ -1,51 +1,51 @@
 export const features = [
   {
     icon: "🎭",
-    title: "Cohérence Personnage",
-    desc: "Vos personnages restent identiques d'une scène à l'autre, même sur des vidéos de 30 minutes.",
+    title: "Character Consistency",
+    desc: "Your characters stay identical across every scene, even in 30-minute long-form videos.",
   },
   {
     icon: "🎨",
-    title: "Styles Artistiques",
-    desc: "Choisissez parmi 12 styles visuels distincts : sketch, cartoon, réaliste, minimaliste et plus.",
+    title: "Artistic Styles",
+    desc: "Choose from 12 distinct visual styles: sketch, cartoon, realistic, minimalist, and more.",
   },
   {
     icon: "⏱️",
     title: "Long-Form Ready",
-    desc: "Générez des vidéos éducatives complètes, des cours en ligne, sans limite de durée.",
+    desc: "Generate complete educational videos and online courses without duration limits.",
   },
   {
     icon: "🎙️",
-    title: "Narration Humaine",
-    desc: "Voix synthétiques ultra-réalistes en 8 langues avec synchronisation labiale parfaite.",
+    title: "Human Narration",
+    desc: "Ultra-realistic AI voices in 8 languages with perfect lip-syncing and pacing.",
   },
 ];
 
 export const steps = [
   {
     n: "01",
-    title: "Décrivez votre histoire",
-    desc: "Entrez votre script ou décrivez votre sujet. Notre IA génère un storyboard complet.",
+    title: "Describe Your Story",
+    desc: "Enter your script or describe your topic. Our AI generates a complete storyboard instantly.",
   },
   {
     n: "02",
-    title: "Personnalisez chaque scène",
-    desc: "Ajustez les personnages, les décors, le style visuel et la narration selon votre vision.",
+    title: "Customize Every Scene",
+    desc: "Refine characters, backgrounds, visual style, and narration to match your vision.",
   },
   {
     n: "03",
-    title: "Exportez et partagez",
-    desc: "Téléchargez votre vidéo en HD ou partagez directement sur vos plateformes.",
+    title: "Export & Share",
+    desc: "Download your video in 4K or share directly to your favorite social platforms.",
   },
 ];
 
 export const mockVideos = [
-  { id: 1, title: "La Révolution Industrielle", genre: "Éducatif", duration: "12:30" },
-  { id: 2, title: "Comment fonctionne Bitcoin ?", genre: "Tech", duration: "8:45" },
-  { id: 3, title: "L'histoire de Marie Curie", genre: "Biographie", duration: "15:20" },
-  { id: 4, title: "Les bases de la programmation", genre: "Tutoriel", duration: "22:10" },
-  { id: 5, title: "Le changement climatique", genre: "Science", duration: "10:05" },
-  { id: 6, title: "Marketing Digital en 2026", genre: "Business", duration: "18:55" },
+  { id: 1, title: "The Industrial Revolution", genre: "Educational", duration: "12:30" },
+  { id: 2, title: "How Bitcoin Works", genre: "Tech", duration: "08:45" },
+  { id: 3, title: "Life of Marie Curie", genre: "Biography", duration: "15:20" },
+  { id: 4, title: "Coding Basics for Kids", genre: "Tutorial", duration: "22:10" },
+  { id: 5, title: "Climate Change Deep Dive", genre: "Science", duration: "10:05" },
+  { id: 6, title: "Digital Marketing in 2026", genre: "Business", duration: "18:55" },
 ];
 
 export const pricingPlans = [
@@ -54,11 +54,11 @@ export const pricingPlans = [
     price: 49,
     highlighted: false,
     features: [
-      "500 crédits / mois",
-      "Vidéos jusqu'à 10 min",
-      "3 styles visuels",
+      "500 credits / month",
+      "Videos up to 10 min",
+      "3 visual styles",
       "Export HD 1080p",
-      "Support email",
+      "Email support",
     ],
   },
   {
@@ -66,12 +66,12 @@ export const pricingPlans = [
     price: 149,
     highlighted: true,
     features: [
-      "2 000 crédits / mois",
-      "Vidéos illimitées",
-      "12 styles visuels",
+      "2,000 credits / month",
+      "Unlimited videos",
+      "12 visual styles",
       "Export 4K",
-      "Personnages personnalisés",
-      "Support prioritaire",
+      "Custom characters",
+      "Priority support",
     ],
   },
   {
@@ -79,60 +79,60 @@ export const pricingPlans = [
     price: 399,
     highlighted: false,
     features: [
-      "8 000 crédits / mois",
-      "Accès API",
-      "Marque blanche",
-      "Rendu prioritaire",
-      "Manager dédié",
-      "SLA garanti",
+      "8,000 credits / month",
+      "API access",
+      "White-label branding",
+      "Priority rendering",
+      "Dedicated manager",
+      "Guaranteed SLA",
     ],
   },
 ];
 
 export const testimonials = [
   {
-    name: "Sophie Martin",
-    role: "Créatrice de contenu",
-    text: "Sketch Pilot a transformé ma façon de créer des vidéos éducatives. En 30 minutes, j'ai une vidéo professionnelle prête à publier.",
+    name: "Sarah Miller",
+    role: "Content Creator",
+    text: "Sketch Pilot transformed how I create educational videos. In 30 minutes, I have a professional video ready to publish.",
     avatar: "SM",
   },
   {
-    name: "Thomas Leclerc",
-    role: "Formateur en ligne",
-    text: "La cohérence des personnages entre les scènes est bluffante. Mes élèves adorent le style visuel unique de mes cours.",
-    avatar: "TL",
+    name: "Thomas Reed",
+    role: "Online Instructor",
+    text: "The character consistency is mind-blowing. My students love the unique visual style of my courses.",
+    avatar: "TR",
   },
   {
     name: "Amina Diallo",
     role: "Marketing Manager",
-    text: "ROI impressionnant. On a réduit notre budget vidéo de 70% tout en doublant notre production de contenu.",
+    text: "Impressive ROI. We reduced our video budget by 70% while doubling our content output.",
     avatar: "AD",
   },
 ];
 
 export const faqs = [
   {
-    q: "Combien de temps faut-il pour générer une vidéo ?",
-    a: "Selon la longueur et la complexité, entre 2 et 15 minutes pour une vidéo de 10 minutes.",
+    q: "How long does it take to generate a video?",
+    a: "Depending on length and complexity, between 2 and 15 minutes for a 10-minute video.",
   },
   {
-    q: "Puis-je utiliser mes propres personnages ?",
-    a: "Oui, avec les plans Professional et Business vous pouvez importer vos propres assets et personnages.",
+    q: "Can I use my own characters?",
+    a: "Yes, with Professional and Business plans you can import your own assets and characters.",
   },
   {
-    q: "Quelles langues sont supportées ?",
-    a: "8 langues : Français, Anglais, Espagnol, Allemand, Portugais, Arabe, Chinois, Japonais.",
+    q: "Which languages are supported?",
+    a: "8 languages: English, French, Spanish, German, Portuguese, Arabic, Chinese, Japanese.",
   },
   {
-    q: "Les vidéos sont-elles libres de droits ?",
-    a: "Oui, toutes les vidéos générées avec votre compte vous appartiennent entièrement.",
+    q: "Do I own the videos I generate?",
+    a: "Yes, you have full commercial rights and ownership of all content generated with your account.",
   },
   {
-    q: "Puis-je annuler mon abonnement à tout moment ?",
-    a: "Oui, sans frais ni engagement. Votre abonnement reste actif jusqu'à la fin de la période payée.",
+    q: "Can I cancel my subscription anytime?",
+    a: "Yes, with no hidden fees or commitments. Your plan remains active until the end of the period.",
   },
   {
-    q: "Y a-t-il une version gratuite ?",
-    a: "Nous offrons un essai gratuit de 14 jours avec 50 crédits pour tester toutes les fonctionnalités.",
+    q: "Is there a free trial available?",
+    a: "We offer a 14-day free trial with 50 credits to test all premium features.",
   },
 ];
