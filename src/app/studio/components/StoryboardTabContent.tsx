@@ -25,12 +25,12 @@ export function StoryboardTabContent({
     const activeScene = displayScenes.find((s: any, i: number) => (s.id || `s${i + 1}`) === selectedSceneId);
 
     return (
-        <div className="flex flex-1 overflow-hidden h-full">
+        <div className="flex flex-1 overflow-hidden h-full px-12 pt-12 gap-6">
             {/* ── Vertical Filmstrip (Left Navigation) ── */}
-            <div className="w-[100px] lg:w-[140px] shrink-0 bg-white border-r border-zinc-200/80 mt-3 flex flex-col h-full overflow-hidden">
+            <div className="w-[110px] lg:w-[140px] shrink-0 bg-white border border-zinc-200/50 rounded-md flex flex-col h-full overflow-hidden shadow-sm">
                 <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/40">
-                    <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] opacity-80">Scenes</h3>
-                    <span className="text-[10px] font-black text-zinc-300 tabular-nums">{displayScenes.length}</span>
+                    <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] opacity-80">Scenes</h3>
+                    <span className="text-[11px] font-black text-zinc-300 tabular-nums">{displayScenes.length}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto px-3 py-6 space-y-4 scrollbar-hide">
                     <StoryboardFilmstrip vertical />
@@ -43,11 +43,11 @@ export function StoryboardTabContent({
                     className="flex-1 flex flex-col overflow-hidden bg-[#F8F8F7] relative"
                 >
                     {activeScene ? (
-                        <div className="flex flex-1 gap-8 min-h-0 overflow-hidden px-8 py-6">
+                        <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
                             {/* Left Column: Adaptive Preview & Controls */}
-                            <div className="flex-1 flex flex-col gap-8 min-w-0 relative z-10">
-                                <div className="flex-1 flex items-center justify-center min-h-0">
-                                    <div className="max-w-full max-h-full transition-all duration-500 relative group">
+                            <div className="flex-1 flex flex-col gap-6 min-w-0 relative z-10">
+                                <div className="flex-1 flex items-center justify-center min-h-0 bg-white  border border-zinc-200/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] rounded-md">
+                                    <div className="max-w-full max-h-full transition-all duration-300 relative group">
                                         <StoryboardCanvas
                                             currentSceneIndex={currentSceneIndex}
                                             repromptIndex={repromptIndex}
@@ -56,13 +56,13 @@ export function StoryboardTabContent({
                                 </div>
 
                                 {/* Restored Technical Controls below preview */}
-                                <div className="max-w-4xl mx-auto w-full">
+                                <div className="max-w-3xl mx-auto w-full">
                                     <StoryboardSceneControls />
                                 </div>
                             </div>
 
                             {/* Right Column: Narrower Sidebar */}
-                            <div className="w-[340px] xl:w-[380px] shrink-0 flex flex-col overflow-hidden bg-white/40 backdrop-blur-sm rounded-3xl border border-zinc-200/50 p-1">
+                            <div className="w-[300px] xl:w-[320px] shrink-0 flex flex-col overflow-hidden">
                                 <StoryboardSidebar onRegenerateImage={onRegenerateImage} />
                             </div>
                         </div>

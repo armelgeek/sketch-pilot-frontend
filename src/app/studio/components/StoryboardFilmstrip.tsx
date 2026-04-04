@@ -91,7 +91,7 @@ export function StoryboardFilmstrip({ vertical }: StoryboardFilmstripProps) {
                                 </div>
                             )}
                             <div className={cn(
-                                "absolute bottom-1 left-1 text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm transition-colors",
+                                "absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-colors",
                                 isAct ? "bg-emerald-500 text-white" : "bg-black/60 text-white group-hover:bg-black/80"
                             )}>
                                 {String(i + 1).padStart(2, "0")}
@@ -125,7 +125,7 @@ export function StoryboardFilmstrip({ vertical }: StoryboardFilmstripProps) {
                             data-active={isAct}
                             onClick={() => setSelectedSceneId(sId)}
                             className={cn(
-                                "relative w-[200px] shrink-0 flex flex-col gap-1 rounded-lg overflow-hidden border-2 transition-all duration-200 group",
+                                "relative w-[200px] shrink-0 flex flex-col gap-1 rounded-md overflow-hidden border-2 transition-all duration-200 group",
                                 isAct
                                     ? "border-emerald-500 shadow-sm shadow-emerald-200/60"
                                     : "border-zinc-200/80 hover:border-zinc-300"
@@ -147,7 +147,7 @@ export function StoryboardFilmstrip({ vertical }: StoryboardFilmstripProps) {
                                     </div>
                                 )}
                                 <div className={cn(
-                                    "absolute bottom-1 left-1 text-[8px] font-black px-1 py-0.5 rounded transition-colors",
+                                    "absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors",
                                     isAct ? "bg-emerald-500 text-white" : "bg-black/50 text-white"
                                 )}>
                                     {String(i + 1).padStart(2, "0")}

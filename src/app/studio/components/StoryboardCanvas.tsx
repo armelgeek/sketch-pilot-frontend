@@ -46,8 +46,8 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-full w-full">
-            <div className="relative group max-w-full max-h-full shadow-2xl rounded-2xl overflow-hidden border border-zinc-200 bg-white">
+        <div className="flex flex-col justify-center h-full w-full">
+            <div className="relative group max-w-full max-h-full  rounded-xl overflow-hidden">
                 {/* Generation overlay */}
                 {(isGenerating || isRegenerating) && (
                     <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4 z-40 animate-in fade-in duration-500">
@@ -81,21 +81,21 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
                     {activeSceneIndex + 1} / {displayScenes.length}
                 </div>
 
-                {/* Navigation Chevrons (More subtle) */}
-                <div className="absolute inset-y-0 left-0 flex items-center p-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Navigation Chevrons (Refined) */}
+                <div className="absolute inset-y-0 left-4 flex items-center z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
                     <button
                         onClick={(e) => { e.stopPropagation(); goToPrev(); }}
                         disabled={activeSceneIndex === 0}
-                        className="h-10 w-10 flex items-center justify-center rounded-full bg-white/90 text-zinc-900 border border-zinc-200 hover:bg-white shadow-xl transition-all disabled:opacity-0">
-                        <ChevronLeft className="h-6 w-6" />
+                        className="h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-zinc-900 border border-zinc-200/50 hover:bg-white shadow-xl transition-all disabled:opacity-0 active:scale-90">
+                        <ChevronLeft className="h-5 w-5" />
                     </button>
                 </div>
-                <div className="absolute inset-y-0 right-0 flex items-center p-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-y-0 right-4 flex items-center z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-1 group-hover:translate-x-0">
                     <button
                         onClick={(e) => { e.stopPropagation(); goToNext(); }}
                         disabled={activeSceneIndex === displayScenes.length - 1}
-                        className="h-10 w-10 flex items-center justify-center rounded-full bg-white/90 text-zinc-900 border border-zinc-200 hover:bg-white shadow-xl transition-all disabled:opacity-0">
-                        <ChevronRight className="h-6 w-6" />
+                        className="h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-zinc-900 border border-zinc-200/50 hover:bg-white shadow-xl transition-all disabled:opacity-0 active:scale-90">
+                        <ChevronRight className="h-5 w-5" />
                     </button>
                 </div>
             </div>
