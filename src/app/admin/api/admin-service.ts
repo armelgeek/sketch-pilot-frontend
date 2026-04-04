@@ -242,7 +242,27 @@ export class AdminService extends BaseService<any> {
 
         const res = await this.apiFetch<any>(`/v1/characters?${query.toString()}`);
         return {
-            data: res.data,
+            data: res.data || [],
+            total: res.total || res.data?.length || 0,
+            page: res.page || 1,
+            limit: res.limit || 10
+        };
+    }
+
+    async listStandardModels(params?: { page?: number; limit?: number; search?: string }): Promise<{
+        data: any[];
+        total: number;
+        page: number;
+        limit: number;
+    }> {
+        const query = new URLSearchParams();
+        if (params?.page) query.append("page", params.page.toString());
+        if (params?.limit) query.append("limit", params.limit.toString());
+        if (params?.search) query.append("search", params.search);
+
+        const res = await this.apiFetch<any>(`/v1/character-models?${query.toString()}`);
+        return {
+            data: res.data || [],
             total: res.total || res.data?.length || 0,
             page: res.page || 1,
             limit: res.limit || 10

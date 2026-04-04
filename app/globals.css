@@ -87,3 +87,20 @@ body {
     @apply border-zinc-200;
   }
 }
+@keyframes slide {
+  from { background-position: 0 0; }
+  to { background-position: 20px 0; }
+}
+
+@keyframes bell {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(15deg); }
+  50% { transform: rotate(-15deg); }
+  75% { transform: rotate(10deg); }
+}
+
+@keyframes bg-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

@@ -83,12 +83,12 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                 )}
 
                 {/* Hover Play/View Overlay - Ultra Minimal */}
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center z-10">
-                    <div className="h-14 w-14 rounded-full bg-white shadow-2xl flex items-center justify-center text-zinc-950 scale-75 group-hover:scale-100 transition-all duration-500">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center z-10">
+                    <div className="h-12 w-12 rounded-full bg-white shadow-[0_0_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-zinc-950 scale-90 group-hover:scale-100 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
                         {video.status === "completed" ? (
-                            <Play className="h-6 w-6 fill-current ml-1" />
+                            <Play className="h-5 w-5 fill-current ml-0.5" />
                         ) : (
-                            <Eye className="h-6 w-6" />
+                            <Eye className="h-5 w-5" />
                         )}
                     </div>
                 </div>
@@ -150,8 +150,8 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <div className={cn("h-2 w-2 rounded-full ring-4 ring-zinc-50 shadow-sm", config.dotColor)} />
-                            <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                            <div className={cn("h-1.5 w-1.5 rounded-full ring-[3px] ring-zinc-50 shadow-[0_0_8px_rgba(0,0,0,0.1)]", config.dotColor)} />
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] whitespace-nowrap">
                                 {config.label}
                             </span>
                         </div>

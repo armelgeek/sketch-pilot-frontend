@@ -10,9 +10,6 @@ export const authClient = createAuthClient({
     }),
     inferAdditionalFields({
       user: {
-        isAdmin: { type: 'boolean' },
-        role: { type: 'string' },
-        banned: { type: 'boolean' },
         firstname: { type: 'string' },
         lastname: { type: 'string' },
         utmSource: { type: 'string' },
@@ -20,9 +17,12 @@ export const authClient = createAuthClient({
         utmCampaign: { type: 'string' },
         utmTerm: { type: 'string' },
         utmContent: { type: 'string' },
+        defaultCharacterId: { type: 'string' },
+        defaultPromptId: { type: 'string' },
+        language: { type: 'string' },
       }
     })
   ]
 });
 
-export const { signIn, signUp, signOut, useSession } = authClient;
+export const { signIn, signUp, signOut, useSession, updateUser } = authClient;

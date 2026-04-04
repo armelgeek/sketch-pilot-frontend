@@ -1,353 +1,484 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Plus, Video, ArrowRight, Sparkles, UserSquare2, Coins, ChevronRight,
-  TrendingUp, CheckCircle2, Clock, AlertCircle
+  ChevronRight, Plus, RefreshCw, Sparkles, Globe, Wand2
 } from "lucide-react";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
-} from "recharts";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
-import { useSession } from "@/src/lib/auth-client";
-import { videosService, type Video as ApiVideo } from "@/src/services/videos-service";
-import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
-import { VideoCard } from "@/src/components/organisms/video-card";
-import { useAdminModels } from "@/src/app/admin/hooks/use-admin-data";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { videosService } from "@/src/services/videos-service";
+import type { VideoIdea, Video } from "@/src/services/videos-service";
+import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { useSSEProgress } from "@/src/contexts/sse-progress-context";
+import { useSession, updateUser } from "@/src/lib/auth-client";
+import { AdminService } from "@/src/app/admin/api/admin-service";
+import { CharacterStudio } from "./components/character-studio";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
+} from "@/src/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import { Label } from "@/src/components/ui/label";
+import { cn } from "@/src/lib/utils";
+
+const adminService = new AdminService();
 
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { subscriptionStatus, isLoading: subLoading } = useSubscriptionManager();
 
-  const [allVideos, setAllVideos] = useState<ApiVideo[]>([]);
-  const [videosLoading, setVideosLoading] = useState(true);
-  const { data: modelsData, isLoading: modelsLoading } = useAdminModels();
-  const models: any[] = modelsData?.data || [];
+  const [script, setScript] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [jobId, setJobId] = useState<string | undefined>();
+  const [error, setError] = useState<string | null>(null);
+
+  const [prompts, setPrompts] = useState<any[]>([]);
+  const [characterModels, setCharacterModels] = useState<any[]>([]);
+  const [personalModels, setPersonalModels] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPromptId, setSelectedPromptId] = useState<string>("");
+  const [duration, setDuration] = useState<string>("60");
+  const [aspectRatio, setAspectRatio] = useState<string>("16:9");
+  const [language, setLanguage] = useState<string>("fr-FR");
+  const [suggesting, setSuggesting] = useState(false);
+  const [generatingScript, setGeneratingScript] = useState(false);
+  const [suggestions, setSuggestions] = useState<VideoIdea[] | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
+  const [recentVideos, setRecentVideos] = useState<Video[]>([]);
+  const [updatingPrefs, setUpdatingPrefs] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [pData, charData, myData, vData] = await Promise.all([
+          adminService.listPublicPrompts({ limit: 100 }),
+          adminService.listStandardModels(),
+          adminService.listModels(),
+          videosService.getAll()
+        ]);
+        setPrompts(pData.data || []);
+        setCharacterModels(charData.data || []);
+        setPersonalModels(myData.data || []);
+        setRecentVideos((vData || []).slice(0, 3));
+
+        if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
+        if (charData.data?.length > 0 && !selectedCharacterId) setSelectedCharacterId(charData.data[0].id);
+      } catch (err) {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [session?.user?.defaultPromptId, session?.user?.defaultCharacterId]);
+
+  useEffect(() => {
+    if (session?.user?.language) setLanguage(session.user.language);
+    if (session?.user?.defaultPromptId) setSelectedPromptId(session.user.defaultPromptId);
+    if (session?.user?.defaultCharacterId) setSelectedCharacterId(session.user.defaultCharacterId);
+  }, [session?.user?.language, session?.user?.defaultPromptId, session?.user?.defaultCharacterId]);
+
+  const { progress: realProgress, message: realMessage, isFinished, videoId: generatedVideoId, error: jobError } =
+    useVideoProgress(jobId);
+
+  const { startProgress, updateProgress, stopProgress } = useSSEProgress();
+
+  useEffect(() => {
+    if (generating && jobId) updateProgress(realProgress, realMessage);
+  }, [realProgress, realMessage, generating, jobId, updateProgress]);
+
+  const handleGenerate = async () => {
+    try {
+      setGenerating(true);
+      setError(null);
+      let finalScript = script;
+
+      if (script.trim().length > 0 && script.trim().length < 150) {
+        startProgress({
+          title: "Rédaction du script...",
+          onCancel: () => { setGenerating(false); stopProgress(); },
+        });
+        try {
+          const response = await videosService.generateScriptFromTitle(script, {
+            language, duration: parseInt(duration, 10), aspectRatio,
+          });
+          finalScript = response.script;
+          setScript(finalScript);
+        } catch (err) { /* fall back */ }
+      }
+
+      startProgress({
+        title: "Initialisation de la vidéo...",
+        onCancel: () => { setGenerating(false); setJobId(undefined); stopProgress(); },
+      });
+
+      const selectedPrompt = prompts.find((p) => p.id === selectedPromptId);
+      const options: any = {
+        promptId: selectedPromptId,
+        duration: parseInt(duration, 10),
+        aspectRatio,
+        language,
+        scriptOnly: true,
+        videoType: selectedPrompt?.category || selectedPrompt?.name || "explainer",
+        videoGenre: (selectedPrompt?.category || "").toLowerCase().includes("storytelling") ? "storytelling" : "general",
+        characterModelId: selectedCharacterId || session?.user?.defaultCharacterId || undefined,
+      };
+
+      const response = await videosService.generate(finalScript, options);
+      if (response.jobId) {
+        setJobId(response.jobId);
+      } else {
+        router.push(`/generate/${response.videoId}/script`);
+      }
+    } catch (error: any) {
+      setError(error.message || "Échec du lancement");
+      setGenerating(false);
+      stopProgress();
+    }
+  };
+
+  const handleSuggestTopics = async () => {
+    try {
+      setSuggesting(true);
+      setError(null);
+      setSuggestions(null);
+      const selectedPrompt = prompts.find((p) => p.id === selectedPromptId);
+      const response = await videosService.suggestTopics({
+        language,
+        videoType: selectedPrompt?.category || selectedPrompt?.name,
+        videoGenre: selectedPrompt?.category?.toLowerCase() === "storytelling" ? "storytelling" : "general",
+        aspectRatio,
+        themeName: selectedPrompt?.name,
+        themeDescription: selectedPrompt?.description,
+        goals: selectedPrompt?.goals || [],
+        duration: parseInt(duration, 10),
+        characterModelId: selectedCharacterId || session?.user?.defaultCharacterId || undefined,
+      });
+      setSuggestions(response.topics);
+    } catch (err: any) {
+      setError(err.message || "Impossible de générer des idées.");
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isFinished && jobId && generatedVideoId) {
+      stopProgress();
+      setTimeout(() => { router.push(`/generate/${generatedVideoId}/script`); }, 1000);
+    } else if (isFinished && jobError) {
+      setGenerating(false);
+      stopProgress();
+    }
+  }, [isFinished, jobId, generatedVideoId, jobError, router, stopProgress]);
+
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bonjour";
+    if (hour < 18) return "Bon après-midi";
+    return "Bonsoir";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-stone-200 border-t-stone-400" />
+      </div>
+    );
+  }
 
   const firstName = session?.user?.name?.split(" ")[0] || "là";
 
-  useEffect(() => {
-    videosService.getAll()
-      .then((all) => setAllVideos(all))
-      .catch(() => {})
-      .finally(() => setVideosLoading(false));
-  }, []);
-
-  const recentVideos = allVideos.slice(0, 3);
-  const completedCount = allVideos.filter(v => v.status === "completed").length;
-  const processingCount = allVideos.filter(v => v.status === "processing" || v.status === "queued").length;
-  const failedCount = allVideos.filter(v => v.status === "failed").length;
-
-  /* Build last-7-days bar chart data */
-  const activityData = useMemo(() => {
-    const days: { label: string; total: number; completed: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayKey = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString("fr-FR", { weekday: "short" });
-      const dayVideos = allVideos.filter((v) => {
-        const created = v.createdAt || v.created_at || "";
-        return created.startsWith(dayKey);
-      });
-      days.push({
-        label,
-        total: dayVideos.length,
-        completed: dayVideos.filter((v) => v.status === "completed").length,
-      });
+  const handleUpdatePreference = async (updates: { language?: string; defaultPromptId?: string; defaultCharacterId?: string }) => {
+    try {
+      setUpdatingPrefs(true);
+      await updateUser(updates);
+      // Update local state if needed
+      if (updates.language) setLanguage(updates.language);
+      if (updates.defaultPromptId) setSelectedPromptId(updates.defaultPromptId);
+      if (updates.defaultCharacterId) setSelectedCharacterId(updates.defaultCharacterId);
+    } catch (err) {
+      console.error("Failed to update preference:", err);
+    } finally {
+      setUpdatingPrefs(false);
     }
-    return days;
-  }, [allVideos]);
+  };
 
-  const remainingCredits = subscriptionStatus?.remainingCredits ?? 0;
-  const totalCredits = subscriptionStatus?.totalCredits ?? 0;
-  const creditPct = totalCredits > 0 ? Math.round((remainingCredits / totalCredits) * 100) : 0;
+  const currentPrompt = prompts.find(p => p.id === selectedPromptId);
+  const currentCharacter = [...characterModels, ...personalModels].find(c => c.id === selectedCharacterId);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-            Bonjour, {firstName} 👋
+    <div className="min-h-[calc(100vh-3.5rem)] bg-stone-50 -m-6 p-6 flex flex-col items-center justify-center">
+
+      <div className="w-full max-w-2xl space-y-10 mb-16">
+
+        {/* Greeting */}
+        <div className="text-center space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">
+            Studio de création
+          </p>
+          <h1 className="text-3xl md:text-4xl font-light text-stone-800 tracking-tight">
+            {greeting()}, <span className="font-semibold">{firstName}.</span>
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Voici un aperçu de votre activité.</p>
+          <p className="text-sm text-stone-400 font-light">
+            Décrivez votre sujet, on s'occupe du reste.
+          </p>
         </div>
-        <Button
-          onClick={() => router.push("/generate")}
-          className="bg-zinc-900 hover:bg-zinc-700 text-white rounded-xl h-10 px-5 font-bold text-sm shadow-sm"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle vidéo
-        </Button>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Total vidéos"
-          value={videosLoading ? "—" : allVideos.length.toString()}
-          icon={<Video className="h-4 w-4" />}
-          href="/videos"
-          accent="zinc"
-        />
-        <StatCard
-          label="Terminées"
-          value={videosLoading ? "—" : completedCount.toString()}
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          href="/videos"
-          accent="emerald"
-        />
-        <StatCard
-          label="Crédits restants"
-          value={subLoading ? "—" : remainingCredits.toString()}
-          icon={<Coins className="h-4 w-4" />}
-          href="/subscription"
-          accent="amber"
-          sub={subLoading || totalCredits === 0 ? undefined : `${creditPct}% restants`}
-        />
-        <StatCard
-          label="Personnages"
-          value={modelsLoading ? "—" : (modelsData?.total ?? 0).toString()}
-          icon={<UserSquare2 className="h-4 w-4" />}
-          href="/admin/models"
-          accent="violet"
-        />
-      </div>
+        {/* Studio Configuration Bar (Unified Pill) */}
+        <div className="flex justify-center -mt-4 animate-in fade-in slide-in-from-top-2 duration-1000">
+          <div className="flex items-center p-1.5 bg-white/40 backdrop-blur-md rounded-full border border-stone-200/50 shadow-lg shadow-stone-200/20">
 
-      {/* Activity Chart + Status breakdown */}
-      {!videosLoading && allVideos.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Bar chart */}
-          <Card className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl shadow-none">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-zinc-400" />
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Activité — 7 derniers jours</span>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 pb-5">
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={activityData} barSize={24} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: "#f4f4f5" }}
-                    contentStyle={{ border: "none", borderRadius: 12, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
-                    formatter={(value) => [value, "Vidéos"]}
-                  />
-                  <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-                    {activityData.map((_, idx) => (
-                      <Cell key={idx} fill={activityData[idx].total > 0 ? "#18181b" : "#e4e4e7"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Status breakdown */}
-          <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-zinc-400" />
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Répartition</span>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 pb-5 space-y-3">
-              <StatusRow icon={<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />} label="Terminées" count={completedCount} total={allVideos.length} color="bg-emerald-500" />
-              <StatusRow icon={<Clock className="h-3.5 w-3.5 text-blue-500" />} label="En cours" count={processingCount} total={allVideos.length} color="bg-blue-500" />
-              <StatusRow icon={<AlertCircle className="h-3.5 w-3.5 text-red-400" />} label="Échecs" count={failedCount} total={allVideos.length} color="bg-red-400" />
-              <StatusRow
-                icon={<Video className="h-3.5 w-3.5 text-zinc-400" />}
-                label="Brouillons"
-                count={allVideos.length - completedCount - processingCount - failedCount}
-                total={allVideos.length}
-                color="bg-zinc-300"
-              />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Credits usage bar */}
-      {!subLoading && totalCredits > 0 && (
-        <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Utilisation des crédits</p>
-                <p className="text-sm font-bold text-zinc-700 mt-0.5">
-                  {remainingCredits} / {totalCredits} crédits disponibles
-                  {subscriptionStatus?.planName && (
-                    <span className="ml-2 text-xs font-semibold text-zinc-400">— {subscriptionStatus.planName}</span>
-                  )}
-                </p>
-              </div>
-              <Link href="/subscription" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
-                Gérer <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className="h-2.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${creditPct}%`,
-                  background: creditPct > 50 ? "#10b981" : creditPct > 20 ? "#f59e0b" : "#ef4444",
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Characters */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Personnages</h2>
-          <Link href="/admin/models" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
-            Voir tout <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        {modelsLoading ? (
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
-            {[1, 2, 3, 4].map(i => <div key={i} className="aspect-square rounded-2xl bg-zinc-100 animate-pulse" />)}
-          </div>
-        ) : models.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-zinc-100 rounded-2xl">
-            <p className="text-sm text-zinc-400 mb-3">Aucun personnage créé</p>
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => router.push("/admin/models/new")}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Créer
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
-            {models.slice(0, 8).map((model: any) => (
-              <Link key={model.id} href={`/admin/models/${model.id}`} className="group relative aspect-square rounded-2xl overflow-hidden ring-1 ring-zinc-200 hover:ring-2 hover:ring-zinc-900 transition-all">
-                <img src={model.images?.[0]} alt={model.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-[9px] font-black text-white truncate">{model.name}</p>
+            {/* Niche Selector */}
+            <Select value={selectedPromptId} onValueChange={(val) => handleUpdatePreference({ defaultPromptId: val })}>
+              <SelectTrigger className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-2.5 transition-all focus:ring-0 shadow-none group">
+                <Globe className="h-3.5 w-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                <div className="flex flex-col items-start leading-none text-left">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Niche</span>
+                  <span className="text-[11px] font-extrabold text-stone-700 whitespace-nowrap">
+                    {currentPrompt?.name || "Choisir"}
+                  </span>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors rotate-90 ml-1" />
+              </SelectTrigger>
+              <SelectContent className="rounded-[2rem] border-stone-100 shadow-2xl p-2 min-w-[220px]">
+                {prompts.map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs font-bold rounded-2xl p-3 hover:bg-stone-50 transition-colors cursor-pointer capitalize">
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      {/* Recent videos */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Vidéos récentes</h2>
-          <Link href="/videos" className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors">
-            Voir tout <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        {videosLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <div key={i} className="aspect-video rounded-2xl bg-zinc-100 animate-pulse" />)}
+            {/* Divider */}
+            <div className="w-px h-6 bg-stone-200/60 mx-1" />
+
+            {/* Character Selector (The Studio Trigger) */}
+            <CharacterStudio
+              selectedId={selectedCharacterId}
+              characterModels={characterModels}
+              personalModels={personalModels}
+              onSelect={(id) => handleUpdatePreference({ defaultCharacterId: id })}
+              onCreated={(newChar) => {
+                setPersonalModels(prev => [newChar, ...prev]);
+                handleUpdatePreference({ defaultCharacterId: newChar.id });
+              }}
+            >
+              <button className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-3 transition-all group">
+                <div className="relative">
+                  <Avatar className="h-7 w-7 border-2 border-white shadow-sm">
+                    <AvatarImage src={currentCharacter?.images?.[0] || currentCharacter?.thumbnailUrl} />
+                    <AvatarFallback className="bg-stone-100 text-[10px] font-black text-stone-400 uppercase">
+                      {currentCharacter?.name?.[0] || <Wand2 className="h-3 w-3" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-stone-800 border-2 border-white flex items-center justify-center">
+                    <Sparkles className="h-1.5 w-1.5 text-white fill-current" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-start leading-none text-left">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Personnage</span>
+                  <span className="text-[11px] font-extrabold text-stone-700 whitespace-nowrap">
+                    {currentCharacter?.name || "Sélectionner"}
+                  </span>
+                </div>
+                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors ml-1" />
+              </button>
+            </CharacterStudio>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-stone-200/60 mx-1" />
+
+            {/* Language Selector */}
+            <Select value={language} onValueChange={(val) => handleUpdatePreference({ language: val })}>
+              <SelectTrigger className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-2.5 transition-all focus:ring-0 shadow-none group">
+                <div className="flex flex-col items-start leading-none text-left">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Langue</span>
+                  <span className="text-[11px] font-extrabold text-stone-700 uppercase tracking-tighter">
+                    {language === "fr-FR" ? "Français" : "English"}
+                  </span>
+                </div>
+                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors rotate-90 ml-1" />
+              </SelectTrigger>
+              <SelectContent className="rounded-[2rem] border-stone-100 shadow-2xl p-2 min-w-[140px]">
+                <SelectItem value="fr-FR" className="text-xs font-bold rounded-2xl p-3">🇫🇷 Français</SelectItem>
+                <SelectItem value="en-US" className="text-xs font-bold rounded-2xl p-3">🇺🇸 English</SelectItem>
+              </SelectContent>
+            </Select>
+
           </div>
-        ) : recentVideos.length === 0 ? (
-          <Card className="bg-white border border-zinc-100 rounded-2xl shadow-none">
-            <CardContent className="py-16 flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-zinc-100 flex items-center justify-center">
-                <Video className="h-5 w-5 text-zinc-400" />
+          {updatingPrefs && (
+            <div className="ml-3 flex items-center">
+              <RefreshCw className="h-3 w-3 text-stone-400 animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* Main card */}
+        <div className="relative group">
+          {/* Very subtle shadow ring on focus */}
+          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-stone-200 to-stone-100 opacity-0 group-focus-within:opacity-100 transition duration-500" />
+
+          <Card className="rounded-2xl border border-stone-200 shadow-sm bg-white overflow-hidden relative">
+            <CardContent className="p-0">
+
+              {/* Textarea area */}
+              <div className="relative px-6 pt-6 pb-4">
+                <Textarea
+                  placeholder="Ex : Les 5 erreurs que font les débutants en bourse…"
+                  className={cn(
+                    "min-h-[120px] w-full resize-none border-none focus-visible:ring-0 shadow-none",
+                    "bg-transparent text-lg font-light text-stone-800 placeholder:text-stone-300",
+                    "leading-relaxed p-0"
+                  )}
+                  value={script}
+                  onChange={(e) => setScript(e.target.value)}
+                />
+                {generatingScript && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-10">
+                    <RefreshCw className="h-5 w-5 text-stone-400 animate-spin" />
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-zinc-500">Aucune vidéo générée pour l&apos;instant.</p>
-              <Button asChild className="bg-zinc-900 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm">
-                <Link href="/generate">Créer ma première vidéo</Link>
-              </Button>
+
+              {/* Divider */}
+              <div className="h-px bg-stone-100 mx-4" />
+
+              {/* Controls row */}
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+
+                  {/* Duration */}
+                  <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+                    {["30", "60", "300"].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDuration(d)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                          duration === d
+                            ? "bg-white text-stone-800 shadow-sm"
+                            : "text-stone-400 hover:text-stone-600"
+                        )}
+                      >
+                        {d === "300" ? "5 min" : d === "60" ? "1 min" : "30s"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Format */}
+                  <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+                    {[
+                      { val: "16:9", label: "YouTube" },
+                      { val: "9:16", label: "TikTok" },
+                    ].map((f) => (
+                      <button
+                        key={f.val}
+                        type="button"
+                        onClick={() => setAspectRatio(f.val)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                          aspectRatio === f.val
+                            ? "bg-white text-stone-800 shadow-sm"
+                            : "text-stone-400 hover:text-stone-600"
+                        )}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Send */}
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!script.trim() || generating}
+                  className={cn(
+                    "h-9 w-9 rounded-full flex items-center justify-center transition-all",
+                    script.trim() && !generating
+                      ? "bg-stone-800 text-white hover:bg-stone-700 shadow-sm hover:shadow-md active:scale-95"
+                      : "bg-stone-100 text-stone-300 cursor-not-allowed"
+                  )}
+                >
+                  {generating
+                    ? <RefreshCw className="h-4 w-4 animate-spin" />
+                    : <ChevronRight className="h-4 w-4" />
+                  }
+                </button>
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {recentVideos.map(video => <VideoCard key={video.id} video={video} />)}
+        </div>
+
+        {/* Suggestions row */}
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            onClick={handleSuggestTopics}
+            disabled={suggesting}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-500 hover:text-stone-800 hover:border-stone-300 hover:shadow-sm transition-all"
+          >
+            <Sparkles className={cn("h-3 w-3", suggesting && "animate-spin")} />
+            {suggesting ? "Recherche…" : "Inspirations"}
+          </button>
+
+          {suggestions && suggestions.slice(0, 3).map((idea, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => { setScript(idea.script); setSuggestions(null); }}
+              className="inline-flex items-center px-4 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-500 hover:text-stone-800 hover:border-stone-300 hover:shadow-sm transition-all"
+            >
+              {idea.title}
+            </button>
+          ))}
+
+          {suggestions && (
+            <button
+              type="button"
+              onClick={() => setSuggestions(null)}
+              className="inline-flex items-center px-4 py-2 rounded-full text-xs text-stone-300 hover:text-stone-500 transition-colors"
+            >
+              Effacer
+            </button>
+          )}
+        </div>
+
+        {/* Recent Videos Section */}
+        {recentVideos.length > 0 && (
+          <div className="pt-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <div className="flex items-center justify-between mb-6 px-1">
+              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Générations récentes</h3>
+              <Button variant="link" onClick={() => router.push("/videos")} className="text-xs text-stone-400 hover:text-stone-800 font-bold p-0">
+                Voir tout
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {recentVideos.map((video) => (
+                <Card key={video.id} className="rounded-2xl border border-stone-100 bg-white/50 hover:bg-white transition-all cursor-pointer overflow-hidden group" onClick={() => router.push(`/generate/${video.id}/script`)}>
+                  <div className="aspect-video bg-stone-100 relative">
+                    {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />}
+                    <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors" />
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs font-bold text-stone-800 line-clamp-1">{video.title || "Sans titre"}</p>
+                    <p className="text-[10px] text-stone-400 font-medium mt-0.5 capitalize">{video.status}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
-      </section>
-
-      {/* Upgrade CTA */}
-      {(!subscriptionStatus?.planName || subscriptionStatus.planName === "Free") && (
-        <div className="flex items-center justify-between p-5 bg-zinc-900 rounded-2xl text-white">
-          <div>
-            <p className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-1">Passez à Pro</p>
-            <p className="font-bold">Débloquez toutes les fonctionnalités IA</p>
-          </div>
-          <Button asChild className="bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black h-9 px-5 text-sm">
-            <Link href="/subscription">
-              Upgrade <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-            </Link>
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-type Accent = "zinc" | "emerald" | "amber" | "violet";
-
-const accentMap: Record<Accent, { bg: string; text: string; iconBg: string }> = {
-  zinc:    { bg: "bg-zinc-50",    text: "text-zinc-500",   iconBg: "bg-zinc-100" },
-  emerald: { bg: "bg-emerald-50", text: "text-emerald-600", iconBg: "bg-emerald-100" },
-  amber:   { bg: "bg-amber-50",   text: "text-amber-600",  iconBg: "bg-amber-100" },
-  violet:  { bg: "bg-violet-50",  text: "text-violet-600", iconBg: "bg-violet-100" },
-};
-
-function StatCard({
-  label, value, icon, href, accent = "zinc", sub,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  href: string;
-  accent?: Accent;
-  sub?: string;
-}) {
-  const a = accentMap[accent];
-  return (
-    <Link href={href} className="block group">
-      <Card className={`${a.bg} border-0 rounded-2xl shadow-none hover:shadow-sm transition-all`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className={`h-8 w-8 rounded-xl ${a.iconBg} flex items-center justify-center ${a.text}`}>
-              {icon}
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
-          </div>
-          <div className="text-2xl font-black tracking-tight text-zinc-900">{value}</div>
-          <p className="text-xs text-zinc-400 font-medium mt-0.5">{label}</p>
-          {sub && <p className={`text-[10px] font-semibold mt-1 ${a.text}`}>{sub}</p>}
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function StatusRow({
-  icon, label, count, total, color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  count: number;
-  total: number;
-  color: string;
-}) {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1.5">
-          {icon}
-          <span className="text-xs font-semibold text-zinc-600">{label}</span>
-        </div>
-        <span className="text-xs font-black text-zinc-700">{count}</span>
       </div>
-      <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
-      </div>
+
+      {/* Footer */}
+      <p className="fixed bottom-6 text-[10px] tracking-widest uppercase text-stone-300 font-medium">
+        Sketch Pilot · v2.0
+      </p>
     </div>
   );
 }

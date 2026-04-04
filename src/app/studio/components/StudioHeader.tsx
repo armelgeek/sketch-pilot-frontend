@@ -5,6 +5,8 @@ import { ChevronRight, Play, Wand2, Film, Check, FileJson, History, ArrowRight, 
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import { useStudioStore, StudioTab } from "../store";
+import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
+import { CreditsWidget } from "@/src/components/organisms/credits-widget";
 
 interface StudioHeaderProps {
     onNext: () => void;
@@ -20,6 +22,7 @@ const STEPS: { id: StudioTab; label: string }[] = [
 
 export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderProps) {
     const router = useRouter();
+    const { subscriptionStatus, isLoading: subLoading } = useSubscriptionManager();
     const {
         activeTab,
         setTab,
@@ -65,7 +68,15 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
 
             {/* Right: Actions */}
             <div className="flex items-center justify-end min-w-[320px] gap-3">
-
+                {activeTab === "storyboard" && (
+                    <div className="mr-2">
+                        <CreditsWidget
+                            credits={subscriptionStatus?.remainingCredits ?? 0}
+                            totalCredits={subscriptionStatus?.totalCredits ?? 0}
+                            subLoading={subLoading}
+                        />
+                    </div>
+                )}
 
                 <div>
                     <div className="flex items-center bg-zinc-50/80 px-4 py-1.5 rounded-xl border border-zinc-100">
