@@ -43,8 +43,7 @@ export function HeroSection({ isAuthenticated }: HeroSectionProps) {
             <Button
               size="lg"
               asChild
-              variant='secondary'
-              className="h-16 px-12 rounded-2xl bg-red-500  hover:bg-amber-600 text-white font-extrabold text-xl transition-all hover:scale-[1.05] active:scale-95 group"
+              className="h-16 px-12 rounded-2xl   hover:bg-amber-600 text-white font-extrabold text-xl transition-all hover:scale-[1.05] active:scale-95 group"
             >
 
               <Link href={isAuthenticated ? '/generate' : "/register"}>
