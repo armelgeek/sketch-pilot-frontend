@@ -5,7 +5,7 @@ import {
     Play, Pencil, Download, Clock, Image as ImageIcon,
     Loader2, MoreVertical, Trash2, Share2, Eye
 } from "lucide-react";
-import { Card, CardContent } from "@/src/components/ui/card";
+import { CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -19,15 +19,15 @@ interface VideoCardProps {
     showActions?: boolean;
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-    completed: { label: "Terminé", className: "bg-emerald-50 text-emerald-600 border-emerald-100/50" },
-    processing: { label: "En cours", className: "bg-amber-50 text-amber-600 border-amber-100/50" },
-    failed: { label: "Échec", className: "bg-red-50 text-red-600 border-red-100/50" },
-    queued: { label: "En attente", className: "bg-amber-50 text-amber-600 border-amber-100/50 opacity-70" },
-    draft: { label: "Brouillon", className: "bg-zinc-50 text-zinc-500 border-zinc-100" },
-    scenes_generated: { label: "Visuels prêts", className: "bg-amber-50 text-amber-600 border-amber-100/50" },
-    narration_generated: { label: "Prêt pour audio", className: "bg-amber-50 text-amber-600 border-amber-100/50" },
-    cancelled: { label: "Annulé", className: "bg-zinc-50 text-zinc-400 border-zinc-100" },
+const statusConfig: Record<string, { label: string; dotColor: string }> = {
+    completed: { label: "Terminé", dotColor: "bg-emerald-500" },
+    processing: { label: "En cours", dotColor: "bg-amber-500" },
+    failed: { label: "Échec", dotColor: "bg-red-500" },
+    queued: { label: "En attente", dotColor: "bg-zinc-400" },
+    draft: { label: "Brouillon", dotColor: "bg-zinc-300" },
+    scenes_generated: { label: "Visuels prêts", dotColor: "bg-amber-400" },
+    narration_generated: { label: "Narration OK", dotColor: "bg-amber-400" },
+    cancelled: { label: "Annulé", dotColor: "bg-zinc-200" },
 };
 
 const EDIT_ROUTE: Record<string, string> = {
@@ -42,13 +42,13 @@ const EDIT_ROUTE: Record<string, string> = {
 
 export function VideoCard({ video, showActions = false }: VideoCardProps) {
     const router = useRouter();
-    const s = statusConfig[video.status] || statusConfig.draft;
+    const config = statusConfig[video.status] || statusConfig.draft;
     const step = EDIT_ROUTE[video.status];
     const editPath = step ? `/generate/${video.id}/${step}` : null;
 
     const dateStr = video.createdAt || video.created_at;
     const date = dateStr
-        ? new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+        ? new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
         : "Récemment";
 
     const isProcessing = video.status === "processing" || video.status === "queued";
@@ -60,134 +60,110 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
     };
 
     return (
-        <Card
-            className={cn(
-                "group relative bg-white dark:bg-zinc-950 rounded-3xl overflow-hidden border border-zinc-100 dark:border-zinc-800 transition-all duration-300",
-                !showActions ? "cursor-pointer hover:border-amber-200 hover:shadow-xl hover:shadow-amber-500/5" : ""
-            )}
+        <div
+            className="group relative flex flex-col gap-4 p-3 rounded-xl bg-white border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 cursor-pointer"
             onClick={handleCardClick}
         >
-            <div className="aspect-video relative overflow-hidden bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-50 dark:border-zinc-800">
+            {/* Thumbnail Area */}
+            <div className="aspect-video relative rounded-xl overflow-hidden bg-zinc-50 border border-zinc-50 transition-all duration-500">
                 {video.thumbnailUrl ? (
                     <img
                         src={video.thumbnailUrl}
                         alt={video.title || video.topic}
-                        className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                 ) : isProcessing ? (
-                    <div className="flex flex-col items-center gap-3 text-amber-500">
-                        <div className="relative">
-                            <Loader2 className="h-8 w-8 animate-spin" />
-                            <div className="absolute inset-0 blur-lg bg-amber-500/20 animate-pulse" />
-                        </div>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600/60">Traitement</span>
+                    <div className="flex items-center justify-center h-full text-amber-500/40">
+                        <Loader2 className="h-6 w-6 animate-spin" />
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-zinc-50 to-zinc-100/50 dark:from-zinc-900 dark:to-zinc-800/50">
-                        <div className="relative">
-                            <ImageIcon className="h-12 w-12 text-zinc-200 dark:text-zinc-700" />
-                            <div className="absolute inset-0 blur-2xl bg-zinc-400/10" />
-                        </div>
+                    <div className="flex items-center justify-center h-full bg-zinc-50">
+                        <ImageIcon className="h-10 w-10 text-zinc-100" />
                     </div>
                 )}
 
-                {/* Status Badge - Refined */}
-                <div className="absolute top-3 left-3 z-20">
-                    <span className={cn(
-                        "text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border backdrop-blur-sm shadow-sm transition-colors",
-                        s.className
-                    )}>
-                        {s.label}
-                    </span>
+                {/* Hover Play/View Overlay - Ultra Minimal */}
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center z-10">
+                    <div className="h-14 w-14 rounded-full bg-white shadow-2xl flex items-center justify-center text-zinc-950 scale-75 group-hover:scale-100 transition-all duration-500">
+                        {video.status === "completed" ? (
+                            <Play className="h-6 w-6 fill-current ml-1" />
+                        ) : (
+                            <Eye className="h-6 w-6" />
+                        )}
+                    </div>
                 </div>
 
-                {/* Top Actions Overlay (More Menu) */}
+                {/* Dropdown Options - Floating */}
                 {showActions && (
-                    <div className="absolute top-3 right-3 z-30">
+                    <div className="absolute top-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 rounded-xl bg-white/80 backdrop-blur-md border border-white/20 shadow-sm hover:bg-white transition-all"
+                                    className="h-10 w-10 rounded-2xl bg-white/90 backdrop-blur-md border border-white shadow-xl hover:bg-white transition-all hover:scale-110 active:scale-95"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <MoreVertical className="h-4 w-4 text-zinc-600" />
+                                    <MoreVertical className="h-5 w-5 text-zinc-900" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl border-zinc-100 shadow-xl">
+                            <DropdownMenuContent align="end" className="w-56 p-2 rounded-[1.5rem] border-zinc-100 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                                 {editPath && (
                                     <DropdownMenuItem
-                                        className="rounded-xl h-9 px-3 cursor-pointer font-semibold text-sm gap-2"
+                                        className="rounded-xl h-11 px-4 cursor-pointer font-bold text-xs gap-3"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             router.push(editPath);
                                         }}
                                     >
-                                        <Pencil className="h-4 w-4 opacity-50" /> Éditer
+                                        <Pencil className="h-4 w-4 opacity-40" /> Éditer le projet
                                     </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem className="rounded-xl h-9 px-3 cursor-pointer font-semibold text-sm gap-2">
-                                    <Share2 className="h-4 w-4 opacity-50" /> Partager
-                                </DropdownMenuItem>
                                 {video.status === "completed" && video.videoUrl && (
                                     <DropdownMenuItem
-                                        className="rounded-xl h-9 px-3 cursor-pointer font-semibold text-sm gap-2"
+                                        className="rounded-xl h-11 px-4 cursor-pointer font-bold text-xs gap-3"
                                         asChild
                                     >
                                         <a href={video.videoUrl} download onClick={(e) => e.stopPropagation()}>
-                                            <Download className="h-4 w-4 opacity-50" /> Télécharger (HD)
+                                            <Download className="h-4 w-4 opacity-40" /> Télécharger en HD
                                         </a>
                                     </DropdownMenuItem>
                                 )}
-                                <DropdownMenuSeparator className="opacity-50" />
-                                <DropdownMenuItem className="rounded-xl h-9 px-3 cursor-pointer font-black text-sm gap-2 text-red-600">
-                                    <Trash2 className="h-4 w-4" /> Supprimer
+                                <DropdownMenuItem className="rounded-xl h-11 px-4 cursor-pointer font-bold text-xs gap-3">
+                                    <Share2 className="h-4 w-4 opacity-40" /> Partager la vidéo
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="mx-2 my-1 opacity-50" />
+                                <DropdownMenuItem className="rounded-xl h-11 px-4 cursor-pointer font-black text-xs gap-3 text-red-500 hover:text-red-600 hover:bg-red-50">
+                                    <Trash2 className="h-4 w-4" /> Supprimer définitivement
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 )}
-
-                {/* Primary Interaction Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/5 z-10">
-                    {video.status === "completed" && video.videoUrl ? (
-                        <a
-                            href={video.videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-14 w-14 rounded-full bg-white flex items-center justify-center text-zinc-900 shadow-2xl scale-90 group-hover:scale-100 transition-all duration-500 hover:bg-amber-400 hover:text-white"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <Play className="h-6 w-6 fill-current ml-1" />
-                        </a>
-                    ) : editPath ? (
-                        <div className="h-12 w-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-zinc-900 shadow-xl scale-90 group-hover:scale-100 transition-all duration-500">
-                            <Eye className="h-5 w-5" />
-                        </div>
-                    ) : null}
-                </div>
             </div>
 
-            <CardContent className="p-5 bg-white dark:bg-zinc-950">
-                <div className="flex flex-col gap-1.5">
-                    <h3 className="font-black text-base lg:text-lg tracking-tight text-zinc-900 dark:text-zinc-100 line-clamp-1 group-hover:text-amber-600 transition-all duration-300 group-hover:translate-x-0.5">
-                        {video.title || video.topic || "Projet sans titre"}
-                    </h3>
-                    <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2 text-[12px] text-zinc-400 font-bold">
-                            <Clock className="h-3.5 w-3.5 opacity-60" />
-                            {date}
+            {/* Info Area - Clean Layout */}
+            <div className="flex flex-col gap-2 px-1 pb-1">
+                <h3 className="font-bold text-[16px] text-zinc-950 line-clamp-1 leading-snug group-hover:text-amber-500 transition-colors">
+                    {video.title || video.topic || "Projet sans titre"}
+                </h3>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className={cn("h-2 w-2 rounded-full ring-4 ring-zinc-50 shadow-sm", config.dotColor)} />
+                            <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                                {config.label}
+                            </span>
                         </div>
-                        {video.status === "completed" && (
-                            <div className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100/50 shadow-sm">
-                                <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                                HD READY
-                            </div>
-                        )}
+                        <div className="h-1 w-1 rounded-full bg-zinc-200" />
+                        <span className="text-[11px] font-bold text-zinc-300">{date}</span>
                     </div>
+
+                    {video.status === "completed" && (
+                        <div className="text-[10px] font-black text-emerald-500/50 scale-90">4K / HDR</div>
+                    )}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
