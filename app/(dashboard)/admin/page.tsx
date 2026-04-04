@@ -107,7 +107,7 @@ export default function AdminOverviewPage() {
                     <CardHeader>
                         <CardTitle className="text-lg font-black tracking-tight flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                            Répartition par Statut Vidéo
+                            Répartition par Statut Vidé
                         </CardTitle>
                         <CardDescription>État actuel de la file d'attente de génération</CardDescription>
                     </CardHeader>

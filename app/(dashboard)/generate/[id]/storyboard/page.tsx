@@ -309,11 +309,13 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     return (
         <>
             <div className="flex flex-col bg-[#F8F8F7]" style={{ minHeight: "calc(100vh - 56px)" }}>
-                <StudioHeader
-                    onNext={onNext}
-                    onAssemble={onAssemble}
-                    promptsUrl={activeVideo?.options?.promptsUrl}
-                />
+                {activeTab !== "script" && (
+                    <StudioHeader
+                        onNext={onNext}
+                        onAssemble={onAssemble}
+                        promptsUrl={activeVideo?.options?.promptsUrl}
+                    />
+                )}
                 <StudioErrorBar />
 
                 <div className="flex overflow-hidden flex-1">
@@ -321,6 +323,7 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
                         <ScriptTabContent
                             onScenesChange={onScenesChange}
                             onSaveScript={handleSaveScript}
+                            onAnimate={onAnimate}
                         />
                         <StoryboardTabContent
                             currentSceneIndex={currentSceneIndex}

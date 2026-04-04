@@ -1,46 +1,87 @@
 "use client";
-
 import { ScriptEditor } from "@/src/components/organisms/script-editor";
+
 import { useStudioStore } from "../store";
+import { useStudioActions } from "../hooks/use-studio-actions";
+import { Save, Wand2, Check, ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ScriptTabContentProps {
     onScenesChange: (newScenes: any[]) => void;
     onSaveScript: () => void;
+    onAnimate?: () => void;
 }
 
-export function ScriptTabContent({ onScenesChange, onSaveScript }: ScriptTabContentProps) {
-    const { activeTab, activeVideo } = useStudioStore();
+export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate }: ScriptTabContentProps) {
+    const router = useRouter();
+    const { activeTab, activeVideo, generating, visualsGenerated } = useStudioStore();
+    const { handleRegenerateImage } = useStudioActions();
 
     if (activeTab !== "script") return null;
 
     const displayScenes = activeVideo
-        ? ((activeVideo.scenes?.length ? activeVideo.scenes : activeVideo.script?.scenes) || [])
+        ? (activeVideo.scenes?.length ? activeVideo.scenes : activeVideo.script?.scenes) ?? []
         : [];
 
     return (
-        <div className="flex flex-col h-full bg-[#0E0E10]">
-            {/* Sub-header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800 shrink-0">
-                <div>
-                    <p className="text-xs font-bold text-zinc-200 leading-none">Script & Prompts visuels</p>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">
-                        {displayScenes.length} scène{displayScenes.length !== 1 ? "s" : ""}
-                        {" · "}Éditez la narration et les prompts avant de générer les visuels
-                    </p>
-                </div>
-                <button
-                    onClick={onSaveScript}
-                    className="text-[10px] text-zinc-500 hover:text-emerald-400 transition-colors font-bold uppercase tracking-widest">
-                    Sauvegarder
-                </button>
-            </div>
+        <div className="flex flex-col flex-1 h-full bg-[#F9F8F5] overflow-hidden relative">
+            {/* Custom Validation Header */}
+            <header className="shrink-0 flex items-center justify-between px-6 h-16 border-b border-zinc-100 bg-white z-50 shadow-sm shadow-zinc-100/50">
+                <div className="flex items-center gap-4 min-w-[320px]">
+                    <button
+                        onClick={() => router.push("/videos")}
+                        className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-zinc-100 transition-all text-zinc-400 hover:text-zinc-900"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </button>
 
-            <div className="flex-1 overflow-y-auto py-5 px-5">
-                <div className="max-w-2xl mx-auto">
+                    <div className="flex flex-col min-w-0">
+                        <h1 className="text-[14px] font-black text-zinc-900 truncate tracking-tight">
+                            {activeVideo?.title || "Projet sans titre"}
+                        </h1>
+                        <div className="flex items-center gap-2 mt-[-2px]">
+                            <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-50/50 px-1.5 py-0.5 rounded border border-amber-100/50 leading-none">
+                                Validation Narrative
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    {onAnimate && (
+                        <button
+                            onClick={onAnimate}
+                            disabled={generating}
+                            className="flex items-center gap-3 h-10 px-6 rounded-xl bg-zinc-900 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200 disabled:opacity-50 group shrink-0"
+                        >
+                            {generating ? (
+                                <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : visualsGenerated ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            ) : (
+                                <Wand2 className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" />
+                            )}
+                            <span>{visualsGenerated ? "Suivant" : "Générer le storyboard"}</span>
+                        </button>
+                    )}
+                </div>
+            </header>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-10 pt-12 pb-20 scrollbar-hide flex flex-col min-h-0">
+                <div className="max-w-2xl mx-auto w-full flex-1">
+                    {/* Discreet mention above editor */}
+                    <div className="text-center">
+                        <p className="text-[14px] text-zinc-400 font-medium leading-relaxed italic">
+                            Vérifiez vos textes et prompts visuels avant de générer le storyboard.
+                        </p>
+                    </div>
+
                     <ScriptEditor
                         scenes={displayScenes}
                         onScenesChange={onScenesChange}
                         showImagePrompt={true}
+                        onRegenerateImage={handleRegenerateImage}
                     />
                 </div>
             </div>

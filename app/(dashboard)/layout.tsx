@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {isStudio ? (
               children
             ) : (
-              <div className="mx-auto max-w-5xl px-6 py-8">
+              <div className="px-6 py-8">
                 {children}
               </div>
             )}

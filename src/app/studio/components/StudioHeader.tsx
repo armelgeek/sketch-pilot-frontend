@@ -41,21 +41,21 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
     };
 
     return (
-        <header className="flex items-center justify-between px-6 h-16 border-b border-zinc-200/80 bg-white/95  shrink-0 relative z-50 overflow-hidden">
+        <header className="flex items-center justify-between px-6 h-14 border-b border-zinc-100 bg-white shrink-0 relative z-50 overflow-hidden">
             {/* Left: Brand & Metadata */}
-            <div className="flex items-center gap-5 min-w-[320px]">
+            <div className="flex items-center gap-4 min-w-[320px]">
                 <div
-                    className="flex items-center justify-center  cursor-pointer transition-all shrink-0"
+                    className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-zinc-100 cursor-pointer transition-all shrink-0 text-zinc-400 hover:text-zinc-900"
                     onClick={() => router.push("/videos")}>
-                    <ChevronLeft className="h-3.5 w-3.5" />
+                    <ChevronLeft className="h-4 w-4" />
                 </div>
 
                 <div className="flex flex-col min-w-0">
-                    <h1 className="text-[15px] font-black text-zinc-900 truncate">
-                        {"Projet sans titre"}
+                    <h1 className="text-[14px] font-black text-zinc-900 truncate tracking-tight">
+                        {activeVideo?.title || "Projet sans titre"}
                     </h1>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">Studio Workspace</span>
+                    <div className="flex items-center gap-2 mt-[-2px]">
+                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 px-1.5 py-0.5 rounded border border-emerald-100/50 leading-none">Studio Workspace</span>
                     </div>
                 </div>
             </div>
@@ -68,7 +68,7 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
 
 
                 <div>
-                    <div className="flex items-center bg-zinc-100/50 px-5 py-2 rounded-2xl border border-zinc-100/80">
+                    <div className="flex items-center bg-zinc-50/80 px-4 py-1.5 rounded-xl border border-zinc-100">
                         {STEPS.map(({ id, label }, index) => {
                             const isActive = effectiveStepId === id;
                             const isCompleted = effectiveStepIndex > index;

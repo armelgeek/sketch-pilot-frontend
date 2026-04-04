@@ -21,6 +21,18 @@
 
   --tracking-tightest: -0.06em;
   --tracking-tighter: -0.04em;
+
+  --animate-shimmer: shimmer 2.5s infinite linear;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+
+    to {
+      transform: translateX(200%);
+    }
+  }
 }
 
 body {

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, Copy, Sparkles } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { Textarea } from "@/src/components/ui/textarea";
-import { cn } from "@/src/lib/utils";
+import { useState, useRef, useEffect } from "react";
+import { Copy, Trash2, Plus, Mic2, Sparkles, Pencil, Wand2, Loader2 } from "lucide-react";
 
 interface Scene {
     id: string;
-    text: string;
+    text?: string;
+    narration?: string;
+    content?: string;
+    imagePrompt?: string;
+    prompt?: string;
     [key: string]: any;
 }
 
@@ -16,152 +17,215 @@ interface ScriptEditorProps {
     scenes: Scene[];
     onScenesChange: (scenes: Scene[]) => void;
     showImagePrompt?: boolean;
+    onRegenerateImage?: (sceneId: string, index: number, prompt: string) => Promise<any>;
 }
 
-export function ScriptEditor({ scenes, onScenesChange, showImagePrompt = false }: ScriptEditorProps) {
+function AutoResizeTextarea({
+    value,
+    onChange,
+    placeholder,
+    className,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+    className?: string;
+}) {
+    const ref = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.style.height = "auto";
+            ref.current.style.height = ref.current.scrollHeight + "px";
+        }
+    }, [value]);
+
+    return (
+        <textarea
+            ref={ref}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            rows={1}
+            className={className}
+            style={{ resize: "none", overflow: "hidden" }}
+        />
+    );
+}
+
+export function ScriptEditor({
+    scenes,
+    onScenesChange,
+    showImagePrompt = false,
+    onRegenerateImage,
+}: ScriptEditorProps) {
     const [editingScenes, setEditingScenes] = useState<Scene[]>(scenes);
+    const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
-    const updateScenes = (newScenes: Scene[]) => {
-        setEditingScenes(newScenes);
-        onScenesChange(newScenes);
+    const updateScenes = (next: Scene[]) => {
+        setEditingScenes(next);
+        onScenesChange(next);
     };
 
-    const handleTextChange = (id: string, field: string, value: string) => {
-        const newScenes = editingScenes.map(s => {
-            if (s.id === id) {
+    const handleChange = (id: string, field: string, value: string) => {
+        updateScenes(
+            editingScenes.map((s) => {
+                if (s.id !== id) return s;
                 const updated = { ...s, [field]: value };
-                if (field === "narration") {
-                    updated.text = value;
-                    updated.content = value;
-                }
-                if (field === "imagePrompt") {
-                    updated.prompt = value;
-                }
+                if (field === "narration") { updated.text = value; updated.content = value; }
+                if (field === "imagePrompt") { updated.prompt = value; }
                 return updated;
-            }
-            return s;
+            })
+        );
+    };
+
+    const addScene = (afterIndex: number) => {
+        const next = [...editingScenes];
+        next.splice(afterIndex + 1, 0, {
+            id: `new-${Date.now()}`,
+            text: "", narration: "", imagePrompt: "",
         });
-        updateScenes(newScenes);
+        updateScenes(next);
     };
 
-    const addScene = (index: number) => {
-        const newScene: Scene = { id: `new-${Date.now()}`, text: "" };
-        const newScenes = [...editingScenes];
-        newScenes.splice(index + 1, 0, newScene);
-        updateScenes(newScenes);
+    const duplicate = (index: number) => {
+        const next = [...editingScenes];
+        next.splice(index + 1, 0, { ...editingScenes[index], id: `dup-${Date.now()}` });
+        updateScenes(next);
     };
 
-    const duplicateScene = (index: number) => {
-        const newScene: Scene = { ...editingScenes[index], id: `dup-${Date.now()}` };
-        const newScenes = [...editingScenes];
-        newScenes.splice(index + 1, 0, newScene);
-        updateScenes(newScenes);
-    };
-
-    const deleteScene = (index: number) => {
+    const remove = (index: number) => {
+        if (editingScenes.length <= 1) return;
         updateScenes(editingScenes.filter((_, i) => i !== index));
     };
 
     return (
-        <div className="space-y-2.5">
-            {editingScenes.map((scene, index) => (
-                <div
-                    key={scene.id}
-                    className="group relative flex gap-3 items-start animate-in fade-in slide-in-from-bottom-1 duration-200"
-                    style={{ animationDelay: `${index * 30}ms` }}
-                >
-                    {/* Number + connector */}
-                    <div className="flex flex-col items-center shrink-0 pt-3.5">
-                        <div
-                            className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-black border border-zinc-700"
-                            aria-label={`Scène ${index + 1}`}
-                        >
-                            {index + 1}
-                        </div>
-                        {index < editingScenes.length - 1 && (
-                            <div className="w-px flex-1 min-h-6 bg-zinc-800 mt-1" />
-                        )}
-                    </div>
+        <div className="max-w-2xl mx-auto selection:bg-primary-elite/20">
+            <div className="flex flex-col">
+                {editingScenes.map((scene, index) => {
+                    const num = String(index + 1).padStart(2, "0");
+                    const narration = scene.narration ?? scene.text ?? scene.content ?? "";
+                    const imagePrompt = scene.imagePrompt ?? scene.prompt ?? "";
 
-                    {/* Card */}
-                    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group/card relative mb-2 transition-colors hover:border-zinc-700 focus-within:border-zinc-600">
+                    return (
+                        <div key={scene.id} className="relative">
+                            {/* Vertical thread */}
+                            {index < editingScenes.length - 1 && (
+                                <div className="absolute left-4 top-10 bottom-0 w-px bg-gray-200 hidden md:block" />
+                            )}
 
-                        {/* Actions (on hover) */}
-                        <div className="absolute top-2 right-2 z-10 flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                            <button
-                                onClick={() => duplicateScene(index)}
-                                title="Dupliquer"
-                                className="p-1.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-emerald-400 hover:bg-zinc-700 transition-colors"
-                            >
-                                <Copy className="h-3 w-3" />
-                            </button>
-                            <button
-                                onClick={() => deleteScene(index)}
-                                title="Supprimer"
-                                disabled={editingScenes.length <= 1}
-                                className="p-1.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                                <Trash2 className="h-3 w-3" />
-                            </button>
-                        </div>
-
-                        {/* Narration */}
-                        <div className="px-4 pt-4 pb-3">
-                            <span className="text-[9px] uppercase font-black text-zinc-600 tracking-widest mb-2 block">
-                                Narration
-                            </span>
-                            <Textarea
-                                value={scene.narration || scene.text || scene.content || ""}
-                                onChange={(e) => handleTextChange(scene.id, "narration", e.target.value)}
-                                placeholder="Ce qui sera dit par la voix off…"
-                                className="min-h-[64px] resize-none border-none focus-visible:ring-0 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-700 p-0 leading-relaxed"
-                            />
-                        </div>
-
-                        {/* Image prompt */}
-                        {showImagePrompt && (
-                            <div className="px-4 pt-2.5 pb-3.5 border-t border-zinc-800">
-                                <div className="flex items-center gap-1.5 mb-2">
-                                    <Sparkles className="h-3 w-3 text-zinc-600" />
-                                    <span className="text-[9px] uppercase font-black text-zinc-600 tracking-widest">
-                                        Prompt visuel
+                            {/* Scene row */}
+                            <div className="flex items-start gap-6 py-8 group/row">
+                                {/* Dot */}
+                                <div className="hidden md:flex shrink-0 mt-0.5 w-8 h-8 rounded-full border border-zinc-200 bg-white items-center justify-center transition-all duration-300 group-hover/row:border-primary-elite/30 group-hover/row:shadow-[0_0_15px_rgba(245,158,11,0.1)] relative z-10">
+                                    <span className="text-[10px] font-extrabold text-zinc-400 tabular-nums transition-colors group-hover/row:text-primary-elite">
+                                        {num}
                                     </span>
                                 </div>
-                                <Textarea
-                                    value={scene.imagePrompt || scene.prompt || ""}
-                                    onChange={(e) => handleTextChange(scene.id, "imagePrompt", e.target.value)}
-                                    placeholder="Décrivez ce que l'IA doit générer comme image…"
-                                    className="min-h-[56px] resize-none border-none focus-visible:ring-0 bg-transparent text-sm text-zinc-400 placeholder:text-zinc-700 p-0 leading-relaxed"
-                                />
+
+                                {/* Card */}
+                                <div className="flex-1 rounded-2xl border border-zinc-100/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden transition-all duration-300 hover:shadow-[0_12px_40px_rgb(0,0,0,0.04)] hover:border-zinc-200/60 focus-within:ring-2 focus-within:ring-primary-elite/10 focus-within:border-primary-elite/40 group/card">
+
+                                    {/* Card header */}
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-50/80">
+                                        <span className="text-[10px] font-extrabold tracking-[0.15em] uppercase bg-amber-100 text-amber-500">
+                                            Séquence {num}
+                                        </span>
+                                        <div className="flex gap-1.5 opacity-0 group-hover/card:opacity-100 focus-within:opacity-100 transition-all duration-200 translate-y-1 group-hover/card:translate-y-0">
+                                            <button
+                                                onClick={() => duplicate(index)}
+                                                className="h-8 w-8 rounded-lg border border-zinc-100 bg-white shadow-sm flex items-center justify-center text-zinc-400 hover:text-primary-elite hover:border-primary-elite/20 hover:shadow-primary-elite/5 transition-all"
+                                                title="Dupliquer"
+                                            >
+                                                <Copy className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => remove(index)}
+                                                disabled={editingScenes.length <= 1}
+                                                className="h-8 w-8 rounded-lg border border-zinc-100 bg-white shadow-sm flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50/50 hover:border-red-100 transition-all disabled:opacity-20 disabled:pointer-events-none"
+                                                title="Supprimer"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Card body */}
+                                    <div className="px-6 py-2s space-y-2">
+
+                                        {/* Narration */}
+                                        <div className="group/field">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="p-1 rounded-md bg-amber-50 group-hover/field:bg-amber-100 transition-colors flex items-center gap-1.5 pr-2">
+                                                    <Mic2 className="h-3.5 w-3.5 text-primary-elite" />
+                                                    <Pencil className="h-2.5 w-2.5 text-primary-elite/40" />
+                                                </div>
+                                                <span className="text-[10px] font-extrabold tracking-[0.1em] uppercase text-zinc-400">
+                                                    Narration
+                                                </span>
+                                            </div>
+                                            <AutoResizeTextarea
+                                                value={narration}
+                                                onChange={(v) => handleChange(scene.id, "narration", v)}
+                                                placeholder="Que dit la voix-off ?"
+                                                className="w-full bg-transparent border-none outline-none text-[16px] leading-[1.6] text-zinc-800 placeholder:text-zinc-200  font-medium"
+                                            />
+                                        </div>
+
+                                        {/* Image prompt */}
+                                        {showImagePrompt && (
+                                            <div className="pt-6 border-t border-zinc-50/80 group/field-prompt">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="p-1 rounded-md bg-zinc-50 group-hover/field-prompt:bg-zinc-100 transition-colors flex items-center gap-1.5 pr-2">
+                                                        <Sparkles className="h-3.5 w-3.5 text-zinc-400 group-hover/field-prompt:text-primary-elite transition-colors" />
+                                                        <Pencil className="h-2.5 w-2.5 text-zinc-300 group-hover/field-prompt:text-primary-elite/40 transition-colors" />
+                                                    </div>
+                                                    <span className="text-[10px] font-extrabold tracking-[0.1em] uppercase text-zinc-400">
+                                                        Prompt visuel
+                                                    </span>
+                                                </div>
+                                                <div className="bg-zinc-50/40 rounded-xl px-4 py-4 border border-zinc-100/50 focus-within:bg-zinc-50 transition-colors relative group/prompt-box">
+                                                    <AutoResizeTextarea
+                                                        value={imagePrompt}
+                                                        onChange={(v) => handleChange(scene.id, "imagePrompt", v)}
+                                                        placeholder="Décrivez l'image ou l'ambiance visuelle…"
+                                                        className="w-full bg-transparent border-none outline-none text-[14px] leading-relaxed text-zinc-500 italic placeholder:text-zinc-300 pr-10"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Insert scene (+) */}
-                    <button
-                        onClick={() => addScene(index)}
-                        title="Insérer une scène"
-                        className="absolute -bottom-1 left-8 z-20 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-                    >
-                        <div className="bg-emerald-500 text-white rounded-full p-1 shadow-lg shadow-emerald-500/30">
-                            <Plus className="h-3 w-3" />
+                            {/* Insert between */}
+                            {index < editingScenes.length - 1 && (
+                                <div className="flex items-center gap-3 pl-14 h-0 overflow-visible relative z-10 group/insert">
+                                    <button
+                                        onClick={() => addScene(index)}
+                                        className="h-7 w-7 -mt-3.5 rounded-full border border-zinc-200 bg-white shadow-sm flex items-center justify-center text-zinc-400 hover:border-primary-elite/40 hover:text-primary-elite hover:scale-110 transition-all duration-300"
+                                        title="Insérer une séquence"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </button>
+                                    <div className="h-px bg-zinc-100 flex-1 -mt-3.5 opacity-0 group-hover/insert:opacity-100 transition-opacity" />
+                                </div>
+                            )}
                         </div>
-                    </button>
-                </div>
-            ))}
+                    );
+                })}
+            </div>
 
-            {editingScenes.length === 0 && (
-                <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-2xl">
-                    <p className="text-zinc-600 mb-4 text-sm">Aucune scène définie.</p>
-                    <Button
-                        onClick={() => addScene(-1)}
-                        variant="outline"
-                        className="rounded-xl border-zinc-700 text-zinc-400 hover:bg-zinc-800"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Ajouter une scène
-                    </Button>
-                </div>
-            )}
+            {/* Footer add */}
+            <div className="mt-12 flex justify-center">
+                <button
+                    onClick={() => addScene(editingScenes.length - 1)}
+                    className="flex items-center gap-2.5 h-11 px-8 rounded-full border border-zinc-200 bg-white shadow-sm text-[12px] font-extrabold tracking-widest uppercase text-zinc-500 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 hover:-translate-y-0.5 transition-all duration-300"
+                >
+                    <Plus className="h-4 w-4" />
+                    Nouvelle séquence
+                </button>
+            </div>
         </div>
     );
 }
