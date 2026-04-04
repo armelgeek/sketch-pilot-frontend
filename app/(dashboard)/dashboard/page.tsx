@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ChevronRight, Plus, RefreshCw, Sparkles, Globe, Wand2
-} from "lucide-react";
+import { ChevronRight, RefreshCw, Sparkles, Globe } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Textarea } from "@/src/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/src/components/ui/select";
 import { videosService } from "@/src/services/videos-service";
 import type { VideoIdea, Video } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
@@ -16,11 +14,7 @@ import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { useSession, updateUser } from "@/src/lib/auth-client";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { CharacterStudio } from "./components/character-studio";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
-} from "@/src/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { Label } from "@/src/components/ui/label";
 import { cn } from "@/src/lib/utils";
 
 const adminService = new AdminService();
@@ -212,270 +206,176 @@ export default function DashboardPage() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-stone-50 -m-6 p-6 flex flex-col items-center justify-center">
 
-      <div className="w-full max-w-2xl space-y-10 mb-16">
+      <div className="w-full max-w-xl space-y-6 mb-16">
 
         {/* Greeting */}
-        <div className="text-center space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">
-            Studio de création
-          </p>
-          <h1 className="text-3xl md:text-4xl font-light text-stone-800 tracking-tight">
-            {greeting()}, <span className="font-semibold">{firstName}.</span>
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">
+            {greeting()}, {firstName}.
           </h1>
-          <p className="text-sm text-stone-400 font-light">
+          <p className="text-sm text-stone-400">
             Décrivez votre sujet, on s'occupe du reste.
           </p>
         </div>
 
-        {/* Studio Configuration Bar (Unified Pill) */}
-        <div className="flex justify-center -mt-4 animate-in fade-in slide-in-from-top-2 duration-1000">
-          <div className="flex items-center p-1.5 bg-white/40 backdrop-blur-md rounded-full border border-stone-200/50 shadow-lg shadow-stone-200/20">
+        {/* Config row */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {/* Niche */}
+          <Select value={selectedPromptId} onValueChange={(val) => handleUpdatePreference({ defaultPromptId: val })}>
+            <SelectTrigger className="h-8 text-xs font-medium bg-white border border-stone-200 rounded-lg px-3 gap-1.5 shadow-none focus:ring-0 w-auto">
+              <Globe className="h-3.5 w-3.5 text-stone-400" />
+              <span className="text-stone-700">{currentPrompt?.name || "Niche"}</span>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-stone-100 shadow-xl">
+              {prompts.map((p) => (
+                <SelectItem key={p.id} value={p.id} className="text-xs capitalize">{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            {/* Niche Selector */}
-            <Select value={selectedPromptId} onValueChange={(val) => handleUpdatePreference({ defaultPromptId: val })}>
-              <SelectTrigger className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-2.5 transition-all focus:ring-0 shadow-none group">
-                <Globe className="h-3.5 w-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                <div className="flex flex-col items-start leading-none text-left">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Niche</span>
-                  <span className="text-[11px] font-extrabold text-stone-700 whitespace-nowrap">
-                    {currentPrompt?.name || "Choisir"}
-                  </span>
-                </div>
-                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors rotate-90 ml-1" />
-              </SelectTrigger>
-              <SelectContent className="rounded-[2rem] border-stone-100 shadow-2xl p-2 min-w-[220px]">
-                {prompts.map((p) => (
-                  <SelectItem key={p.id} value={p.id} className="text-xs font-bold rounded-2xl p-3 hover:bg-stone-50 transition-colors cursor-pointer capitalize">
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Character */}
+          <CharacterStudio
+            selectedId={selectedCharacterId}
+            characterModels={characterModels}
+            personalModels={personalModels}
+            onSelect={(id) => handleUpdatePreference({ defaultCharacterId: id })}
+            onCreated={(newChar) => {
+              setPersonalModels(prev => [newChar, ...prev]);
+              handleUpdatePreference({ defaultCharacterId: newChar.id });
+            }}
+          >
+            <button className="h-8 flex items-center gap-1.5 bg-white border border-stone-200 rounded-lg px-3 text-xs font-medium text-stone-700 hover:border-stone-300 transition-colors">
+              <Avatar className="h-4 w-4">
+                <AvatarImage src={currentCharacter?.images?.[0] || currentCharacter?.thumbnailUrl} />
+                <AvatarFallback className="bg-stone-100 text-[8px] font-black text-stone-400">
+                  {currentCharacter?.name?.[0] || "?"}
+                </AvatarFallback>
+              </Avatar>
+              {currentCharacter?.name || "Personnage"}
+            </button>
+          </CharacterStudio>
 
-            {/* Divider */}
-            <div className="w-px h-6 bg-stone-200/60 mx-1" />
+          {/* Language */}
+          <Select value={language} onValueChange={(val) => handleUpdatePreference({ language: val })}>
+            <SelectTrigger className="h-8 text-xs font-medium bg-white border border-stone-200 rounded-lg px-3 gap-1.5 shadow-none focus:ring-0 w-auto">
+              <span>{language === "fr-FR" ? "🇫🇷 FR" : "🇺🇸 EN"}</span>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-stone-100 shadow-xl">
+              <SelectItem value="fr-FR" className="text-xs">🇫🇷 Français</SelectItem>
+              <SelectItem value="en-US" className="text-xs">🇺🇸 English</SelectItem>
+            </SelectContent>
+          </Select>
 
-            {/* Character Selector (The Studio Trigger) */}
-            <CharacterStudio
-              selectedId={selectedCharacterId}
-              characterModels={characterModels}
-              personalModels={personalModels}
-              onSelect={(id) => handleUpdatePreference({ defaultCharacterId: id })}
-              onCreated={(newChar) => {
-                setPersonalModels(prev => [newChar, ...prev]);
-                handleUpdatePreference({ defaultCharacterId: newChar.id });
-              }}
-            >
-              <button className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-3 transition-all group">
-                <div className="relative">
-                  <Avatar className="h-7 w-7 border-2 border-white shadow-sm">
-                    <AvatarImage src={currentCharacter?.images?.[0] || currentCharacter?.thumbnailUrl} />
-                    <AvatarFallback className="bg-stone-100 text-[10px] font-black text-stone-400 uppercase">
-                      {currentCharacter?.name?.[0] || <Wand2 className="h-3 w-3" />}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-stone-800 border-2 border-white flex items-center justify-center">
-                    <Sparkles className="h-1.5 w-1.5 text-white fill-current" />
-                  </div>
-                </div>
-                <div className="flex flex-col items-start leading-none text-left">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Personnage</span>
-                  <span className="text-[11px] font-extrabold text-stone-700 whitespace-nowrap">
-                    {currentCharacter?.name || "Sélectionner"}
-                  </span>
-                </div>
-                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors ml-1" />
-              </button>
-            </CharacterStudio>
-
-            {/* Divider */}
-            <div className="w-px h-6 bg-stone-200/60 mx-1" />
-
-            {/* Language Selector */}
-            <Select value={language} onValueChange={(val) => handleUpdatePreference({ language: val })}>
-              <SelectTrigger className="h-10 border-none bg-transparent hover:bg-white/60 rounded-full px-5 flex items-center gap-2.5 transition-all focus:ring-0 shadow-none group">
-                <div className="flex flex-col items-start leading-none text-left">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-0.5">Langue</span>
-                  <span className="text-[11px] font-extrabold text-stone-700 uppercase tracking-tighter">
-                    {language === "fr-FR" ? "Français" : "English"}
-                  </span>
-                </div>
-                <ChevronRight className="h-3 w-3 text-stone-300 group-hover:text-stone-400 transition-colors rotate-90 ml-1" />
-              </SelectTrigger>
-              <SelectContent className="rounded-[2rem] border-stone-100 shadow-2xl p-2 min-w-[140px]">
-                <SelectItem value="fr-FR" className="text-xs font-bold rounded-2xl p-3">🇫🇷 Français</SelectItem>
-                <SelectItem value="en-US" className="text-xs font-bold rounded-2xl p-3">🇺🇸 English</SelectItem>
-              </SelectContent>
-            </Select>
-
-          </div>
-          {updatingPrefs && (
-            <div className="ml-3 flex items-center">
-              <RefreshCw className="h-3 w-3 text-stone-400 animate-spin" />
-            </div>
-          )}
+          {updatingPrefs && <RefreshCw className="h-3 w-3 text-stone-400 animate-spin" />}
         </div>
 
         {/* Main card */}
-        <div className="relative group">
-          {/* Very subtle shadow ring on focus */}
-          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-stone-200 to-stone-100 opacity-0 group-focus-within:opacity-100 transition duration-500" />
-
-          <Card className="rounded-2xl border border-stone-200 shadow-sm bg-white overflow-hidden relative">
-            <CardContent className="p-0">
-
-              {/* Textarea area */}
-              <div className="relative px-6 pt-6 pb-4">
-                <Textarea
-                  placeholder="Ex : Les 5 erreurs que font les débutants en bourse…"
-                  className={cn(
-                    "min-h-[120px] w-full resize-none border-none focus-visible:ring-0 shadow-none",
-                    "bg-transparent text-lg font-light text-stone-800 placeholder:text-stone-300",
-                    "leading-relaxed p-0"
-                  )}
-                  value={script}
-                  onChange={(e) => setScript(e.target.value)}
-                />
-                {generatingScript && (
-                  <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-10">
-                    <RefreshCw className="h-5 w-5 text-stone-400 animate-spin" />
-                  </div>
+        <Card className="rounded-2xl border border-stone-200 shadow-sm bg-white overflow-hidden">
+          <CardContent className="p-0">
+            <div className="relative px-5 pt-5 pb-3">
+              <Textarea
+                placeholder="Ex : Les 5 erreurs que font les débutants en bourse…"
+                className={cn(
+                  "min-h-[100px] w-full resize-none border-none focus-visible:ring-0 shadow-none",
+                  "bg-transparent text-base font-light text-stone-800 placeholder:text-stone-300",
+                  "leading-relaxed p-0"
                 )}
-              </div>
-
-              {/* Divider */}
-              <div className="h-px bg-stone-100 mx-4" />
-
-              {/* Controls row */}
-              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-
-                  {/* Duration */}
-                  <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
-                    {["30", "60", "300"].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDuration(d)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
-                          duration === d
-                            ? "bg-white text-stone-800 shadow-sm"
-                            : "text-stone-400 hover:text-stone-600"
-                        )}
-                      >
-                        {d === "300" ? "5 min" : d === "60" ? "1 min" : "30s"}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Format */}
-                  <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
-                    {[
-                      { val: "16:9", label: "YouTube" },
-                      { val: "9:16", label: "TikTok" },
-                    ].map((f) => (
-                      <button
-                        key={f.val}
-                        type="button"
-                        onClick={() => setAspectRatio(f.val)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
-                          aspectRatio === f.val
-                            ? "bg-white text-stone-800 shadow-sm"
-                            : "text-stone-400 hover:text-stone-600"
-                        )}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
+                value={script}
+                onChange={(e) => setScript(e.target.value)}
+              />
+              {generatingScript && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-10">
+                  <RefreshCw className="h-5 w-5 text-stone-400 animate-spin" />
                 </div>
+              )}
+            </div>
 
-                {/* Send */}
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={!script.trim() || generating}
-                  className={cn(
-                    "h-9 w-9 rounded-full flex items-center justify-center transition-all",
-                    script.trim() && !generating
-                      ? "bg-stone-800 text-white hover:bg-stone-700 shadow-sm hover:shadow-md active:scale-95"
-                      : "bg-stone-100 text-stone-300 cursor-not-allowed"
-                  )}
-                >
-                  {generating
-                    ? <RefreshCw className="h-4 w-4 animate-spin" />
-                    : <ChevronRight className="h-4 w-4" />
-                  }
-                </button>
+            <div className="h-px bg-stone-100 mx-4" />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+                  {["30", "60", "300"].map((d) => (
+                    <button key={d} type="button" onClick={() => setDuration(d)}
+                      className={cn("px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+                        duration === d ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600"
+                      )}>
+                      {d === "300" ? "5 min" : d === "60" ? "1 min" : "30s"}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+                  {[{ val: "16:9", label: "YouTube" }, { val: "9:16", label: "TikTok" }].map((f) => (
+                    <button key={f.val} type="button" onClick={() => setAspectRatio(f.val)}
+                      className={cn("px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+                        aspectRatio === f.val ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600"
+                      )}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <button type="button" onClick={handleGenerate} disabled={!script.trim() || generating}
+                className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all",
+                  script.trim() && !generating
+                    ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95"
+                    : "bg-stone-100 text-stone-300 cursor-not-allowed"
+                )}>
+                {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Suggestions row */}
+        {/* Suggestions */}
         <div className="flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            onClick={handleSuggestTopics}
-            disabled={suggesting}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-500 hover:text-stone-800 hover:border-stone-300 hover:shadow-sm transition-all"
-          >
+          <button type="button" onClick={handleSuggestTopics} disabled={suggesting}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-200 bg-white text-xs text-stone-500 hover:text-stone-800 hover:border-stone-300 transition-all">
             <Sparkles className={cn("h-3 w-3", suggesting && "animate-spin")} />
             {suggesting ? "Recherche…" : "Inspirations"}
           </button>
-
           {suggestions && suggestions.slice(0, 3).map((idea, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => { setScript(idea.script); setSuggestions(null); }}
-              className="inline-flex items-center px-4 py-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-500 hover:text-stone-800 hover:border-stone-300 hover:shadow-sm transition-all"
-            >
+            <button key={i} type="button" onClick={() => { setScript(idea.script); setSuggestions(null); }}
+              className="inline-flex items-center px-3 py-1.5 rounded-full border border-stone-200 bg-white text-xs text-stone-500 hover:text-stone-800 hover:border-stone-300 transition-all">
               {idea.title}
             </button>
           ))}
-
           {suggestions && (
-            <button
-              type="button"
-              onClick={() => setSuggestions(null)}
-              className="inline-flex items-center px-4 py-2 rounded-full text-xs text-stone-300 hover:text-stone-500 transition-colors"
-            >
+            <button type="button" onClick={() => setSuggestions(null)}
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs text-stone-300 hover:text-stone-500 transition-colors">
               Effacer
             </button>
           )}
         </div>
 
-        {/* Recent Videos Section */}
+        {/* Recent Videos */}
         {recentVideos.length > 0 && (
-          <div className="pt-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-            <div className="flex items-center justify-between mb-6 px-1">
-              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Générations récentes</h3>
-              <Button variant="link" onClick={() => router.push("/videos")} className="text-xs text-stone-400 hover:text-stone-800 font-bold p-0">
+          <div className="pt-6 w-full">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Récentes</p>
+              <Button variant="link" onClick={() => router.push("/videos")} className="text-xs text-stone-400 hover:text-stone-800 font-semibold p-0 h-auto">
                 Voir tout
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {recentVideos.map((video) => (
-                <Card key={video.id} className="rounded-2xl border border-stone-100 bg-white/50 hover:bg-white transition-all cursor-pointer overflow-hidden group" onClick={() => router.push(`/generate/${video.id}/script`)}>
+                <div key={video.id}
+                  className="rounded-xl border border-stone-100 bg-white hover:border-stone-200 transition-all cursor-pointer overflow-hidden group"
+                  onClick={() => router.push(`/generate/${video.id}/script`)}>
                   <div className="aspect-video bg-stone-100 relative">
-                    {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />}
-                    <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors" />
+                    {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" />}
                   </div>
-                  <div className="p-3">
-                    <p className="text-xs font-bold text-stone-800 line-clamp-1">{video.title || "Sans titre"}</p>
-                    <p className="text-[10px] text-stone-400 font-medium mt-0.5 capitalize">{video.status}</p>
+                  <div className="p-2.5">
+                    <p className="text-xs font-semibold text-stone-800 line-clamp-1">{video.title || "Sans titre"}</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5 capitalize">{video.status}</p>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Footer */}
       <p className="fixed bottom-6 text-[10px] tracking-widest uppercase text-stone-300 font-medium">
         Sketch Pilot · v2.0
       </p>

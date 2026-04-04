@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     useStudioStore,
@@ -13,6 +13,8 @@ import {
 } from "@/src/app/studio";
 import { videosService } from "@/src/services/videos-service";
 import { AdminService } from "@/src/app/admin/api/admin-service";
+import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 
 const adminService = new AdminService();
 
@@ -29,7 +31,10 @@ export default function StudioPage({ params }: StudioPageProps) {
         setLists,
         activeVideo,
         activeTab,
-        setShowProductionModal
+        setShowProductionModal,
+        setVisualsGenerated,
+        setGenerating,
+        setRegeneratingSceneId,
     } = useStudioStore();
 
     const {
@@ -39,13 +44,47 @@ export default function StudioPage({ params }: StudioPageProps) {
         handleRegenerateImage
     } = useStudioActions();
 
+    const { stopProgress } = useSSEProgress();
+
+    // ── Visual generation (animate all scenes) ────────────────────────────────
+    const [animateJobId, setAnimateJobId] = useState<string | undefined>();
+    const { isFinished: animateFinished, status: animateStatus } =
+        useVideoProgress(animateJobId);
+
+    useEffect(() => {
+        if (!animateJobId || !animateFinished) return;
+        stopProgress();
+        setGenerating(false);
+        setAnimateJobId(undefined);
+        if (animateStatus === "completed") {
+            setVisualsGenerated(true);
+            setTab("storyboard");
+            router.replace(`/generate/${id}/storyboard`);
+        }
+    }, [animateFinished, animateStatus, animateJobId, id, router, setTab, setVisualsGenerated, setGenerating, stopProgress]);
+
+    // ── Per-scene image reprompt ───────────────────────────────────────────────
+    const [repromptJobId, setRepromptJobId] = useState<string | undefined>();
+    const { isFinished: repromptFinished } = useVideoProgress(repromptJobId);
+
+    useEffect(() => {
+        if (!repromptJobId || !repromptFinished) return;
+        // Job done — clear jobId first to stop tracking
+        setRepromptJobId(undefined);
+        // Refetch the full video to get updated imageUrls for all scenes
+        videosService.getById(id)
+            .then((video) => setVideo(video))
+            .catch(() => { })
+            .finally(() => setRegeneratingSceneId(null));
+    }, [repromptFinished, repromptJobId, id, setVideo, setRegeneratingSceneId]);
+
     // Sync tab with URL
     useEffect(() => {
         const validSteps = ["script", "storyboard", "production", "audio"];
         if (validSteps.includes(step)) {
             if (step === "production" || step === "audio") {
                 setShowProductionModal(true);
-                setTab("storyboard"); // Default background for production modal
+                setTab("storyboard");
             } else {
                 setTab(step as any);
                 setShowProductionModal(false);
@@ -59,12 +98,11 @@ export default function StudioPage({ params }: StudioPageProps) {
             try {
                 const [video, voices, models, music] = await Promise.all([
                     videosService.getById(id),
-                    adminService.listVoices(),
+                    adminService.listPublicVoices(),
                     adminService.listStandardModels(),
-                    adminService.listMusic(),
+                    adminService.listPublicMusic(),
                 ]);
                 setVideo(video);
-                // voices and music from listVoices/listMusic return the array directly (res.data in AdminService)
                 setLists(voices || [], models.data || [], music || []);
             } catch (err) {
                 console.error("[Studio] Failed to load video data:", err);
@@ -83,10 +121,12 @@ export default function StudioPage({ params }: StudioPageProps) {
 
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-white">
-            <StudioHeader
-                onNext={() => { }}
-                onAssemble={handleAssemble}
-            />
+            {activeTab !== "script" && (
+                <StudioHeader
+                    onNext={() => { }}
+                    onAssemble={handleAssemble}
+                />
+            )}
             <StudioErrorBar />
 
             <main className="flex-1 overflow-hidden relative">
@@ -94,13 +134,21 @@ export default function StudioPage({ params }: StudioPageProps) {
                     <ScriptTabContent
                         onScenesChange={(scenes) => setVideo({ ...activeVideo, scenes })}
                         onSaveScript={handleSaveScript}
-                        onAnimate={() => handleAnimate(() => { })}
+                        onAnimate={async () => {
+                            const jobId = await handleAnimate(() => { });
+                            if (jobId) setAnimateJobId(jobId);
+                        }}
                     />
                 )}
 
                 {activeTab === "storyboard" && (
                     <StoryboardTabContent
-                        onRegenerateImage={handleRegenerateImage}
+                        onRegenerateImage={async (sceneId, index, prompt) => {
+                            // Prevent double-click: only one regen at a time
+                            if (repromptJobId) return;
+                            const jobId = await handleRegenerateImage(sceneId, index, prompt);
+                            if (jobId) setRepromptJobId(jobId);
+                        }}
                     />
                 )}
             </main>

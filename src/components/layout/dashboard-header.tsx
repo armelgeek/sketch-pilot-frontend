@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react"
 
 import { usePathname } from "next/navigation";
-import {
-    Bell, Coins, Plus, Clapperboard, Video, Zap, LayoutDashboard,
-    Search, Wand2, Command
-} from "lucide-react";
+import { Bell, Clapperboard, Video, Zap, LayoutDashboard, Wand2 } from "lucide-react";
 import { useSession } from "@/src/lib/auth-client";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
 import { cn } from "@/src/lib/utils";
@@ -39,24 +36,18 @@ export function DashboardHeader() {
     const { subscriptionStatus, isLoading: subLoading } = useSubscriptionManager();
 
     // ─── Hide Conditions ──────────────────────────────────────────────────────────
-    // Hide the black global header during the "Storyboard" step of the Studio
-    // to give more breathing room to the canvas.
-    const isStoryboard = pathname?.endsWith("/storyboard");
-    if (isStoryboard) return null;
+    // Hide the global header in all Studio steps (/generate/*) since
+    // the Studio has its own dedicated header.
+    const isStudio = pathname?.startsWith("/generate/");
+    if (isStudio) return null;
 
     if (!session) return null;
 
     const credits = subscriptionStatus?.remainingCredits ?? 0;
     const totalCredits = subscriptionStatus?.totalCredits ?? 0;
-    const isStudio = pathname?.startsWith("/generate/");
 
     return (
-        <header
-            className={cn(
-                "h-14 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0 transition-colors bg-white/80 backdrop-blur-md border-b border-zinc-100",
-                isStudio && "bg-zinc-950 border-zinc-800"
-            )}
-        >
+        <header className="h-14 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0 bg-white/80 backdrop-blur-md border-b border-zinc-100">
             <div className="flex items-center gap-3">
             </div>
 
@@ -64,7 +55,7 @@ export function DashboardHeader() {
                 <CreditsWidget
                     credits={credits}
                     totalCredits={totalCredits}
-                    isStudio={isStudio}
+                    isStudio={false}
                     subLoading={subLoading}
                 />
 
@@ -80,14 +71,7 @@ export function DashboardHeader() {
                     <span className="text-xs font-black tracking-tight relative z-10">Créer</span>
                 </Link>
 
-                <button
-                    className={cn(
-                        "group relative h-9 w-9 rounded-xl flex items-center justify-center transition-all",
-                        isStudio
-                            ? "bg-zinc-900 text-zinc-500 hover:text-white"
-                            : "bg-white border border-zinc-100 text-zinc-400 hover:text-zinc-900"
-                    )}
-                >
+                <button className="group relative h-9 w-9 rounded-xl flex items-center justify-center bg-white border border-zinc-100 text-zinc-400 hover:text-zinc-900 transition-all">
                     <Bell className="h-4 w-4 group-hover:animate-[bell_0.5s_ease-in-out]" />
                     <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 bg-amber-500 rounded-full border-2 border-white dark:border-zinc-950 shadow-sm animate-pulse" />
                 </button>

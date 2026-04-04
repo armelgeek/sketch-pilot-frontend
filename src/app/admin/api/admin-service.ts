@@ -109,6 +109,21 @@ export class AdminService extends BaseService<any> {
         return res.data;
     }
 
+    /** Public endpoint — safe for non-admin users */
+    async listPublicVoices(): Promise<VoicePreset[]> {
+        try {
+            const res = await this.apiFetch<any>(`/v1/voices`);
+            return res.data || [];
+        } catch {
+            // Fallback: try the admin route (works for admin users)
+            try {
+                return await this.listVoices();
+            } catch {
+                return [];
+            }
+        }
+    }
+
     async createVoice(data: Partial<VoicePreset>): Promise<VoicePreset> {
         const res = await this.apiFetch<any>(`${this.endpoint}/config/voices`, {
             method: "POST",
@@ -135,6 +150,22 @@ export class AdminService extends BaseService<any> {
         const res = await this.apiFetch<any>(`${this.endpoint}/config/music`);
         return res.data;
     }
+
+    /** Public endpoint — safe for non-admin users */
+    async listPublicMusic(): Promise<MusicTrack[]> {
+        try {
+            const res = await this.apiFetch<any>(`/v1/music`);
+            return res.data || [];
+        } catch {
+            // Fallback: try the admin route (works for admin users)
+            try {
+                return await this.listMusic();
+            } catch {
+                return [];
+            }
+        }
+    }
+
 
     async createMusic(data: Partial<MusicTrack>): Promise<MusicTrack> {
         const res = await this.apiFetch<any>(`${this.endpoint}/config/music`, {
