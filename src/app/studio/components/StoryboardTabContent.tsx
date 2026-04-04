@@ -27,7 +27,7 @@ export function StoryboardTabContent({
     return (
         <div className="flex flex-1 overflow-hidden h-full px-12 pt-12 gap-6">
             {/* ── Vertical Filmstrip (Left Navigation) ── */}
-            <div className="w-[110px] lg:w-[140px] shrink-0 bg-white border border-zinc-200/50 rounded-md flex flex-col h-full overflow-hidden shadow-sm">
+            <div className="w-[110px] lg:w-[140px] shrink-0 bg-white border border-zinc-200/50 rounded-md flex flex-col h-[600px] max-h-[600px] overflow-y-auto scroll-m-0  shadow-sm">
                 <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/40">
                     <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] opacity-80">Scenes</h3>
                     <span className="text-[11px] font-black text-zinc-300 tabular-nums">{displayScenes.length}</span>
