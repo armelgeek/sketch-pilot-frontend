@@ -8,7 +8,7 @@ import {
   TrendingUp, CheckCircle2, Clock, AlertCircle
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell
 } from "recharts";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
@@ -33,7 +33,7 @@ export default function DashboardPage() {
   useEffect(() => {
     videosService.getAll()
       .then((all) => setAllVideos(all))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setVideosLoading(false));
   }, []);
 
@@ -42,20 +42,22 @@ export default function DashboardPage() {
   const processingCount = allVideos.filter(v => v.status === "processing" || v.status === "queued").length;
   const failedCount = allVideos.filter(v => v.status === "failed").length;
 
-  /* Build last-7-days bar chart data */
+  /* Build last-7-days bar chart data - Robust Date Logic */
   const activityData = useMemo(() => {
-    const days: { label: string; total: number; completed: number }[] = [];
+    const days: { label: string; date: Date; total: number; completed: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dayKey = d.toISOString().slice(0, 10);
       const label = d.toLocaleDateString("fr-FR", { weekday: "short" });
       const dayVideos = allVideos.filter((v) => {
-        const created = v.createdAt || v.created_at || "";
-        return created.startsWith(dayKey);
+        const createdStr = v.createdAt || v.created_at;
+        if (!createdStr) return false;
+        const createdDate = new Date(createdStr);
+        return createdDate.toDateString() === d.toDateString();
       });
       days.push({
         label,
+        date: d,
         total: dayVideos.length,
         completed: dayVideos.filter((v) => v.status === "completed").length,
       });
@@ -68,18 +70,20 @@ export default function DashboardPage() {
   const creditPct = totalCredits > 0 ? Math.round((remainingCredits / totalCredits) * 100) : 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-10">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pt-2">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-            Bonjour, {firstName} 👋
+          <h1 className="text-3xl font-black tracking-tightest text-zinc-900 uppercase">
+            Dashboard
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Voici un aperçu de votre activité.</p>
+          <p className="text-sm font-bold text-zinc-400 mt-1 uppercase tracking-widest">
+            Welcome back, {firstName}
+          </p>
         </div>
         <Button
           onClick={() => router.push("/generate")}
-          className="bg-zinc-900 hover:bg-zinc-700 text-white rounded-xl h-10 px-5 font-bold text-sm shadow-sm"
+          className="bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl h-12 px-6 font-black text-[13px] shadow-xl shadow-zinc-200 active:scale-95 transition-all uppercase tracking-wider"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle vidéo
@@ -87,7 +91,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total vidéos"
           value={videosLoading ? "—" : allVideos.length.toString()}
@@ -121,32 +125,88 @@ export default function DashboardPage() {
 
       {/* Activity Chart + Status breakdown */}
       {!videosLoading && allVideos.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Bar chart */}
-          <Card className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl shadow-none">
-            <CardHeader className="pb-2 pt-5 px-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Activity Chart Area */}
+          <Card className="lg:col-span-2 bg-white border border-zinc-100 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <CardHeader className="pb-4 pt-6 px-6 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-zinc-400" />
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Activité — 7 derniers jours</span>
+                <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-900">Activité — 7 derniers jours</span>
+              </div>
+              <div className="px-2 py-0.5 rounded-full bg-zinc-50 border border-zinc-100 text-[10px] font-bold text-zinc-400">
+                LIVRÉ
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-5">
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={activityData} barSize={24} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: "#f4f4f5" }}
-                    contentStyle={{ border: "none", borderRadius: 12, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
-                    formatter={(value) => [value, "Vidéos"]}
-                  />
-                  <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-                    {activityData.map((_, idx) => (
-                      <Cell key={idx} fill={activityData[idx].total > 0 ? "#18181b" : "#e4e4e7"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <CardContent className="px-6 pb-6 flex-1">
+              <div className="h-[320px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#18181b" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#18181b" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f4f4f5" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11, fontWeight: 700, fill: "#71717a" }}
+                      axisLine={false}
+                      tickLine={false}
+                      dy={10}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 11, fontWeight: 700, fill: "#d4d4d8" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      animationDuration={300}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white border border-zinc-100 p-3 rounded-2xl shadow-2xl flex flex-col gap-2 min-w-[140px]">
+                              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{label}</p>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-xs font-bold text-zinc-900">Total</span>
+                                  <span className="text-sm font-black">{payload[0].value}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-xs font-bold text-amber-600">Terminées</span>
+                                  <span className="text-sm font-black text-amber-600">{payload[1].value}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#18181b"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorTotal)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="completed"
+                      stroke="#f59e0b"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorCompleted)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -159,15 +219,15 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="px-5 pb-5 space-y-3">
-              <StatusRow icon={<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />} label="Terminées" count={completedCount} total={allVideos.length} color="bg-emerald-500" />
-              <StatusRow icon={<Clock className="h-3.5 w-3.5 text-blue-500" />} label="En cours" count={processingCount} total={allVideos.length} color="bg-blue-500" />
+              <StatusRow icon={<CheckCircle2 className="h-3.5 w-3.5 text-amber-500" />} label="Terminées" count={completedCount} total={allVideos.length} color="bg-amber-500" />
+              <StatusRow icon={<Clock className="h-3.5 w-3.5 text-zinc-900" />} label="En cours" count={processingCount} total={allVideos.length} color="bg-zinc-900" />
               <StatusRow icon={<AlertCircle className="h-3.5 w-3.5 text-red-400" />} label="Échecs" count={failedCount} total={allVideos.length} color="bg-red-400" />
               <StatusRow
                 icon={<Video className="h-3.5 w-3.5 text-zinc-400" />}
                 label="Brouillons"
                 count={allVideos.length - completedCount - processingCount - failedCount}
                 total={allVideos.length}
-                color="bg-zinc-300"
+                color="bg-zinc-200"
               />
             </CardContent>
           </Card>
@@ -290,10 +350,10 @@ export default function DashboardPage() {
 type Accent = "zinc" | "emerald" | "amber" | "violet";
 
 const accentMap: Record<Accent, { bg: string; text: string; iconBg: string }> = {
-  zinc:    { bg: "bg-zinc-50",    text: "text-zinc-500",   iconBg: "bg-zinc-100" },
+  zinc: { bg: "bg-zinc-50", text: "text-zinc-500", iconBg: "bg-zinc-100" },
   emerald: { bg: "bg-emerald-50", text: "text-emerald-600", iconBg: "bg-emerald-100" },
-  amber:   { bg: "bg-amber-50",   text: "text-amber-600",  iconBg: "bg-amber-100" },
-  violet:  { bg: "bg-violet-50",  text: "text-violet-600", iconBg: "bg-violet-100" },
+  amber: { bg: "bg-amber-50", text: "text-amber-600", iconBg: "bg-amber-100" },
+  violet: { bg: "bg-violet-50", text: "text-violet-600", iconBg: "bg-violet-100" },
 };
 
 function StatCard({

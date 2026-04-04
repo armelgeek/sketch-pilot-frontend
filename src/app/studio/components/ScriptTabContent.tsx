@@ -4,6 +4,7 @@ import { ScriptEditor } from "@/src/components/organisms/script-editor";
 import { useStudioStore } from "../store";
 import { useStudioActions } from "../hooks/use-studio-actions";
 import { Save, Wand2, Check, ChevronLeft } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 import { useRouter } from "next/navigation";
 
 interface ScriptTabContentProps {

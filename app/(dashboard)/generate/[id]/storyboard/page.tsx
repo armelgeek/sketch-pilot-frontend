@@ -140,11 +140,12 @@ export default function StudioPage({ params }: { params: Promise<{ id: string }>
     useEffect(() => {
         const load = async () => {
             try {
-                const [video, voices, models, music] = await Promise.all([
+                const [video, voices, models, music, prompts] = await Promise.all([
                     videosService.getById(resolvedParams.id),
                     adminService.listVoices(),
                     adminService.listModels(),
                     adminService.listMusic(),
+                    adminService.listPublicPrompts({ limit: 100 }),
                 ]);
 
                 setVideo(video);

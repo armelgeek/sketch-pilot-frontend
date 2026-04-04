@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Video, Library, Zap, ChevronLeft, ChevronRight, LogOut, Coins, Plus } from "lucide-react";
+import { LayoutDashboard, Video, Library, Zap, ChevronLeft, ChevronRight, LogOut, Coins, Plus, Settings } from "lucide-react";
+
 import { cn } from "@/src/lib/utils";
 import { useSession, signOut } from "@/src/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
@@ -13,7 +14,9 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/generate", label: "Générer", icon: Plus },
   { href: "/videos", label: "Mes Vidéos", icon: Video },
+  { href: "/my-models", label: "Ma Bibliothèque", icon: Library },
   { href: "/subscription", label: "Abonnement", icon: Zap },
+  { href: "/settings", label: "Paramètres", icon: Settings },
 ];
 
 export function DashboardSidebar() {

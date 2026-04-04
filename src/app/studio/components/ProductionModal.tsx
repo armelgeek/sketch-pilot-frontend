@@ -73,10 +73,10 @@ export function ProductionModal({ onAssemble, onSkipMusic }: ProductionModalProp
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all",
                                         isActive
-                                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                            ? "bg-zinc-900 border-zinc-950 text-white shadow-sm"
                                             : "border-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
                                     )}>
-                                    <step.icon className="h-3.5 w-3.5" />
+                                    <step.icon className={cn("h-3.5 w-3.5", isActive ? "text-amber-400" : "text-zinc-400")} />
                                     {step.label}
                                 </button>
                             );
@@ -127,16 +127,16 @@ export function ProductionModal({ onAssemble, onSkipMusic }: ProductionModalProp
                     {productionStep < 2 ? (
                         <button
                             onClick={() => setProductionStep((productionStep + 1) as 0 | 1 | 2)}
-                            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
+                            className="flex items-center gap-1 text-xs text-zinc-900 hover:text-black transition-colors font-medium">
                             Suivant <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                     ) : (
                         <Button
                             onClick={onAssemble}
                             disabled={assembling}
-                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-lg h-8 px-4 text-xs gap-1.5 shadow-sm shadow-emerald-200/60">
-                            <Zap className="h-3.5 w-3.5 fill-current" />
-                            Rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
+                            className="bg-zinc-950 hover:bg-zinc-800 text-white font-black rounded-xl h-9 px-6 text-xs gap-2 shadow-xl shadow-zinc-200">
+                            <Zap className="h-3.5 w-3.5 fill-current text-amber-400" />
+                            Générer la vidéo finale ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
                         </Button>
                     )}
                 </div>
