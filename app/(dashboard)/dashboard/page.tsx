@@ -347,38 +347,7 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
-
-        {/* Recent Videos */}
-        {recentVideos.length > 0 && (
-          <div className="pt-6 w-full">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Récentes</p>
-              <Button variant="link" onClick={() => router.push("/videos")} className="text-xs text-stone-400 hover:text-stone-800 font-semibold p-0 h-auto">
-                Voir tout
-              </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {recentVideos.map((video) => (
-                <div key={video.id}
-                  className="rounded-xl border border-stone-100 bg-white hover:border-stone-200 transition-all cursor-pointer overflow-hidden group"
-                  onClick={() => router.push(`/generate/${video.id}/script`)}>
-                  <div className="aspect-video bg-stone-100 relative">
-                    {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" />}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-semibold text-stone-800 line-clamp-1">{video.title || "Sans titre"}</p>
-                    <p className="text-[10px] text-stone-400 mt-0.5 capitalize">{video.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
-
-      <p className="fixed bottom-6 text-[10px] tracking-widest uppercase text-stone-300 font-medium">
-        Sketch Pilot · v2.0
-      </p>
     </div>
   );
 }

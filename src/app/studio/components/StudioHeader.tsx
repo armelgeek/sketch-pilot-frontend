@@ -44,7 +44,7 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
     };
 
     return (
-        <header className="flex items-center justify-between px-6 h-14 border-b border-zinc-100 bg-white shrink-0 relative z-50 overflow-hidden">
+        <header className="flex items-center justify-between px-6 h-14 border-b border-zinc-100 bg-white shrink-0 relative overflow-hidden">
             {/* Left: Brand & Metadata */}
             <div className="flex items-center gap-4 min-w-[320px]">
                 <div
@@ -118,8 +118,8 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
                 </div>
                 <div>
                     <Button
-                        onClick={() => onAssemble()}
-                        disabled={assembling || (activeTab === "storyboard" && !visualsGenerated)}
+                        onClick={() => setShowProductionModal(true)}
+                        disabled={assembling}
                         className="h-10 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-black text-[10px] px-6 shadow-xl shadow-zinc-300 flex items-center gap-2 group transition-all uppercase tracking-widest">
                         <span>Partager</span>
                         <ArrowRight className="h-4 w-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />

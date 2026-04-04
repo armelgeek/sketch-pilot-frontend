@@ -4,16 +4,18 @@ import { ScriptEditor } from "@/src/components/organisms/script-editor";
 import { useStudioStore } from "../store";
 import { useStudioActions } from "../hooks/use-studio-actions";
 import { Save, Wand2, Check, ChevronLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface ScriptTabContentProps {
     onScenesChange: (newScenes: any[]) => void;
     onSaveScript: () => void;
     onAnimate?: () => void;
+    onShare?: () => void;
 }
 
-export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate }: ScriptTabContentProps) {
+export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate, onShare }: ScriptTabContentProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { activeTab, activeVideo, generating, visualsGenerated } = useStudioStore();
     const { handleRegenerateImage } = useStudioActions();
 
@@ -26,7 +28,7 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate }: Sc
     return (
         <div className="flex flex-col flex-1 h-full bg-[#F9F8F5] overflow-hidden relative">
             {/* Custom Validation Header */}
-            <header className="shrink-0 flex items-center justify-between px-6 h-16 border-b border-zinc-100 bg-white z-50 shadow-sm shadow-zinc-100/50">
+            <header className="shrink-0 flex items-center justify-between px-6 h-16 border-b border-zinc-100 bg-white  shadow-sm shadow-zinc-100/50">
                 <div className="flex items-center gap-4 min-w-[320px]">
                     <button
                         onClick={() => router.push("/videos")}
@@ -50,7 +52,10 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate }: Sc
                 <div className="flex items-center gap-4">
                     {onAnimate && (
                         <button
-                            onClick={onAnimate}
+                            onClick={visualsGenerated ? () => {
+                                useStudioStore.getState().setTab("storyboard");
+                                router.push(pathname.replace("/script", "/storyboard"));
+                            } : onAnimate}
                             disabled={generating}
                             className="flex items-center gap-3 h-10 px-6 rounded-xl bg-zinc-900 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200 disabled:opacity-50 group shrink-0"
                         >
@@ -62,6 +67,15 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate }: Sc
                                 <Wand2 className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" />
                             )}
                             <span>{visualsGenerated ? "Suivant" : "Générer le storyboard"}</span>
+                        </button>
+                    )}
+
+                    {onShare && (
+                        <button
+                            onClick={onShare}
+                            className="flex items-center gap-3 h-10 px-6 rounded-xl border border-zinc-200 bg-white text-zinc-900 text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-all shadow-sm shrink-0"
+                        >
+                            Partager
                         </button>
                     )}
                 </div>

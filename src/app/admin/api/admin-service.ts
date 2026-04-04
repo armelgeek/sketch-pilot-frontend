@@ -109,10 +109,14 @@ export class AdminService extends BaseService<any> {
         return res.data;
     }
 
-    /** Public endpoint — safe for non-admin users */
+    /** Public endpoint — safe for non-admin users at /api/v1/config/voices */
     async listPublicVoices(): Promise<VoicePreset[]> {
         try {
-            const res = await this.apiFetch<any>(`/v1/voices`);
+            const res = await this.apiFetch<any>(`/v1/config/voices`);
+            if (res.voices) {
+                // Flatten the grouped object { providerName: VoicePreset[] } into a single array
+                return Object.values(res.voices).flat() as VoicePreset[];
+            }
             return res.data || [];
         } catch {
             // Fallback: try the admin route (works for admin users)
@@ -151,11 +155,11 @@ export class AdminService extends BaseService<any> {
         return res.data;
     }
 
-    /** Public endpoint — safe for non-admin users */
+    /** Public endpoint — safe for non-admin users at /api/v1/config/music */
     async listPublicMusic(): Promise<MusicTrack[]> {
         try {
-            const res = await this.apiFetch<any>(`/v1/music`);
-            return res.data || [];
+            const res = await this.apiFetch<any>(`/v1/config/music`);
+            return res.music || res.data || [];
         } catch {
             // Fallback: try the admin route (works for admin users)
             try {

@@ -1,12 +1,66 @@
 "use client";
 
 import { useRef } from "react";
-import { X, Mic, Music, Type, Check, ChevronLeft, ChevronRight, Zap, SkipBack, Play, SkipForward } from "lucide-react";
+import {
+    X, Mic, Music, Type, Check,
+    ChevronLeft, ChevronRight, Zap,
+    SkipBack, Play, SkipForward
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { Slider } from "@/src/components/ui/slider";
 import { cn } from "@/src/lib/utils";
 import { useStudioStore } from "../store";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface AudioOptions {
+    voicePreset: string;
+    voiceVolume: number;
+    musicVolume: number;
+    musicId: string;
+}
+
+interface CaptionOptions {
+    enabled: boolean;
+    style: string;
+    highlightColor: string;
+}
+
+interface Voice {
+    id: string;
+    presetId: string;
+    name: string;
+    gender: "male" | "female";
+    language: string;
+}
+
+interface MusicTrack {
+    id: string;
+    name: string;
+    tags?: string[];
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const STEPS = [
+    { id: 0, label: "Voix", icon: Mic },
+    { id: 1, label: "Musique", icon: Music },
+    { id: 2, label: "Sous-titres", icon: Type },
+] as const;
+
+const CAPTION_STYLES = [
+    { id: "colored", label: "Coloré" },
+    { id: "scaling", label: "Zoom" },
+    { id: "bounce", label: "Rebond" },
+    { id: "neon", label: "Néon" },
+    { id: "typewriter", label: "Machine" },
+    { id: "karaoke", label: "Karaoké" },
+    { id: "animated-background", label: "Bulle" },
+    { id: "remotion", label: "Moderne" },
+];
+
+// ─── Main Modal ───────────────────────────────────────────────────────────────
 
 interface ProductionModalProps {
     onAssemble: () => void;
@@ -15,393 +69,501 @@ interface ProductionModalProps {
 
 export function ProductionModal({ onAssemble, onSkipMusic }: ProductionModalProps) {
     const {
-        showProductionModal,
-        setShowProductionModal,
-        productionStep,
-        setProductionStep,
-        audioOptions,
-        setAudioOptions,
-        captionOptions,
-        setCaptionOptions,
-        availableVoices,
-        musicTracks,
-        isPlayingAudio,
-        setIsPlayingAudio,
-        assembling,
-        activeVideo,
+        showProductionModal, setShowProductionModal,
+        productionStep, setProductionStep,
+        audioOptions, setAudioOptions,
+        captionOptions, setCaptionOptions,
+        availableVoices, musicTracks,
+        isPlayingAudio, setIsPlayingAudio,
+        assembling, activeVideo,
     } = useStudioStore();
 
-    const modalRef = useRef<HTMLDivElement | null>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     if (!showProductionModal) return null;
+
+    const coinCost = activeVideo?.options?.resolution === "1080p" ? 10 : 5;
 
     return (
         <div
             className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm"
             onClick={(e) => { if (e.target === e.currentTarget) setShowProductionModal(false); }}
             role="dialog"
-            aria-modal="true">
+            aria-modal="true"
+        >
             <div
                 ref={modalRef}
-                className="w-full max-w-2xl bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-
-                {/* Header with Stepper */}
-                <div className="shrink-0 border-b border-zinc-100">
-                    <div className="flex items-center justify-between px-5 py-3.5">
-                        <div className="flex-1">
-                            <p className="text-xs font-bold text-zinc-900">Production</p>
-                            <p className="text-[10px] text-zinc-400">Étape {productionStep + 1}/3</p>
-                        </div>
-                        <button
-                            onClick={() => setShowProductionModal(false)}
-                            className="h-7 w-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div className="flex gap-0 px-5 pb-3.5">
-                        {[
-                            { id: 0, label: "Voix", icon: Mic },
-                            { id: 1, label: "Musique", icon: Music },
-                            { id: 2, label: "Sous-titres", icon: Type }
-                        ].map((step) => {
-                            const isActive = productionStep === step.id;
-                            return (
-                                <button
-                                    key={step.id}
-                                    onClick={() => setProductionStep(step.id as 0 | 1 | 2)}
-                                    className={cn(
-                                        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all",
-                                        isActive
-                                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                            : "border-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
-                                    )}>
-                                    <step.icon className="h-3.5 w-3.5" />
-                                    {step.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+                className="w-full max-w-xl bg-white border border-zinc-200 rounded-2xl shadow-xl flex flex-col max-h-[88vh]"
+            >
+                {/* Header */}
+                <ModalHeader
+                    step={productionStep}
+                    onStepChange={setProductionStep}
+                    onClose={() => setShowProductionModal(false)}
+                />
 
                 {/* Body */}
-                <div className="overflow-y-auto p-4 flex-1">
-                    <div className="max-w-xl mx-auto">
-                        {productionStep === 0 && (
-                            <VoiceStep
-                                availableVoices={availableVoices}
-                                audioOptions={audioOptions}
-                                onUpdateOptions={setAudioOptions}
-                            />
-                        )}
-                        {productionStep === 1 && (
-                            <MusicStep
-                                musicTracks={musicTracks}
-                                audioOptions={audioOptions}
-                                isPlayingAudio={isPlayingAudio}
-                                onUpdateOptions={setAudioOptions}
-                                onTogglePlay={() => setIsPlayingAudio(!isPlayingAudio)}
-                                onSkip={onSkipMusic}
-                            />
-                        )}
-                        {productionStep === 2 && (
-                            <CaptionsStep
-                                captionOptions={captionOptions}
-                                onUpdateOptions={setCaptionOptions}
-                            />
-                        )}
-                    </div>
+                <div className="overflow-y-auto flex-1 p-5">
+                    {productionStep === 0 && (
+                        <VoiceStep
+                            voices={availableVoices}
+                            options={audioOptions}
+                            onChange={setAudioOptions}
+                        />
+                    )}
+                    {productionStep === 1 && (
+                        <MusicStep
+                            tracks={musicTracks}
+                            options={audioOptions}
+                            isPlaying={isPlayingAudio}
+                            onChange={setAudioOptions}
+                            onTogglePlay={() => setIsPlayingAudio(!isPlayingAudio)}
+                            onSkip={onSkipMusic}
+                        />
+                    )}
+                    {productionStep === 2 && (
+                        <CaptionsStep
+                            options={captionOptions}
+                            onChange={setCaptionOptions}
+                        />
+                    )}
                 </div>
 
                 {/* Footer */}
-                <div className="shrink-0 px-5 py-3 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
-                    <button
-                        onClick={() => productionStep > 0 && setProductionStep((productionStep - 1) as 0 | 1 | 2)}
-                        disabled={productionStep === 0}
-                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
-                        <ChevronLeft className="h-3.5 w-3.5" /> Précédent
-                    </button>
-                    <div className="text-xs font-medium text-zinc-500">
-                        Étape {productionStep + 1} sur 3
-                    </div>
-                    {productionStep < 2 ? (
-                        <button
-                            onClick={() => setProductionStep((productionStep + 1) as 0 | 1 | 2)}
-                            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
-                            Suivant <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                    ) : (
-                        <Button
-                            onClick={onAssemble}
-                            disabled={assembling}
-                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-lg h-8 px-4 text-xs gap-1.5 shadow-sm shadow-emerald-200/60">
-                            <Zap className="h-3.5 w-3.5 fill-current" />
-                            Rendu ({activeVideo?.options?.resolution === "1080p" ? "10" : "5"} 🪙)
-                        </Button>
-                    )}
-                </div>
+                <ModalFooter
+                    step={productionStep}
+                    onStepChange={setProductionStep}
+                    onAssemble={onAssemble}
+                    assembling={assembling}
+                    coinCost={coinCost}
+                />
             </div>
         </div>
     );
 }
 
-// ─── Sub-steps ───────────────────────────────────────────────────────────────
+// ─── Modal Header ─────────────────────────────────────────────────────────────
 
-function VoiceStep({ availableVoices, audioOptions, onUpdateOptions }: {
-    availableVoices: any[];
-    audioOptions: any;
-    onUpdateOptions: (options: Partial<any>) => void;
+function ModalHeader({
+    step,
+    onStepChange,
+    onClose,
+}: {
+    step: number;
+    onStepChange: (s: 0 | 1 | 2) => void;
+    onClose: () => void;
 }) {
     return (
-        <div className="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-zinc-200 bg-white">
-                <div className="h-6 w-6 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Mic className="h-3 w-3 text-blue-500" />
-                </div>
+        <div className="border-b border-zinc-100">
+            <div className="flex items-center justify-between px-5 py-4">
                 <div>
-                    <p className="text-xs font-bold text-zinc-900">Voix Narrative</p>
-                    <p className="text-[9px] text-zinc-400">Narration globale</p>
+                    <p className="text-sm font-semibold text-zinc-900">Production</p>
+                    <p className="text-xs text-zinc-400">Étape {step + 1} / 3</p>
                 </div>
+                <button
+                    onClick={onClose}
+                    className="h-7 w-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+                    aria-label="Fermer"
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
-            <div className="p-3.5 space-y-3.5">
-                <Select
-                    value={audioOptions.voicePreset}
-                    onValueChange={(v) => onUpdateOptions({ voicePreset: v })}>
-                    <SelectTrigger className="bg-white border-zinc-200 text-zinc-900 rounded-lg h-9 text-xs">
-                        <SelectValue placeholder="Choisir une voix" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl bg-white border-zinc-200">
-                        {availableVoices.map((v: any) => (
-                            <SelectItem key={v.id} value={v.presetId} className="text-zinc-900 text-xs">
-                                <div className="flex items-center gap-1.5">
-                                    <span>{v.gender === "female" ? "👩" : "👨"}</span>
-                                    <span className="font-medium">{v.name}</span>
-                                    <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-zinc-100 text-zinc-400 font-bold">
-                                        {v.language?.split("-")[0]}
-                                    </span>
-                                </div>
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
 
-                <div className="space-y-3">
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-[10px]">
-                            <span className="text-zinc-500">🎙️ Voix</span>
-                            <span className="font-black text-zinc-800 tabular-nums">{audioOptions.voiceVolume}%</span>
-                        </div>
-                        <Slider
-                            min={0} max={100} step={5}
-                            value={audioOptions.voiceVolume}
-                            onChange={(e: any) => onUpdateOptions({ voiceVolume: parseInt(e.target.value) })} />
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-[10px]">
-                            <span className="text-zinc-500">🎵 Musique</span>
-                            <span className="font-black text-zinc-800 tabular-nums">{audioOptions.musicVolume}%</span>
-                        </div>
-                        <Slider
-                            min={0} max={100} step={5}
-                            value={audioOptions.musicVolume}
-                            onChange={(e: any) => onUpdateOptions({ musicVolume: parseInt(e.target.value) })} />
-                    </div>
-                </div>
-                <p className="text-[9px] text-zinc-400 italic leading-relaxed border-t border-zinc-200 pt-2.5">
-                    Ducking automatique pour garder la voix audible.
-                </p>
+            <div className="flex gap-1 px-5 pb-4">
+                {STEPS.map(({ id, label, icon: Icon }) => (
+                    <button
+                        key={id}
+                        onClick={() => onStepChange(id)}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                            step === id
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                : "border-transparent text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+                        )}
+                    >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                    </button>
+                ))}
             </div>
         </div>
     );
 }
 
-function MusicStep({
-    musicTracks,
-    audioOptions,
-    isPlayingAudio,
-    onUpdateOptions,
-    onTogglePlay,
-    onSkip
+// ─── Modal Footer ─────────────────────────────────────────────────────────────
+
+function ModalFooter({
+    step,
+    onStepChange,
+    onAssemble,
+    assembling,
+    coinCost,
 }: {
-    musicTracks: any[];
-    audioOptions: any;
-    isPlayingAudio: boolean;
-    onUpdateOptions: (options: Partial<any>) => void;
+    step: number;
+    onStepChange: (s: 0 | 1 | 2) => void;
+    onAssemble: () => void;
+    assembling: boolean;
+    coinCost: number;
+}) {
+    return (
+        <div className="px-5 py-3.5 border-t border-zinc-100 bg-zinc-50/60 flex items-center justify-between">
+            <button
+                onClick={() => step > 0 && onStepChange((step - 1) as 0 | 1 | 2)}
+                disabled={step === 0}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+                <ChevronLeft className="h-3.5 w-3.5" /> Précédent
+            </button>
+
+            <span className="text-xs text-zinc-400">{step + 1} / 3</span>
+
+            {step < 2 ? (
+                <button
+                    onClick={() => onStepChange((step + 1) as 0 | 1 | 2)}
+                    className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors font-medium"
+                >
+                    Suivant <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+            ) : (
+                <Button
+                    onClick={onAssemble}
+                    disabled={assembling}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold h-8 px-4 rounded-lg gap-1.5 shadow-sm shadow-emerald-200/50"
+                >
+                    <Zap className="h-3.5 w-3.5 fill-current" />
+                    Rendu — {coinCost} 🪙
+                </Button>
+            )}
+        </div>
+    );
+}
+
+// ─── Step: Voice ──────────────────────────────────────────────────────────────
+
+function VoiceStep({
+    voices,
+    options,
+    onChange,
+}: {
+    voices: Voice[];
+    options: AudioOptions;
+    onChange: (patch: Partial<AudioOptions>) => void;
+}) {
+    return (
+        <div className="space-y-5">
+            <StepHeader icon={Mic} iconBg="bg-blue-50" iconColor="text-blue-500" title="Voix narrative" subtitle="Sélectionnez une voix de narration" />
+
+            <Select value={options.voicePreset} onValueChange={(v) => onChange({ voicePreset: v })}>
+                <SelectTrigger className="bg-white border-zinc-200 text-zinc-900 rounded-lg h-9 text-xs">
+                    <SelectValue placeholder="Choisir une voix" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl bg-white border-zinc-200">
+                    {voices.map((v) => (
+                        <SelectItem key={v.id} value={v.presetId} className="text-xs text-zinc-900">
+                            <span className="flex items-center gap-2">
+                                <span>{v.gender === "female" ? "👩" : "👨"}</span>
+                                <span className="font-medium">{v.name}</span>
+                                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-400 font-semibold">
+                                    {v.language?.split("-")[0]}
+                                </span>
+                            </span>
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+
+            <div className="space-y-4">
+                <VolumeSlider
+                    label="Voix"
+                    emoji="🎙️"
+                    value={options.voiceVolume}
+                    onChange={(val) => onChange({ voiceVolume: val })}
+                />
+                <VolumeSlider
+                    label="Musique"
+                    emoji="🎵"
+                    value={options.musicVolume}
+                    onChange={(val) => onChange({ musicVolume: val })}
+                />
+            </div>
+
+            <p className="text-xs text-zinc-400 italic">
+                Le ducking automatique maintient la voix audible sur la musique.
+            </p>
+        </div>
+    );
+}
+
+function VolumeSlider({
+    label,
+    emoji,
+    value,
+    onChange,
+}: {
+    label: string;
+    emoji: string;
+    value: number;
+    onChange: (v: number) => void;
+}) {
+    return (
+        <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+                <span className="text-zinc-500">{emoji} {label}</span>
+                <span className="font-semibold text-zinc-800 tabular-nums">{value}%</span>
+            </div>
+            <Slider
+                min={0} max={100} step={5}
+                value={value}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(parseInt(e.target.value))}
+            />
+        </div>
+    );
+}
+
+// ─── Step: Music ──────────────────────────────────────────────────────────────
+
+function MusicStep({
+    tracks,
+    options,
+    isPlaying,
+    onChange,
+    onTogglePlay,
+    onSkip,
+}: {
+    tracks: MusicTrack[];
+    options: AudioOptions;
+    isPlaying: boolean;
+    onChange: (patch: Partial<AudioOptions>) => void;
     onTogglePlay: () => void;
     onSkip: (dir: "next" | "prev") => void;
 }) {
-    return (
-        <div className="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-zinc-200 bg-white">
-                <div className="h-6 w-6 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                    <Music className="h-3 w-3 text-amber-500" />
-                </div>
-                <div>
-                    <p className="text-xs font-bold text-zinc-900">Musique de fond</p>
-                    <p className="text-[9px] text-zinc-400">{musicTracks.length} pistes</p>
-                </div>
-            </div>
-            <div className="p-3 space-y-2">
-                <div className="max-h-44 overflow-y-auto space-y-1 pr-0.5">
-                    <MusicOption
-                        label="Aucune musique"
-                        selected={audioOptions.musicId === "none"}
-                        onClick={() => onUpdateOptions({ musicId: "none" })} />
-                    {musicTracks.map((t: any) => (
-                        <MusicOption
-                            key={t.id}
-                            label={t.name}
-                            tags={t.tags}
-                            selected={audioOptions.musicId === t.id}
-                            playing={audioOptions.musicId === t.id && isPlayingAudio}
-                            onClick={() => {
-                                onUpdateOptions({ musicId: t.id });
-                                if (!isPlayingAudio) onTogglePlay();
-                            }} />
-                    ))}
-                </div>
+    const handleTrackSelect = (id: string) => {
+        onChange({ musicId: id });
+        if (!isPlaying && id !== "none") onTogglePlay();
+    };
 
-                <div className="flex items-center justify-center gap-3 pt-2 border-t border-zinc-100">
-                    <button onClick={() => onSkip("prev")} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-                        <SkipBack className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                        onClick={onTogglePlay}
-                        disabled={audioOptions.musicId === "none"}
-                        className={cn(
-                            "h-8 w-8 rounded-full border flex items-center justify-center transition-all",
-                            audioOptions.musicId !== "none" ? "bg-white border-zinc-200 text-zinc-700 hover:border-emerald-400 hover:text-emerald-600" : "bg-zinc-50 border-zinc-100 text-zinc-300 cursor-not-allowed"
-                        )}>
-                        {isPlayingAudio ? (
-                            <div className="flex gap-0.5"><div className="w-0.5 h-3 bg-current rounded-sm" /><div className="w-0.5 h-3 bg-current rounded-sm" /></div>
-                        ) : (
-                            <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
-                        )}
-                    </button>
-                    <button onClick={() => onSkip("next")} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-                        <SkipForward className="h-3.5 w-3.5" />
-                    </button>
-                </div>
+    return (
+        <div className="space-y-4">
+            <StepHeader icon={Music} iconBg="bg-amber-50" iconColor="text-amber-500" title="Musique de fond" subtitle={`${tracks.length} pistes disponibles`} />
+
+            <div className="max-h-48 overflow-y-auto space-y-1 pr-0.5">
+                <TrackOption
+                    label="Aucune musique"
+                    selected={options.musicId === "none"}
+                    playing={false}
+                    onClick={() => handleTrackSelect("none")}
+                />
+                {tracks.map((t) => (
+                    <TrackOption
+                        key={t.id}
+                        label={t.name}
+                        tags={t.tags}
+                        selected={options.musicId === t.id}
+                        playing={options.musicId === t.id && isPlaying}
+                        onClick={() => handleTrackSelect(t.id)}
+                    />
+                ))}
+            </div>
+
+            {/* Playback controls */}
+            <div className="flex items-center justify-center gap-4 pt-2 border-t border-zinc-100">
+                <button onClick={() => onSkip("prev")} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+                    <SkipBack className="h-4 w-4" />
+                </button>
+                <button
+                    onClick={onTogglePlay}
+                    disabled={options.musicId === "none"}
+                    className={cn(
+                        "h-9 w-9 rounded-full border flex items-center justify-center transition-all",
+                        options.musicId !== "none"
+                            ? "bg-white border-zinc-200 text-zinc-700 hover:border-emerald-400 hover:text-emerald-600"
+                            : "bg-zinc-50 border-zinc-100 text-zinc-300 cursor-not-allowed"
+                    )}
+                    aria-label={isPlaying ? "Pause" : "Lecture"}
+                >
+                    {isPlaying ? (
+                        <span className="flex gap-0.5">
+                            <span className="w-0.5 h-3 bg-current rounded-sm" />
+                            <span className="w-0.5 h-3 bg-current rounded-sm" />
+                        </span>
+                    ) : (
+                        <Play className="h-4 w-4 fill-current ml-0.5" />
+                    )}
+                </button>
+                <button onClick={() => onSkip("next")} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+                    <SkipForward className="h-4 w-4" />
+                </button>
             </div>
         </div>
     );
 }
 
-function MusicOption({
+function TrackOption({
     label,
     tags,
     selected,
-    playing = false,
-    onClick
+    playing,
+    onClick,
 }: {
-    label: string,
-    tags?: string[],
-    selected: boolean,
-    playing?: boolean,
-    onClick: () => void
+    label: string;
+    tags?: string[];
+    selected: boolean;
+    playing: boolean;
+    onClick: () => void;
 }) {
     return (
         <button
             onClick={onClick}
             className={cn(
-                "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] border transition-colors text-left",
-                selected ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs border transition-colors text-left",
+                selected
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                    : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+            )}
+        >
+            <span className={cn(
+                "h-3.5 w-3.5 rounded-full border-2 shrink-0 flex items-center justify-center",
+                selected ? "border-emerald-500 bg-emerald-500" : "border-zinc-300"
             )}>
-            <div className={cn("h-3.5 w-3.5 rounded-full border-2 shrink-0 flex items-center justify-center", selected ? "border-emerald-500 bg-emerald-500" : "border-zinc-300")}>
-                {selected && <div className="h-1 w-1 rounded-full bg-white" />}
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate flex items-center gap-1">
-                    {selected && playing && (
-                        <span className="flex gap-0.5 mr-1">
-                            {[1, 2, 3].map(b => (
-                                <span key={b} className="w-0.5 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: `${b * 0.1}s` }} />
+                {selected && <span className="h-1 w-1 rounded-full bg-white" />}
+            </span>
+
+            <span className="flex-1 min-w-0">
+                <span className="font-medium truncate flex items-center gap-1.5">
+                    {playing && (
+                        <span className="flex gap-0.5">
+                            {[0, 100, 200].map((delay) => (
+                                <span
+                                    key={delay}
+                                    className="w-0.5 h-2 bg-emerald-500 rounded-full animate-bounce"
+                                    style={{ animationDelay: `${delay}ms` }}
+                                />
                             ))}
                         </span>
                     )}
                     {label}
-                </div>
-                {tags && <div className="text-[8px] text-zinc-400 truncate">{tags.join(" · ")}</div>}
-            </div>
+                </span>
+                {tags && <span className="text-[9px] text-zinc-400 truncate block">{tags.join(" · ")}</span>}
+            </span>
         </button>
     );
 }
 
-function CaptionsStep({
-    captionOptions,
-    onUpdateOptions
-}: {
-    captionOptions: any;
-    onUpdateOptions: (options: Partial<any>) => void;
-}) {
-    const CAPTION_STYLES = [
-        { id: "colored", label: "Coloré" },
-        { id: "scaling", label: "Zoom" },
-        { id: "bounce", label: "Rebond" },
-        { id: "neon", label: "Néon" },
-        { id: "typewriter", label: "Machine" },
-        { id: "karaoke", label: "Karaoké" },
-        { id: "animated-background", label: "Bulle" },
-        { id: "remotion", label: "Moderne" },
-    ];
-    const HIGHLIGHT_COLORS = ["#FFE135", "#10B981", "#3B82F6", "#EC4899", "#F97316", "#FFFFFF"];
+// ─── Step: Captions ───────────────────────────────────────────────────────────
 
+function CaptionsStep({
+    options,
+    onChange,
+}: {
+    options: CaptionOptions;
+    onChange: (patch: Partial<CaptionOptions>) => void;
+}) {
     return (
-        <div className="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-zinc-200 bg-white">
-                <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-pink-50 flex items-center justify-center shrink-0">
-                        <Type className="h-3 w-3 text-pink-500" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-zinc-900">Sous-titres</p>
-                        <p className="text-[9px] text-zinc-400">Style & animation</p>
-                    </div>
-                </div>
-                <button
-                    onClick={() => onUpdateOptions({ enabled: !captionOptions.enabled })}
-                    className={cn("relative w-8 h-4 rounded-full transition-colors", captionOptions.enabled ? "bg-emerald-500" : "bg-zinc-200")}>
-                    <div className={cn("absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform shadow-sm", captionOptions.enabled ? "translate-x-4" : "translate-x-0.5")} />
-                </button>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <StepHeader icon={Type} iconBg="bg-pink-50" iconColor="text-pink-500" title="Sous-titres" subtitle="Style et animation" />
+                <Toggle enabled={options.enabled} onToggle={() => onChange({ enabled: !options.enabled })} />
             </div>
-            {captionOptions.enabled ? (
-                <div className="p-3.5 space-y-3">
-                    <div className="grid grid-cols-2 gap-1">
-                        {CAPTION_STYLES.map(s => (
+
+            {options.enabled ? (
+                <>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {CAPTION_STYLES.map(({ id, label }) => (
                             <button
-                                key={s.id}
-                                onClick={() => onUpdateOptions({ style: s.id })}
+                                key={id}
+                                onClick={() => onChange({ style: id })}
                                 className={cn(
-                                    "flex items-center justify-between px-2 py-1 rounded-lg text-[10px] font-medium border transition-all",
-                                    captionOptions.style === s.id ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
-                                )}>
-                                {s.label}
-                                {captionOptions.style === s.id && <Check className="h-2.5 w-2.5" />}
+                                    "flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium border transition-all",
+                                    options.style === id
+                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                        : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+                                )}
+                            >
+                                {label}
+                                {options.style === id && <Check className="h-3 w-3" />}
                             </button>
                         ))}
                     </div>
-                    <CaptionPreview style={captionOptions.style} highlightColor={captionOptions.highlightColor} />
-                </div>
+
+                    <CaptionPreview style={options.style} />
+                </>
             ) : (
-                <div className="flex flex-col items-center justify-center py-8 gap-1.5 opacity-30">
-                    <Type className="h-6 w-6 text-zinc-400" />
-                    <p className="text-xs text-zinc-400 font-medium">Désactivés</p>
+                <div className="flex flex-col items-center justify-center py-10 gap-2 text-zinc-300">
+                    <Type className="h-7 w-7" />
+                    <p className="text-xs font-medium">Sous-titres désactivés</p>
                 </div>
             )}
         </div>
     );
 }
 
-function CaptionPreview({ style, highlightColor }: { style: string, highlightColor: string }) {
+// ─── Shared Components ────────────────────────────────────────────────────────
+
+function StepHeader({
+    icon: Icon,
+    iconBg,
+    iconColor,
+    title,
+    subtitle,
+}: {
+    icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    title: string;
+    subtitle: string;
+}) {
     return (
-        <div className="relative aspect-video rounded-lg bg-zinc-900 overflow-hidden border border-zinc-200">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=60')] bg-cover bg-center opacity-20" />
+        <div className="flex items-center gap-3">
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", iconBg)}>
+                <Icon className={cn("h-4 w-4", iconColor)} />
+            </div>
+            <div>
+                <p className="text-sm font-semibold text-zinc-900">{title}</p>
+                <p className="text-xs text-zinc-400">{subtitle}</p>
+            </div>
+        </div>
+    );
+}
+
+function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+    return (
+        <button
+            onClick={onToggle}
+            aria-pressed={enabled}
+            className={cn(
+                "relative w-9 h-5 rounded-full transition-colors shrink-0",
+                enabled ? "bg-emerald-500" : "bg-zinc-200"
+            )}
+        >
+            <span className={cn(
+                "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform",
+                enabled ? "translate-x-4" : "translate-x-0.5"
+            )} />
+        </button>
+    );
+}
+
+function CaptionPreview({ style }: { style: string }) {
+    const previewMap: Record<string, React.ReactNode> = {
+        colored: <span className="text-sm font-black italic text-white">VOTRE <span className="text-yellow-400">VIDÉO</span></span>,
+        scaling: <span className="text-sm font-bold text-white uppercase scale-110 inline-block">TEXTE</span>,
+        bounce: <span className="text-sm font-bold text-yellow-400 animate-bounce inline-block">REBOND</span>,
+        neon: <span className="text-sm font-bold text-cyan-400" style={{ textShadow: "0 0 8px cyan" }}>NÉON</span>,
+        typewriter: <span className="text-sm font-mono text-green-400 border-r-2 border-green-400">MACHINE_</span>,
+        karaoke: <span className="text-sm font-bold"><span className="text-yellow-400">KA</span><span className="text-white">RAOKE</span></span>,
+        "animated-background": <span className="text-sm font-bold text-white bg-emerald-500/80 px-2 py-0.5 rounded">BULLE</span>,
+        remotion: <span className="text-sm font-semibold tracking-widest text-white uppercase">Moderne</span>,
+    };
+
+    return (
+        <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-200">
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-20"
+                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=60')" }}
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center text-center px-4">
-                {style === "colored" && <div className="text-xs font-black italic text-white line-clamp-2">VOTRE <span style={{ color: highlightColor }}>VIDÉO</span>.</div>}
-                {style === "scaling" && <div className="text-xs font-bold text-white uppercase scale-110 animate-pulse">TEXTE</div>}
-                {style === "bounce" && <div className="text-xs font-bold text-yellow-400 animate-bounce">REBOND</div>}
-                {/* ... other styles simplified for preview ... */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                {previewMap[style] ?? <span className="text-sm font-bold text-white">APERÇU</span>}
             </div>
         </div>
     );

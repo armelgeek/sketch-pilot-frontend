@@ -138,6 +138,7 @@ export default function StudioPage({ params }: StudioPageProps) {
                             const jobId = await handleAnimate(() => { });
                             if (jobId) setAnimateJobId(jobId);
                         }}
+                        onShare={() => setShowProductionModal(true)}
                     />
                 )}
 
