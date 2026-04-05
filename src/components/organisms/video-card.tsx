@@ -13,6 +13,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 import { cn } from "@/src/lib/utils";
 import { Video } from "@/src/services/videos-service";
+import { useMemo } from "react";
 
 interface VideoCardProps {
     video: Video;
@@ -53,6 +54,22 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
 
     const isProcessing = video.status === "processing" || video.status === "queued";
 
+    const displayThumbnail = useMemo(() => {
+        if (video.thumbnailUrl) return video.thumbnailUrl;
+
+        const scenes = video.scenes || (video as any).script?.scenes || [];
+        if (scenes.length > 0) {
+            const scenesWithImages = scenes.filter((s: any) => s.imageUrl);
+            if (scenesWithImages.length > 0) {
+                // Stable random based on video ID
+                const charSum = video.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+                const index = charSum % scenesWithImages.length;
+                return scenesWithImages[index].imageUrl;
+            }
+        }
+        return null;
+    }, [video.id, video.thumbnailUrl, video.scenes, (video as any).script]);
+
     const handleCardClick = () => {
         if (!showActions && editPath) {
             router.push(editPath);
@@ -66,9 +83,9 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
         >
             {/* Thumbnail Area */}
             <div className="aspect-video relative rounded-xl overflow-hidden bg-zinc-50 border border-zinc-50 transition-all duration-500">
-                {video.thumbnailUrl ? (
+                {displayThumbnail ? (
                     <img
-                        src={video.thumbnailUrl}
+                        src={displayThumbnail}
                         alt={video.title || video.topic}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />

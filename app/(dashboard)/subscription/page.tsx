@@ -202,7 +202,7 @@ export default function SubscriptionPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 px-4 py-8">
+    <div className="max-w-5xl mx-auto space-y-6 px-4 py-8">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -257,8 +257,8 @@ export default function SubscriptionPage() {
               </div>
               <span
                 className={`text-xs font-medium px-2.5 py-1 rounded-full border ${activeSubscription?.status === "active"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-zinc-50 text-zinc-500 border-zinc-200"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-zinc-50 text-zinc-500 border-zinc-200"
                   }`}
               >
                 {activeSubscription ? (statusLabel[activeSubscription.status] ?? "Inconnu") : "Gratuit"}
@@ -339,8 +339,8 @@ export default function SubscriptionPage() {
                 <div
                   key={pack.id}
                   className={`border rounded-xl p-5 flex flex-col gap-3 transition-colors ${pack.featured
-                      ? "border-emerald-300 bg-emerald-50/40"
-                      : "border-zinc-200 bg-white hover:border-zinc-300"
+                    ? "border-emerald-300 bg-emerald-50/40"
+                    : "border-zinc-200 bg-white hover:border-zinc-300"
                     }`}
                 >
                   <div>
@@ -357,8 +357,8 @@ export default function SubscriptionPage() {
                     onClick={() => handleBuyPack(pack.id)}
                     disabled={loading}
                     className={`w-full py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 flex items-center justify-center gap-2 ${pack.featured
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                        : "border border-zinc-200 hover:border-zinc-300 text-zinc-700"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "border border-zinc-200 hover:border-zinc-300 text-zinc-700"
                       }`}
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Acheter"}
