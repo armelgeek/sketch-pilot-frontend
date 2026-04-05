@@ -19,19 +19,28 @@ export default function EditModelPage({ params }: EditModelPageProps) {
 
     const model = models?.data?.find((m: any) => m.id === id);
 
-    const handleSave = async (data: any, files: File[]) => {
+    const handleSave = async (data: any, files: File[], inspirationFiles: Record<number, File>) => {
         try {
-            // 1. Upload new images
+            // 1. Upload new main images
             const uploadedUrls: string[] = [];
             for (const file of files) {
                 const url = await uploadAsset({ file, type: 'image' as any });
                 uploadedUrls.push(url);
             }
 
-            // 2. Prepare update data
+            // 2. Upload new inspiration images
+            const finalInspirations = [...(data.thumbnailInspirations || [])];
+            for (const [indexStr, file] of Object.entries(inspirationFiles)) {
+                const index = parseInt(indexStr);
+                const url = await uploadAsset({ file, type: 'image' as any });
+                finalInspirations[index] = url;
+            }
+
+            // 3. Prepare update data
             const updateData = {
                 ...data,
-                images: [...(data.images || []), ...uploadedUrls]
+                images: [...(data.images || []), ...uploadedUrls],
+                thumbnailInspirations: finalInspirations
             };
 
             if (updateData.voiceId === "none") {

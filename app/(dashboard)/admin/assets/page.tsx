@@ -103,10 +103,10 @@ export default function AdminAssetsPage() {
 
                 <div className="flex items-center gap-3">
                     <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-amber-500 transition-colors" />
                         <Input
                             placeholder="Rechercher..."
-                            className="pl-11 h-12 w-full md:w-[280px] rounded-[20px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm focus:ring-emerald-500/20 font-bold transition-all"
+                            className="pl-11 h-12 w-full md:w-[280px] rounded-[20px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm focus:ring-amber-500/20 font-bold transition-all"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -141,11 +141,11 @@ export default function AdminAssetsPage() {
                         {voicesQuery.isLoading ? (
                             Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-48 rounded-[32px]" />)
                         ) : filteredVoices.map((voice) => (
-                            <Card key={voice.id} className="border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 rounded-[32px] overflow-hidden group hover:ring-2 ring-emerald-500 transition-all duration-300">
+                            <Card key={voice.id} className="border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 rounded-[32px] overflow-hidden group hover:ring-2 ring-amber-500 transition-all duration-300">
                                 <CardContent className="p-8">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/20 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 dark:border-emerald-900/30">
+                                            <div className="h-12 w-12 bg-amber-50 dark:bg-amber-950/20 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 dark:border-amber-900/30">
                                                 <Volume2 className="h-6 w-6" />
                                             </div>
                                             <div>
@@ -166,7 +166,7 @@ export default function AdminAssetsPage() {
                                             size="icon"
                                             className={cn(
                                                 "h-10 w-10 rounded-full transition-all",
-                                                audioPreview === voice.previewUrl ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-zinc-50 dark:bg-zinc-800"
+                                                audioPreview === voice.previewUrl ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-zinc-50 dark:bg-zinc-800"
                                             )}
                                             onClick={() => voice.previewUrl && handlePlayPreview(voice.previewUrl)}
                                         >

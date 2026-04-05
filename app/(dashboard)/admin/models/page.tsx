@@ -109,7 +109,7 @@ export default function AdminModelsPage() {
                                             {model.gender} • {model.age}
                                         </Badge>
                                     </div>
-                                    <div className="h-10 w-10 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-900 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-lg scale-90 group-hover:scale-100">
+                                    <div className="h-10 w-10 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-900 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-lg scale-90 group-hover:scale-100">
                                         <ArrowRight className="h-5 w-5" />
                                     </div>
                                 </div>

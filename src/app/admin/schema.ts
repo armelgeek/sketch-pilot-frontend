@@ -80,10 +80,14 @@ export const videoTypeSpecificationSchema = z.object({
     audienceDefault: z.string(),
     task: z.string(),
     goals: z.array(z.string()),
-    structure: z.string(),
+    structure: z.array(z.string()),
     rules: z.array(z.string()),
     formatting: z.string(),
     instructions: z.array(z.string()),
+    // Advanced / Narrative attributes
+    visualRules: z.array(z.string()).optional(),
+    orchestration: z.array(z.string()).optional(),
+    outputFormat: z.string().optional(),
 });
 
 export const adminPromptSchema = videoTypeSpecificationSchema.extend({
@@ -95,3 +99,16 @@ export const adminPromptSchema = videoTypeSpecificationSchema.extend({
 });
 
 export type AdminPrompt = z.infer<typeof adminPromptSchema>;
+
+export const thumbnailTemplateSchema = z.object({
+    id: z.string().uuid(),
+    styleName: z.string().min(1),
+    niche: z.string().min(1),
+    prompt: z.string().min(1),
+    previewUrl: z.string().optional().nullable(),
+    isActive: z.boolean().default(true),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+});
+
+export type ThumbnailTemplate = z.infer<typeof thumbnailTemplateSchema>;

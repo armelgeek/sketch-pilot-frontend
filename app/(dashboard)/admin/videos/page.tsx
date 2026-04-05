@@ -21,7 +21,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 
 const STATUS_CONFIG: Record<string, { pill: string; dot: string; label: string; icon: React.ReactNode }> = {
-    completed: { pill: "bg-emerald-50 text-emerald-600 border-emerald-100/50", dot: "bg-emerald-500", label: "Terminé", icon: <CheckCircle2 className="h-3 w-3" /> },
+    completed: { pill: "bg-amber-50 text-amber-600 border-amber-100/50", dot: "bg-amber-500", label: "Terminé", icon: <CheckCircle2 className="h-3 w-3" /> },
     failed: { pill: "bg-red-50 text-red-500 border-red-100/50", dot: "bg-red-500", label: "Échec", icon: <AlertCircle className="h-3 w-3" /> },
     generating: { pill: "bg-amber-50 text-amber-600 border-amber-100/50", dot: "bg-amber-500", label: "Génération", icon: <PlayCircle className="h-3 w-3" /> },
     processing: { pill: "bg-amber-50 text-amber-600 border-amber-100/50", dot: "bg-amber-500", label: "Traitement", icon: <PlayCircle className="h-3 w-3" /> },

@@ -65,7 +65,7 @@ export default function VideoDetailPage({ params }: VideoDetailPageProps) {
         draft: { color: "bg-zinc-100 text-zinc-500", icon: <Monitor className="h-4 w-4" />, label: "Brouillon" },
         queued: { color: "bg-blue-50 text-blue-500", icon: <Clock className="h-4 w-4" />, label: "En file" },
         generating: { color: "bg-amber-50 text-amber-500", icon: <PlayCircle className="h-4 w-4 animate-pulse" />, label: "Génération" },
-        completed: { color: "bg-emerald-50 text-emerald-500", icon: <CheckCircle2 className="h-4 w-4" />, label: "Terminé" },
+        completed: { color: "bg-amber-50 text-amber-500", icon: <CheckCircle2 className="h-4 w-4" />, label: "Terminé" },
         failed: { color: "bg-red-50 text-red-500", icon: <AlertCircle className="h-4 w-4" />, label: "Échec" },
     }[video.status] || { color: "bg-zinc-100 text-zinc-500", icon: <Monitor className="h-4 w-4" />, label: video.status };
 
@@ -131,7 +131,7 @@ export default function VideoDetailPage({ params }: VideoDetailPageProps) {
                                 {video.status === "generating" && (
                                     <div className="w-64 h-2 bg-zinc-800 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-emerald-500 transition-all duration-500"
+                                            className="h-full bg-amber-500 transition-all duration-500"
                                             style={{ width: `${video.progress}%` }}
                                         />
                                     </div>
@@ -165,7 +165,7 @@ export default function VideoDetailPage({ params }: VideoDetailPageProps) {
                                 </div>
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">Progress</span>
-                                    <p className="text-xl font-black text-emerald-500">{video.progress}%</p>
+                                    <p className="text-xl font-black text-amber-500">{video.progress}%</p>
                                 </div>
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">Coût</span>
@@ -220,7 +220,7 @@ export default function VideoDetailPage({ params }: VideoDetailPageProps) {
                         <CardContent className="p-8 pt-4 space-y-6">
                             <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
                                 <div className="relative">
-                                    <div className="absolute -left-[29px] top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50 dark:ring-emerald-950/20" />
+                                    <div className="absolute -left-[29px] top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-50 dark:ring-amber-950/20" />
                                     <div>
                                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Création</p>
                                         <p className="text-sm font-black text-zinc-900 dark:text-white">{new Date(video.createdAt).toLocaleString()}</p>

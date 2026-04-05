@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import {
     Play, Pencil, Download, Clock, Image as ImageIcon,
-    Loader2, MoreVertical, Trash2, Share2, Eye
+    Loader2, MoreVertical, Trash2, Share2, Eye, Sparkles
 } from "lucide-react";
+import { useState } from "react";
+import { ThumbnailStudio } from "@/src/components/videos/thumbnail-studio";
 import { CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -43,6 +45,7 @@ const EDIT_ROUTE: Record<string, string> = {
 
 export function VideoCard({ video, showActions = false }: VideoCardProps) {
     const router = useRouter();
+    const [isStudioOpen, setIsStudioOpen] = useState(false);
     const config = statusConfig[video.status] || statusConfig.draft;
     const step = EDIT_ROUTE[video.status];
     const editPath = step ? `/generate/${video.id}/${step}` : null;
@@ -110,6 +113,14 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                     </div>
                 </div>
 
+                {/* Variations Badge */}
+                {video.options?.thumbnailVariations && video.options.thumbnailVariations.length > 0 && (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-lg text-white">
+                        <ImageIcon className="h-3.5 w-3.5 text-red-500" />
+                        <span className="text-[10px] font-bold">~{video.options.thumbnailVariations.length} thumbnails</span>
+                    </div>
+                )}
+
                 {/* Dropdown Options - Floating */}
                 {showActions && (
                     <div className="absolute top-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -144,6 +155,17 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                                         <a href={video.videoUrl} download onClick={(e) => e.stopPropagation()}>
                                             <Download className="h-4 w-4 opacity-40" /> Télécharger en HD
                                         </a>
+                                    </DropdownMenuItem>
+                                )}
+                                {video.status === "completed" && (
+                                    <DropdownMenuItem
+                                        className="rounded-xl h-11 px-4 cursor-pointer font-bold text-xs gap-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsStudioOpen(true);
+                                        }}
+                                    >
+                                        <Sparkles className="h-4 w-4" /> Générer Thumbnail
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem className="rounded-xl h-11 px-4 cursor-pointer font-bold text-xs gap-3">
@@ -181,6 +203,13 @@ export function VideoCard({ video, showActions = false }: VideoCardProps) {
                     )}
                 </div>
             </div>
+
+            {isStudioOpen && (
+                <ThumbnailStudio
+                    video={video}
+                    onClose={() => setIsStudioOpen(false)}
+                />
+            )}
         </div>
     );
 }

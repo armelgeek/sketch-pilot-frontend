@@ -46,10 +46,10 @@ export default function AdminUsersPage() {
 
                 <div className="flex items-center gap-3">
                     <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-amber-500 transition-colors" />
                         <Input
                             placeholder="Rechercher par nom ou email..."
-                            className="pl-11 h-12 w-full md:w-[320px] rounded-[20px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm focus:ring-emerald-500/20 font-bold transition-all"
+                            className="pl-11 h-12 w-full md:w-[320px] rounded-[20px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm focus:ring-amber-500/20 font-bold transition-all"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
                     users.map((user: AdminUser) => (
                         <Card
                             key={user.id}
-                            className="group rounded-[32px] border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden transition-all duration-300 hover:ring-2 ring-emerald-500 cursor-pointer"
+                            className="group rounded-[32px] border-none shadow-xl shadow-zinc-200/40 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden transition-all duration-300 hover:ring-2 ring-amber-500 cursor-pointer"
                             onClick={() => router.push(`/admin/users/${user.id}`)}
                         >
                             <CardContent className="p-0">
@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
                                                 </Avatar>
                                                 <div className={cn(
                                                     "absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white dark:border-zinc-900 flex items-center justify-center",
-                                                    user.banned ? "bg-red-500" : "bg-emerald-500"
+                                                    user.banned ? "bg-red-500" : "bg-amber-500"
                                                 )}>
                                                     {user.banned ? <Ban className="h-2.5 w-2.5 text-white" /> : <ShieldCheck className="h-2.5 w-2.5 text-white" />}
                                                 </div>
@@ -92,7 +92,7 @@ export default function AdminUsersPage() {
                                             </div>
                                         </div>
 
-                                        <div className="h-10 w-10 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-300 group-hover:text-emerald-500 transition-colors">
+                                        <div className="h-10 w-10 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-300 group-hover:text-amber-500 transition-colors">
                                             <ArrowRight className="h-5 w-5" />
                                         </div>
                                     </div>
@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
                                             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Status</span>
                                             <span className={cn(
                                                 "text-xs font-black",
-                                                user.banned ? "text-red-500" : "text-emerald-500"
+                                                user.banned ? "text-red-500" : "text-amber-500"
                                             )}>
                                                 {user.banned ? "BLOQUÉ" : "ACTIF"}
                                             </span>

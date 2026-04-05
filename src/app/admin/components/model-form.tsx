@@ -16,7 +16,10 @@ import {
     UserCircle,
     Mic2,
     Palette,
-    TextQuote
+    TextQuote,
+    Plus,
+    Trash2,
+    Sparkles
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -35,7 +38,7 @@ import { useAdminVoices } from "../hooks/use-admin-data";
 
 interface ModelFormProps {
     initialData?: any;
-    onSubmit: (data: any, files: File[]) => Promise<void>;
+    onSubmit: (data: any, files: File[], inspirationFiles: Record<number, File>) => Promise<void>;
     onCancel: () => void;
     isLoading?: boolean;
     title: string;
@@ -53,14 +56,17 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
         stylePrefix: "",
         artistPersona: "",
         isStandard: true,
-        images: []
+        images: [],
+        thumbnailInspirations: []
     });
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit(formData, selectedFiles);
+        // Merge multiple file states into one for easier handling if needed, 
+        // or just pass them separately as before.
+        await onSubmit(formData, selectedFiles, inspirationFiles);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +84,34 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
         const newImages = [...(formData.images || [])];
         newImages.splice(index, 1);
         setFormData({ ...formData, images: newImages });
+    };
+
+    const [inspirationFiles, setInspirationFiles] = useState<Record<number, File>>({});
+
+    const handleInspirationFile = (file: File) => {
+        const index = (formData.thumbnailInspirations || []).length;
+        setInspirationFiles(prev => ({ ...prev, [index]: file }));
+        const newInspirations = [...(formData.thumbnailInspirations || []), URL.createObjectURL(file)];
+        setFormData({ ...formData, thumbnailInspirations: newInspirations });
+    };
+
+    const removeInspiration = (index: number) => {
+        const currentInspirations = formData.thumbnailInspirations || [];
+        const newInspirations = currentInspirations.filter((_: any, i: number) => i !== index);
+
+        // Cleanup files mapping
+        const newFiles: Record<number, File> = {};
+        let newIdx = 0;
+        currentInspirations.forEach((_: any, i: number) => {
+            if (i !== index) {
+                if (inspirationFiles[i]) {
+                    newFiles[newIdx] = inspirationFiles[i];
+                }
+                newIdx++;
+            }
+        });
+        setInspirationFiles(newFiles);
+        setFormData({ ...formData, thumbnailInspirations: newInspirations });
     };
 
     return (
@@ -192,7 +226,7 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-xl max-h-[300px]">
                                         <SelectItem value="none">Aucune voix associée</SelectItem>
-                                        {voices?.map((voice) => (
+                                        {voices?.map((voice: any) => (
                                             <SelectItem key={voice.id} value={voice.presetId}>
                                                 {voice.name} ({voice.provider} - {voice.language})
                                             </SelectItem>
@@ -263,6 +297,52 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Thumbnail Inspirations */}
+                    <Card className="rounded-[32px] border-none shadow-xl shadow-amber-200/20 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden border-t-4 border-amber-500">
+                        <CardHeader className="p-8 pb-4">
+                            <div className="flex items-center gap-3">
+                                <Sparkles className="h-6 w-6 text-amber-500" />
+                                <CardTitle className="font-black tracking-tight text-xl">Inspirations Thumbnail</CardTitle>
+                            </div>
+                            <CardDescription className="font-medium">Images de référence pour les miniatures.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8 pt-4 space-y-6">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {(formData.thumbnailInspirations || []).map((url: string, idx: number) => (
+                                    <div key={idx} className="group relative aspect-video rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200 transition-all hover:ring-4 hover:ring-amber-500/10">
+                                        <img src={url} alt={`Inspiration ${idx}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeInspiration(idx)}
+                                                className="bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        {inspirationFiles[idx] && (
+                                            <div className="absolute top-2 left-2 bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter shadow-sm">New</div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Add Button */}
+                                <label className="flex flex-col items-center justify-center aspect-video border-2 border-dashed border-zinc-200 rounded-xl cursor-pointer hover:bg-amber-50/30 hover:border-amber-200 transition-all group">
+                                    <div className="h-8 w-8 rounded-full bg-zinc-50 flex items-center justify-center mb-2 group-hover:bg-amber-100 transition-colors">
+                                        <Plus className="h-4 w-4 text-zinc-400 group-hover:text-amber-600" />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase text-zinc-400 group-hover:text-amber-600 transition-colors">Ajouter</p>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => e.target.files?.[0] && handleInspirationFile(e.target.files[0])}
+                                    />
+                                </label>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <div className="space-y-8">
@@ -329,6 +409,6 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                     </Card>
                 </div>
             </div>
-        </form>
+        </form >
     );
 }

@@ -94,3 +94,10 @@ export function useAdminMusic() {
         queryFn: () => adminService.listMusic(),
     });
 }
+
+export function useAdminThumbnailTemplates(filters?: { page?: number; limit?: number; niche?: string; search?: string }) {
+    return useQuery({
+        queryKey: adminKeys.thumbnails(filters),
+        queryFn: () => adminService.listThumbnailTemplates(filters),
+    });
+}

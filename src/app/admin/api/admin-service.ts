@@ -323,4 +323,44 @@ export class AdminService extends BaseService<any> {
             method: "DELETE",
         });
     }
+
+    // --- Thumbnail Templates ---
+    async listThumbnailTemplates(params?: { page?: number; limit?: number; niche?: string; search?: string }): Promise<{
+        data: any[];
+        total: number;
+    }> {
+        const query = new URLSearchParams();
+        if (params?.page) query.append("page", params.page.toString());
+        if (params?.limit) query.append("limit", params.limit.toString());
+        if (params?.niche) query.append("niche", params.niche);
+        if (params?.search) query.append("search", params.search);
+
+        const res = await this.apiFetch<any>(`${this.endpoint}/config/thumbnail-templates?${query.toString()}`);
+        return {
+            data: res.data || [],
+            total: res.total || 0,
+        };
+    }
+
+    async createThumbnailTemplate(data: any): Promise<any> {
+        const res = await this.apiFetch<any>(`${this.endpoint}/config/thumbnail-templates`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+        return res.data;
+    }
+
+    async updateThumbnailTemplate(id: string, data: any): Promise<any> {
+        const res = await this.apiFetch<any>(`${this.endpoint}/config/thumbnail-templates/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        });
+        return res.data;
+    }
+
+    async deleteThumbnailTemplate(id: string): Promise<void> {
+        await this.apiFetch(`${this.endpoint}/config/thumbnail-templates/${id}`, {
+            method: "DELETE",
+        });
+    }
 }

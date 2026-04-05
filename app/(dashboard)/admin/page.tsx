@@ -45,8 +45,8 @@ export default function AdminOverviewPage() {
             title: "Vidéos Générées",
             value: stats?.totalVideos ?? 0,
             icon: Video,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50 dark:bg-emerald-950/30",
+            color: "text-amber-600",
+            bg: "bg-amber-50 dark:bg-amber-950/30",
             description: "Total des vidéos créées par tous les utilisateurs"
         },
         {
@@ -106,8 +106,8 @@ export default function AdminOverviewPage() {
                 <Card className="lg:col-span-2 border-none shadow-xl shadow-zinc-200/50 dark:shadow-none bg-white dark:bg-zinc-900 rounded-3xl">
                     <CardHeader>
                         <CardTitle className="text-lg font-black tracking-tight flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                            Répartition par Statut Vidé
+                            <div className="h-2 w-2 rounded-full bg-amber-500" />
+                            Répartition par Statut Vidéo
                         </CardTitle>
                         <CardDescription>État actuel de la file d'attente de génération</CardDescription>
                     </CardHeader>
@@ -126,7 +126,7 @@ export default function AdminOverviewPage() {
                                             </div>
                                             <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                                                    className="h-full bg-amber-500 transition-all duration-1000 ease-out"
                                                     style={{ width: `${percentage}%` }}
                                                 />
                                             </div>
@@ -163,7 +163,7 @@ export default function AdminOverviewPage() {
                             >
                                 {link.label}
                                 <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                                    <TrendingUp className="h-3 w-3 text-emerald-500" />
+                                    <TrendingUp className="h-3 w-3 text-amber-500" />
                                 </div>
                             </Link>
                         ))}

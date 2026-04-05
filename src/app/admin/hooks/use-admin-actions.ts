@@ -13,6 +13,7 @@ export const adminKeys = {
     music: () => [...adminKeys.all, "music"] as const,
     prompts: (filters: any) => [...adminKeys.all, "prompts", filters] as const,
     models: (filters: any = {}) => [...adminKeys.all, "models", filters] as const,
+    thumbnails: (filters: any = {}) => [...adminKeys.all, "thumbnails", filters] as const,
 };
 
 export function useAdminActions() {
@@ -129,6 +130,22 @@ export function useAdminActions() {
         },
     });
 
+    // --- Thumbnail Mutations ---
+    const createThumbnailMutation = useMutation({
+        mutationFn: (data: any) => adminService.createThumbnailTemplate(data),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.thumbnails({}) }),
+    });
+
+    const updateThumbnailMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => adminService.updateThumbnailTemplate(id, data),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.thumbnails({}) }),
+    });
+
+    const deleteThumbnailMutation = useMutation({
+        mutationFn: (id: string) => adminService.deleteThumbnailTemplate(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.thumbnails({}) }),
+    });
+
     return {
         banUser: banMutation.mutateAsync,
         unbanUser: unbanMutation.mutateAsync,
@@ -148,6 +165,9 @@ export function useAdminActions() {
         updateModel: updateModelMutation.mutateAsync,
         deleteModel: deleteModelMutation.mutateAsync,
         uploadAsset: uploadAssetMutation.mutateAsync,
+        createThumbnail: createThumbnailMutation.mutateAsync,
+        updateThumbnail: updateThumbnailMutation.mutateAsync,
+        deleteThumbnail: deleteThumbnailMutation.mutateAsync,
         isPending:
             banMutation.isPending ||
             unbanMutation.isPending ||
@@ -166,6 +186,9 @@ export function useAdminActions() {
             createModelMutation.isPending ||
             updateModelMutation.isPending ||
             deleteModelMutation.isPending ||
-            uploadAssetMutation.isPending,
+            uploadAssetMutation.isPending ||
+            createThumbnailMutation.isPending ||
+            updateThumbnailMutation.isPending ||
+            deleteThumbnailMutation.isPending,
     };
 }

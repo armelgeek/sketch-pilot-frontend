@@ -36,7 +36,7 @@ export function AdminSidebar() {
                 </Link>
 
                 <h1 className="text-xl font-black tracking-tighter mb-8 flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                    <div className="h-8 w-8 rounded-lg bg-amber-600 flex items-center justify-center text-white">
                         <span className="text-xs">🛡️</span>
                     </div>
                     Admin Panel
@@ -52,7 +52,7 @@ export function AdminSidebar() {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all",
                                     isActive
-                                        ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                                        ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
                                         : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                                 )}
                             >
@@ -66,7 +66,7 @@ export function AdminSidebar() {
 
             <div className="mt-auto p-6 border-t border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">System Online</span>
                 </div>
             </div>

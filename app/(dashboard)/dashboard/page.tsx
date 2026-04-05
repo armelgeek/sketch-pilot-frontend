@@ -40,7 +40,6 @@ export default function DashboardPage() {
   const [generatingScript, setGeneratingScript] = useState(false);
   const [suggestions, setSuggestions] = useState<VideoIdea[] | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
-  const [recentVideos, setRecentVideos] = useState<Video[]>([]);
   const [updatingPrefs, setUpdatingPrefs] = useState(false);
 
   useEffect(() => {
@@ -55,7 +54,6 @@ export default function DashboardPage() {
         setPrompts(pData.data || []);
         setCharacterModels(charData.data || []);
         setPersonalModels(myData.data || []);
-        setRecentVideos((vData || []).slice(0, 3));
 
         if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
         if (charData.data?.length > 0 && !selectedCharacterId) setSelectedCharacterId(charData.data[0].id);

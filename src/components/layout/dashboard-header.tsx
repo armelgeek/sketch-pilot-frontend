@@ -47,7 +47,7 @@ export function DashboardHeader() {
     const totalCredits = subscriptionStatus?.totalCredits ?? 0;
 
     return (
-        <header className="h-14 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+        <header className="h-14 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0 backdrop-blur-md border-b border-zinc-100">
             <div className="flex items-center gap-3">
             </div>
 

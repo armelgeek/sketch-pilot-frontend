@@ -25,6 +25,7 @@ export interface Video {
     script?: VideoScript;
     scenes?: any[];
     options?: any;
+    characterModelId?: string;
     title?: string;
     createdAt?: string;
     created_at?: string;
@@ -71,6 +72,11 @@ export interface JobResponse {
 export class VideosService extends BaseService<Video> {
     constructor() {
         super("/v1/videos");
+    }
+
+    async getById(id: string): Promise<Video> {
+        const response = await this.apiFetch<any>(`${this.endpoint}/${id}`);
+        return response.data || response.video || response;
     }
 
     async getAll(): Promise<Video[]> {
@@ -153,6 +159,18 @@ export class VideosService extends BaseService<Video> {
         });
         return response.video;
     }
+
+    async generateThumbnail(videoId: string, options: {
+        inspirationUrl?: string;
+        characterId?: string;
+        title: string;
+    }): Promise<{ variations: string[]; creditsRequired: number }> {
+        return this.apiFetch<any>(`${this.endpoint}/${videoId}/generate-thumbnail`, {
+            method: "POST",
+            body: JSON.stringify(options),
+        });
+    }
+
 
 }
 

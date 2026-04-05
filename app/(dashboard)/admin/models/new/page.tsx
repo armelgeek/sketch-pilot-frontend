@@ -8,26 +8,35 @@ export default function NewModelPage() {
     const router = useRouter();
     const { createModel, uploadAsset, isPending } = useAdminActions();
 
-    const handleSave = async (data: any, files: File[]) => {
+    const handleSave = async (data: any, files: File[], inspirationFiles: Record<number, File>) => {
         try {
-            // 1. Upload all new images first
+            // 1. Upload all new main images
             const uploadedUrls: string[] = [];
             for (const file of files) {
-                const url = await uploadAsset({ file, type: 'image' as any }); // Re-using asset upload
+                const url = await uploadAsset({ file, type: 'image' as any });
                 uploadedUrls.push(url);
             }
 
-            // 2. Prepare model data
+            // 2. Upload new inspiration images
+            const finalInspirations: string[] = [];
+            // We use the objects from data.thumbnailInspirations but replace URLs for new files
+            const baseInspirations = data.thumbnailInspirations || [];
+            for (let i = 0; i < baseInspirations.length; i++) {
+                if (inspirationFiles[i]) {
+                    const url = await uploadAsset({ file: inspirationFiles[i], type: 'image' as any });
+                    finalInspirations.push(url);
+                } else if (baseInspirations[i]) {
+                    finalInspirations.push(baseInspirations[i]);
+                }
+            }
+
+            // 3. Prepare model data
             const modelData = {
-                name: data.name,
-                description: data.description || "",
-                gender: data.gender || "unknown",
-                age: data.age || "unknown",
+                ...data,
                 voiceId: data.voiceId && data.voiceId !== "none" ? data.voiceId : undefined,
                 isStandard: String(data.isStandard),
-                stylePrefix: data.stylePrefix || "",
-                artistPersona: data.artistPersona || "",
-                images: [...(data.images || []), ...uploadedUrls]
+                images: [...(data.images || []), ...uploadedUrls],
+                thumbnailInspirations: finalInspirations
             };
 
             await createModel(modelData);

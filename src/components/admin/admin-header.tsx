@@ -65,7 +65,7 @@ export function AdminHeader() {
             <div className="flex items-center gap-6">
                 {/* Credits Status */}
                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                    <Coins className="h-4 w-4 text-emerald-500" />
+                    <Coins className="h-4 w-4 text-amber-500" />
                     {subLoading ? (
                         <Skeleton className="h-4 w-12" />
                     ) : (
@@ -92,13 +92,13 @@ export function AdminHeader() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none">
-                            <Avatar className="h-10 w-10 border-2 border-emerald-500/20 shadow-sm">
+                            <Avatar className="h-10 w-10 border-2 border-amber-500/20 shadow-sm">
                                 <AvatarImage src={session?.user?.image || ""} />
-                                <AvatarFallback className="bg-emerald-50 text-emerald-700 font-bold text-xs">{userInitials}</AvatarFallback>
+                                <AvatarFallback className="bg-amber-50 text-amber-700 font-bold text-xs">{userInitials}</AvatarFallback>
                             </Avatar>
                             <div className="hidden lg:flex flex-col items-start leading-tight">
                                 <span className="text-sm font-black text-zinc-900 dark:text-zinc-50">{userName.split(" ")[0]}</span>
-                                <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-600">Administrator</span>
+                                <span className="text-[10px] font-black uppercase tracking-tighter text-amber-600">Administrator</span>
                             </div>
                         </button>
                     </DropdownMenuTrigger>

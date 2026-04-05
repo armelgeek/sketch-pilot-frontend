@@ -31,19 +31,7 @@ export function DashboardSidebar() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
-  const [recentVideos, setRecentVideos] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchRecent = async () => {
-      try {
-        const videos = await videosService.getAll();
-        setRecentVideos(videos.slice(0, 3));
-      } catch (err) {
-        console.error("Failed to fetch recent videos:", err);
-      }
-    };
-    fetchRecent();
-  }, []);
 
   const handleSignOut = async () => {
     await signOut({ fetchOptions: { onSuccess: () => router.push("/login") } });
@@ -117,46 +105,41 @@ export function DashboardSidebar() {
             </nav>
           </div>
 
-          {/* Recent Videos Section */}
-          {recentVideos.length > 0 && (
-            <div>
-              {!collapsed && (
-                <div className="flex items-center justify-between px-3 mb-3">
-                  <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] opacity-80">
-                    Récent
-                  </h3>
-                  <Link href="/videos" className="text-[10px] font-bold text-amber-600 hover:underline">Voir tout</Link>
-                </div>
-              )}
-              <div>
-                {recentVideos.map((video) => (
-                  <Link
-                    key={video.id}
-                    href={`/generate/${video.id}/script`}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 text-[13px] font-bold transition-all group",
-                      collapsed && "justify-center px-0 h-10 w-10 mx-auto"
-                    )}
-                    title={collapsed ? video.title || video.topic : undefined}
-                  >
-                    {!collapsed ? (
-                      <>
-                        <div className="h-6 w-6 shrink-0 rounded-lg bg-zinc-50 flex items-center justify-center border border-zinc-100 group-hover:bg-white transition-colors">
-                          <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 group-hover:bg-amber-500 transition-colors" />
-                        </div>
-                        <span className="truncate text-zinc-600 group-hover:text-zinc-900 transition-colors">
-                          {video.title || video.topic}
-                        </span>
-                      </>
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 group-hover:bg-amber-500 transition-colors" />
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+      </div>
+
+      {/* Upgrade CTA */}
+      <div className={cn("py-3", collapsed ? "px-3" : "px-4")}>
+        {collapsed ? (
+          <Link
+            href="/subscription"
+            title="Upgrade to Pro"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-amber-50 border border-amber-200 mx-auto hover:bg-amber-100 transition-colors active:scale-95"
+          >
+            <Zap className="h-[15px] w-[15px] fill-amber-800" />
+          </Link>
+        ) : (
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+            {/* Badge */}
+            <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1">
+              <Zap className="h-3 w-3 fill-amber-700" />
+              <span className="text-[11px] font-semibold text-amber-800">Pro</span>
+            </div>
+
+            <p className="text-[13px] font-bold tracking-tight text-zinc-900 mb-1">
+              Passer à l'offre Pro
+            </p>
+            <p className="text-[11px] leading-relaxed text-zinc-500 mb-3">
+              Débloquez toutes les fonctionnalités et créez sans limites.
+            </p>
+
+            <Link href="/subscription">
+              <button className="w-full rounded-[9px] bg-amber-400 py-2 text-[12px] font-bold text-white hover:bg-amber-600 transition-colors active:scale-[0.97]">
+                Upgrade Now
+              </button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Secondary / Footer Navigation */}

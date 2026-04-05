@@ -78,8 +78,8 @@ export function NavbarPrivate() {
           <div className="hidden md:block h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-2"></div>
 
           {/* Quick Stats Badge */}
-          <div className="hidden lg:flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="hidden lg:flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 shadow-sm shadow-amber-500/5">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
             {subscriptionStatus?.planName || "Plan Gratuit"}
           </div>
         </div>
@@ -91,8 +91,8 @@ export function NavbarPrivate() {
             <Skeleton className="h-10 w-28 rounded-2xl" />
           ) : (
             <Link href="/subscription">
-              <div className="group flex items-center gap-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 pl-1.5 pr-4 py-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:border-emerald-200 dark:hover:border-emerald-800/50 active:scale-95 shadow-sm">
-                <div className="h-7 w-7 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <div className="group flex items-center gap-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 pl-1.5 pr-4 py-1.5 text-sm font-bold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-amber-50 dark:hover:bg-amber-950/20 hover:border-amber-200 dark:hover:border-amber-800/50 active:scale-95 shadow-sm">
+                <div className="h-7 w-7 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
                   <Coins className="h-4 w-4 fill-current opacity-80" />
                 </div>
                 <div className="flex flex-col leading-none">
@@ -117,7 +117,7 @@ export function NavbarPrivate() {
               <div className="flex items-center gap-4 p-4 mb-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50">
                 <Avatar className="h-12 w-12 shadow-sm">
                   <AvatarImage src={session?.user?.image || ""} alt={userName} />
-                  <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">{userInitials}</AvatarFallback>
+                  <AvatarFallback className="bg-amber-100 text-amber-700 font-bold">{userInitials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <div className="text-sm font-black text-zinc-900 dark:text-zinc-50 truncate">{userName}</div>
@@ -128,7 +128,7 @@ export function NavbarPrivate() {
               <DropdownMenuSeparator className="opacity-50" />
 
               <div className="space-y-1 my-2">
-                <DropdownMenuItem asChild className="rounded-xl h-11 px-4 cursor-pointer focus:bg-emerald-50 dark:focus:bg-emerald-950/20 focus:text-emerald-600 dark:focus:text-emerald-400 font-bold text-sm">
+                <DropdownMenuItem asChild className="rounded-xl h-11 px-4 cursor-pointer focus:bg-amber-50 dark:focus:bg-amber-950/20 focus:text-amber-600 dark:focus:text-amber-400 font-bold text-sm">
                   <Link href="/subscription" className="flex items-center justify-between w-full">
                     <span>Abonnement & Facturation</span>
                     <Zap className="h-4 w-4 opacity-50" />
@@ -141,10 +141,10 @@ export function NavbarPrivate() {
                   <Link href="/settings">Paramètres du compte</Link>
                 </DropdownMenuItem>
 
-                {session?.user?.isAdmin && (
+                {(session.user as any)?.isAdmin && (
                   <>
                     <DropdownMenuSeparator className="opacity-50" />
-                    <DropdownMenuItem asChild className="rounded-xl h-11 px-4 cursor-pointer focus:bg-emerald-50 dark:focus:bg-emerald-950/20 focus:text-emerald-600 dark:focus:text-emerald-400 font-black text-sm text-emerald-600">
+                    <DropdownMenuItem asChild className="rounded-xl h-11 px-4 cursor-pointer focus:bg-amber-50 dark:focus:bg-amber-950/20 focus:text-amber-600 dark:focus:text-amber-400 font-black text-sm text-amber-600">
                       <Link href="/admin" className="flex items-center justify-between w-full">
                         <span>Console Administrateur</span>
                         <Shield className="h-4 w-4 opacity-50" />
@@ -181,7 +181,7 @@ export function NavbarPrivate() {
                   <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50">{subscriptionStatus?.remainingCredits ?? 0}</span>
                 </div>
                 <Link href="/subscription" onClick={() => setMobileOpen(false)}>
-                  <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold h-11 px-6 shadow-xl shadow-emerald-500/20">
+                  <Button className="bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold h-11 px-6 shadow-xl shadow-amber-500/20">
                     Acheter
                   </Button>
                 </Link>
@@ -197,8 +197,8 @@ export function NavbarPrivate() {
                 <Link href="/profile" className="px-5 py-4 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 font-bold text-zinc-900 dark:text-zinc-50" onClick={() => setMobileOpen(false)}>
                   Gérer Profil
                 </Link>
-                {session?.user?.isAdmin && (
-                  <Link href="/admin" className="flex items-center justify-between px-5 py-4 rounded-2xl bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-black border border-emerald-500/10" onClick={() => setMobileOpen(false)}>
+                {(session.user as any)?.isAdmin && (
+                  <Link href="/admin" className="flex items-center justify-between px-5 py-4 rounded-2xl bg-amber-500/5 text-amber-600 dark:text-amber-400 font-black border border-amber-500/10" onClick={() => setMobileOpen(false)}>
                     Administration <Shield className="h-5 w-5" />
                   </Link>
                 )}

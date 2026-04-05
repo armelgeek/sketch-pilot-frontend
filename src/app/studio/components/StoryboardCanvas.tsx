@@ -46,7 +46,7 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
     };
 
     return (
-        <div className="flex flex-col justify-center h-full w-full">
+        <div className="flex flex-col h-full w-full">
             <div className="relative group max-w-full max-h-full  rounded-xl overflow-hidden">
                 {/* Generation overlay */}
                 {(isGenerating || isRegenerating) && (
