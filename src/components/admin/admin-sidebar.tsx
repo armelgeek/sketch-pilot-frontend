@@ -10,7 +10,8 @@ import {
     Layout,
     Mic2,
     Music,
-    ArrowLeft
+    ArrowLeft,
+    CreditCard
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -22,6 +23,7 @@ const menuItems = [
     { icon: Layout, label: "Modèles", href: "/admin/models" },
     { icon: Mic2, label: "Voix", href: "/admin/assets?type=voices" },
     { icon: Music, label: "Musique", href: "/admin/assets?type=music" },
+    { icon: CreditCard, label: "Tarification", href: "/admin/pricing" },
 ];
 
 export function AdminSidebar() {

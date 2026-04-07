@@ -93,7 +93,7 @@ export function useVideoProgress(jobId?: string) {
                 const data = JSON.parse(event.data);
                 setState((prev) => ({
                     ...prev,
-                    progress: 100,
+                    progress: data.progress || 100,
                     status: "completed",
                     message: "Generation finished!",
                     videoUrl: data.videoUrl,
@@ -239,5 +239,55 @@ export function useVideoProgress(jobId?: string) {
         }
     }, []);
 
-    return { ...state, isFinished, isReconnecting, retryCount: retryCountState, reset, cancelVideo, restartVideo, rescriptVideo, insertScene };
+    const [displayProgress, setDisplayProgress] = useState(0);
+
+    // ── Interpolation & Crawling Logic ──────────────────────────────────────────
+    useEffect(() => {
+        if (isFinished || state.status === "completed") {
+            setDisplayProgress(100);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setDisplayProgress((prev) => {
+                const target = state.progress;
+
+                // If we are behind the actual progress, move toward it quickly (easing)
+                if (prev < target) {
+                    const diff = target - prev;
+                    const step = Math.max(0.1, diff * 0.1);
+                    return Math.min(target, prev + step);
+                }
+
+                // CRAWLING LOGIC: If we reached target but not finished, crawl slowly
+                // This gives the "alive" feeling the user requested.
+                if (prev >= target && target < 100) {
+                    // Slow down as we get closer to 99%
+                    const remaining = 99 - prev;
+                    if (remaining > 0) {
+                        const crawlStep = Math.max(0.01, remaining * 0.005);
+                        return Math.min(99, prev + crawlStep);
+                    }
+                }
+
+                return prev;
+            });
+        }, 150); // Fluid updates every 150ms
+
+        return () => clearInterval(interval);
+    }, [state.progress, state.status, isFinished]);
+
+    return {
+        ...state,
+        progress: Math.floor(displayProgress), // Expose interpolated progress instead of raw
+        rawProgress: state.progress,
+        isFinished,
+        isReconnecting,
+        retryCount: retryCountState,
+        reset,
+        cancelVideo,
+        restartVideo,
+        rescriptVideo,
+        insertScene
+    };
 }

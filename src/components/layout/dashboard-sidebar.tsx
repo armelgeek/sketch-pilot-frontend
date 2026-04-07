@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Video, Zap, ChevronLeft, ChevronRight,
-  LogOut, Plus, Settings, LifeBuoy, Search, ChevronsUpDown, User, CreditCard
+  LogOut, Plus, Settings, LifeBuoy, Search, ChevronsUpDown, User, CreditCard,
+  Wand2, Sparkles
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { useSession, signOut } from "@/src/lib/auth-client";
@@ -15,10 +16,12 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu";
 import { videosService } from "@/src/services/videos-service";
+import { useHeaderStore } from "@/src/components/layout/header-store";
 
 const navItems = [
   { href: "/dashboard", label: "Nouvelle video", icon: Plus },
-  { href: "/videos", label: "Mes Vidéos", icon: Video }
+  { href: "/videos", label: "Mes Vidéos", icon: Video },
+  { href: "/characters", label: "Mes Personnages", icon: Wand2 }
 ];
 
 const secondaryNavItems = [

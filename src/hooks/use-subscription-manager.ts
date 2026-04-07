@@ -126,6 +126,9 @@ export function useSubscriptionManager() {
     handleUpgrade,
     handleCancel,
     buyCreditPack: subscription.buyCreditPack,
+    getCreditHistory: subscription.getCreditHistory,
+    getPlans: subscription.getPlans,
+    getPacks: subscription.getPacks,
     refresh
   };
 }

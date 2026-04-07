@@ -34,6 +34,14 @@ export function handleError(error: unknown): AppError {
         };
       }
 
+      if (status === "402") {
+        return {
+          code: "INSUFFICIENT_CREDITS",
+          message: "Crédits insuffisants",
+          details: "Vous n'avez pas assez de crédits pour effectuer cette action.",
+        };
+      }
+
       if (status === "429") {
         return {
           code: "RATE_LIMITED",

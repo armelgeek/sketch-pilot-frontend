@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, RefreshCw, Sparkles, Globe } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
-import { Textarea } from "@/src/components/ui/textarea";
+import TextareaAutosize from "react-textarea-autosize";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/src/components/ui/select";
 import { videosService } from "@/src/services/videos-service";
 import type { VideoIdea, Video } from "@/src/services/videos-service";
@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [suggestions, setSuggestions] = useState<VideoIdea[] | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
   const [updatingPrefs, setUpdatingPrefs] = useState(false);
+  const [recentVideos, setRecentVideos] = useState<Video[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -54,6 +55,7 @@ export default function DashboardPage() {
         setPrompts(pData.data || []);
         setCharacterModels(charData.data || []);
         setPersonalModels(myData.data || []);
+        setRecentVideos(vData || []);
 
         if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
         if (charData.data?.length > 0 && !selectedCharacterId) setSelectedCharacterId(charData.data[0].id);
@@ -271,10 +273,10 @@ export default function DashboardPage() {
         <Card className="rounded-2xl border border-stone-200 shadow-sm bg-white overflow-hidden">
           <CardContent className="p-0">
             <div className="relative px-5 pt-5 pb-3">
-              <Textarea
+              <TextareaAutosize
                 placeholder="Ex : Les 5 erreurs que font les débutants en bourse…"
                 className={cn(
-                  "min-h-[100px] w-full resize-none border-none focus-visible:ring-0 shadow-none",
+                  "min-h-[100px] w-full resize-none border-none focus-visible:ring-0 shadow-none outline-none",
                   "bg-transparent text-base font-light text-stone-800 placeholder:text-stone-300",
                   "leading-relaxed p-0"
                 )}
@@ -346,6 +348,61 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Recent Videos */}
+      {recentVideos.length > 0 && (
+        <div className="w-full space-y-4 pt-10">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-[11px] font-black text-stone-400 uppercase tracking-[0.2em]">Vidéos Récentes</h2>
+            <button
+              onClick={() => router.push("/videos")}
+              className="text-[10px] font-bold text-stone-400 hover:text-stone-900 transition-colors uppercase tracking-widest flex items-center gap-1"
+            >
+              Tout voir <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {recentVideos.slice(0, 4).map((video) => (
+              <Card
+                key={video.id}
+                onClick={() => router.push(`/generate/${video.id}/storyboard`)}
+                className="group cursor-pointer rounded-xl border border-stone-200/60 shadow-sm hover:shadow-md hover:border-stone-300 transition-all bg-white overflow-hidden flex items-center p-3 gap-4"
+              >
+                <div className="h-16 w-16 shrink-0 rounded-lg bg-stone-100 overflow-hidden relative border border-stone-100">
+                  {video.thumbnailUrl ? (
+                    <img src={video.thumbnailUrl} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-stone-200" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-stone-800 truncate mb-1 group-hover:text-stone-950">
+                    {video.title || video.topic || "Sans titre"}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded",
+                      video.status === 'completed' ? "bg-emerald-50 text-emerald-600" :
+                        video.status === 'failed' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                    )}>
+                      {video.status === 'completed' ? "Terminée" :
+                        video.status === 'failed' ? "Échec" :
+                          video.status === 'processing' ? "En cours" : "Brouillon"}
+                    </span>
+                    <span className="text-[10px] tabular-nums text-stone-400 font-medium tracking-tight">
+                      {new Date(video.createdAt || video.created_at || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-stone-200 group-hover:text-stone-400 transition-colors translate-x-[-4px] group-hover:translate-x-0" />
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Sparkles, Check, Loader2, Globe, Wand2, Plus } from "lucide-react";
+import { useState, useEffect, Fragment } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Sparkles, Check, Loader2, Globe, Wand2, Plus, ImagePlus, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -30,6 +31,7 @@ interface Prompt {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudioPage() {
+    const router = useRouter();
     const { data: session } = useSession();
     const [mainTab, setMainTab] = useState<"characters" | "niches">("characters");
     const [charTab, setCharTab] = useState<"explorer" | "collection" | "create">("explorer");
@@ -39,11 +41,6 @@ export default function StudioPage() {
     const [prompts, setPrompts] = useState<Prompt[]>([]);
     const [standardModels, setStandardModels] = useState<CharacterModel[]>([]);
     const [personalModels, setPersonalModels] = useState<CharacterModel[]>([]);
-
-    const [generating, setGenerating] = useState(false);
-    const [newName, setNewName] = useState("");
-    const [newPrompt, setNewPrompt] = useState("");
-    const [baseHostId, setBaseHostId] = useState<string | null>(null);
 
     const selectedCharacterId = session?.user?.defaultCharacterId;
     const selectedPromptId = session?.user?.defaultPromptId;
@@ -64,25 +61,6 @@ export default function StudioPage() {
         try { await updateUser(updates); } catch (err) { console.error(err); }
     };
 
-    const handleGenerate = async () => {
-        if (!newName || !newPrompt) return;
-        setGenerating(true);
-        try {
-            const result = await adminService.createModel({
-                name: newName, description: newPrompt, gender: "unknown", isStandard: false,
-                baseModelId: baseHostId ?? undefined,
-            });
-            setPersonalModels(prev => [result, ...prev]);
-            await updatePreference({ defaultCharacterId: result.id });
-            setCharTab("collection");
-            setNewName(""); setNewPrompt(""); setBaseHostId(null);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setGenerating(false);
-        }
-    };
-
     const filtered = (list: CharacterModel[]) =>
         list.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -93,116 +71,126 @@ export default function StudioPage() {
     );
 
     return (
-        <div className="max-w-6xl mx-auto space-y-10 py-6">
-
-            {/* Header */}
-            <div className="flex items-end justify-between">
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Configuration Active</p>
-                    <h1 className="text-4xl font-black tracking-tight text-stone-800">Mon Studio</h1>
+        <div className="min-h-screen">
+            <div className="max-w-[1600px] mx-auto p-6 space-y-8">
+                {/* Tabs Switcher (Simplified) */}
+                <div className="flex items-center justify-between">
+                    <Tabs value={mainTab} onValueChange={v => setMainTab(v as typeof mainTab)} className="bg-stone-100 p-1 rounded-2xl border border-stone-200/50">
+                        <TabsList className="bg-transparent gap-1">
+                            <TabsTrigger value="characters" className="rounded-xl px-6 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                <Wand2 className="h-3.5 w-3.5 mr-2" /> Hôtes
+                            </TabsTrigger>
+                            <TabsTrigger value="niches" className="rounded-xl px-6 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                <Globe className="h-3.5 w-3.5 mr-2" /> Niches
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </div>
-                <Tabs value={mainTab} onValueChange={v => setMainTab(v as typeof mainTab)} className="bg-stone-100 p-1 rounded-2xl border border-stone-200/50">
-                    <TabsList className="bg-transparent gap-1">
-                        <TabsTrigger value="characters" className="rounded-xl px-6 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                            <Wand2 className="h-3.5 w-3.5 mr-2" /> Hôtes
-                        </TabsTrigger>
-                        <TabsTrigger value="niches" className="rounded-xl px-6 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                            <Globe className="h-3.5 w-3.5 mr-2" /> Niches
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
-            </div>
 
-            {/* Card */}
-            <div className="bg-white rounded-[2.5rem] border border-stone-200 shadow-sm min-h-[60vh] overflow-hidden flex flex-col">
-                <Tabs value={mainTab} className="flex-1 flex flex-col">
+                {/* Content Card */}
+                <div className="bg-white rounded-[2.5rem] border border-stone-200 shadow-sm min-h-[60vh] overflow-hidden flex flex-col">
+                    <Tabs value={mainTab} className="flex-1 flex flex-col">
 
-                    {/* ── Hôtes ─────────────────────────────────────────────── */}
-                    <TabsContent value="characters" className="m-0 flex-1 flex flex-col">
+                        {/* ── Hôtes ─────────────────────────────────────────────── */}
+                        <TabsContent value="characters" className="m-0 flex-1 flex flex-col">
 
-                        {/* Sub-nav */}
-                        <div className="px-8 py-5 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
-                            <Tabs value={charTab} onValueChange={v => setCharTab(v as typeof charTab)}>
-                                <TabsList className="bg-white border border-stone-200 rounded-full h-10 p-1 gap-0.5">
-                                    <TabsTrigger value="explorer" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white">
-                                        Explorer
-                                    </TabsTrigger>
-                                    <TabsTrigger value="collection" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white">
-                                        Ma Collection
-                                    </TabsTrigger>
-                                    <TabsTrigger value="create" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white flex gap-1.5 items-center">
-                                        <Sparkles className="h-3 w-3 fill-current" /> Studio IA
-                                    </TabsTrigger>
-                                </TabsList>
-                            </Tabs>
+                            {/* Sub-nav */}
+                            <div className="px-8 py-5 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
+                                <Tabs value={charTab} onValueChange={v => setCharTab(v as typeof charTab)}>
+                                    <TabsList className="bg-white border border-stone-200 rounded-full h-10 p-1 gap-0.5">
+                                        <TabsTrigger value="explorer" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white">
+                                            Explorer
+                                        </TabsTrigger>
+                                        <TabsTrigger value="collection" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white">
+                                            Ma Collection
+                                        </TabsTrigger>
+                                        <TabsTrigger value="create" className="rounded-full px-5 text-[11px] font-bold data-[state=active]:bg-stone-800 data-[state=active]:text-white flex gap-1.5 items-center">
+                                            <Sparkles className="h-3 w-3 fill-current" /> Character Studio
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
 
-                            {charTab !== "create" && (
-                                <div className="relative w-64">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300" />
-                                    <Input
-                                        placeholder="Rechercher..."
-                                        value={search}
-                                        onChange={e => setSearch(e.target.value)}
-                                        className="h-10 pl-10 border-stone-200 bg-white rounded-full text-xs font-medium"
+                                {charTab !== "create" && (
+                                    <div className="relative w-64">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300" />
+                                        <Input
+                                            placeholder="Rechercher..."
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            className="h-10 pl-10 border-stone-200 bg-white rounded-full text-xs font-medium"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-8 flex-1">
+                                <Tabs value={charTab}>
+
+                                    <TabsContent value="explorer" className="m-0">
+                                        <CharacterGrid
+                                            characters={filtered(standardModels)}
+                                            selectedId={selectedCharacterId}
+                                            onSelect={id => updatePreference({ defaultCharacterId: id })}
+                                        />
+                                    </TabsContent>
+
+                                    <TabsContent value="collection" className="m-0">
+                                        <CharacterGrid
+                                            characters={filtered(personalModels)}
+                                            selectedId={selectedCharacterId}
+                                            onSelect={id => updatePreference({ defaultCharacterId: id })}
+                                            onEmpty={() => router.push("/studio/character-pro")}
+                                        />
+                                    </TabsContent>
+
+                                    <TabsContent value="create" className="m-0 h-full">
+                                        <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-12 text-center space-y-8 bg-stone-50/20 rounded-[2.5rem] border-2 border-dashed border-stone-100 animate-in fade-in zoom-in-95 duration-1000">
+                                            <div className="relative">
+                                                <div className="h-24 w-24 rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center border border-stone-100">
+                                                    <Sparkles className="h-10 w-10 text-amber-500 fill-amber-500" />
+                                                </div>
+                                                <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-stone-800 text-white flex items-center justify-center border-2 border-white shadow-lg animate-bounce">
+                                                    <Wand2 className="h-4 w-4" />
+                                                </div>
+                                            </div>
+
+                                            <div className="max-w-md space-y-4">
+                                                <h3 className="text-3xl font-black text-stone-800 uppercase tracking-tighter">AI Character Studio Pro</h3>
+                                                <p className="text-sm text-stone-400 font-medium leading-relaxed">
+                                                    Découvrez notre nouvelle expérience de génération immersive. Créez des hôtes uniques avec un rendu IA professionnel dans un studio plein écran dédié.
+                                                </p>
+                                            </div>
+
+                                            <Button
+                                                onClick={() => router.push("/studio/character-pro")}
+                                                className="h-16 px-12 rounded-[1.5rem] bg-stone-800 hover:bg-stone-950 text-white font-black text-xs uppercase tracking-widest shadow-2xl shadow-stone-300/50 active:scale-95 transition-all group"
+                                            >
+                                                Ouvrir le Studio <Sparkles className="h-4 w-4 ml-3 fill-amber-400 text-amber-400 group-hover:scale-125 transition-transform" />
+                                            </Button>
+                                        </div>
+                                    </TabsContent>
+
+                                </Tabs>
+                            </div>
+                        </TabsContent>
+
+                        {/* ── Niches ────────────────────────────────────────────── */}
+                        <TabsContent value="niches" className="m-0 flex-1 p-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {prompts.map(p => (
+                                    <NicheCard
+                                        key={p.id}
+                                        prompt={p}
+                                        isSelected={selectedPromptId === p.id}
+                                        onSelect={() => updatePreference({ defaultPromptId: p.id })}
                                     />
-                                </div>
-                            )}
-                        </div>
+                                ))}
+                            </div>
+                        </TabsContent>
 
-                        {/* Body */}
-                        <div className="p-8 flex-1">
-                            <Tabs value={charTab}>
-
-                                <TabsContent value="explorer" className="m-0">
-                                    <CharacterGrid
-                                        characters={filtered(standardModels)}
-                                        selectedId={selectedCharacterId}
-                                        onSelect={id => updatePreference({ defaultCharacterId: id })}
-                                    />
-                                </TabsContent>
-
-                                <TabsContent value="collection" className="m-0">
-                                    <CharacterGrid
-                                        characters={filtered(personalModels)}
-                                        selectedId={selectedCharacterId}
-                                        onSelect={id => updatePreference({ defaultCharacterId: id })}
-                                        onEmpty={() => setCharTab("create")}
-                                    />
-                                </TabsContent>
-
-                                <TabsContent value="create" className="m-0">
-                                    <CreateForm
-                                        standardModels={standardModels}
-                                        baseHostId={baseHostId}
-                                        onBaseHostToggle={id => setBaseHostId(prev => prev === id ? null : id)}
-                                        name={newName}
-                                        onNameChange={setNewName}
-                                        prompt={newPrompt}
-                                        onPromptChange={setNewPrompt}
-                                        onSubmit={handleGenerate}
-                                        loading={generating}
-                                    />
-                                </TabsContent>
-
-                            </Tabs>
-                        </div>
-                    </TabsContent>
-
-                    {/* ── Niches ────────────────────────────────────────────── */}
-                    <TabsContent value="niches" className="m-0 flex-1 p-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {prompts.map(p => (
-                                <NicheCard
-                                    key={p.id}
-                                    prompt={p}
-                                    isSelected={selectedPromptId === p.id}
-                                    onSelect={() => updatePreference({ defaultPromptId: p.id })}
-                                />
-                            ))}
-                        </div>
-                    </TabsContent>
-
-                </Tabs>
+                    </Tabs>
+                </div>
             </div>
         </div>
     );
@@ -262,82 +250,6 @@ function CharacterCard({ character, isSelected, onSelect }: {
                     <Check className="h-4 w-4" />
                 </div>
             )}
-        </div>
-    );
-}
-
-// ─── Create Form ───────────────────────────────────────────────────────────────
-
-function CreateForm({ standardModels, baseHostId, onBaseHostToggle, name, onNameChange, prompt, onPromptChange, onSubmit, loading }: {
-    standardModels: CharacterModel[];
-    baseHostId: string | null;
-    onBaseHostToggle: (id: string) => void;
-    name: string;
-    onNameChange: (v: string) => void;
-    prompt: string;
-    onPromptChange: (v: string) => void;
-    onSubmit: () => void;
-    loading: boolean;
-}) {
-    return (
-        <div className="max-w-xl mx-auto py-8 space-y-8">
-
-            {/* Hôte de base */}
-            <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">
-                    Hôte de base <span className="normal-case font-medium tracking-normal text-stone-300">(optionnel)</span>
-                </p>
-                <div className="flex flex-wrap gap-2">
-                    {standardModels.map(host => {
-                        const thumb = host.images?.[0] ?? host.thumbnailUrl;
-                        const active = baseHostId === host.id;
-                        return (
-                            <button
-                                key={host.id}
-                                onClick={() => onBaseHostToggle(host.id)}
-                                className={cn(
-                                    "flex items-center gap-2 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all",
-                                    active ? "border-stone-800 bg-stone-50 text-stone-700" : "border-stone-100 text-stone-400 hover:border-stone-200"
-                                )}>
-                                <img src={thumb} alt={host.name} className="h-5 w-5 rounded-full object-cover" />
-                                {host.name}
-                                {active && <Check className="h-3 w-3 shrink-0" />}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Nom */}
-            <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nom</p>
-                <Input
-                    placeholder="Ex: Adam l'Investisseur"
-                    value={name}
-                    onChange={e => onNameChange(e.target.value)}
-                    className="h-14 rounded-2xl border-stone-200 bg-stone-50 font-bold text-lg"
-                />
-            </div>
-
-            {/* Style */}
-            <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Style visuel & instructions</p>
-                <textarea
-                    placeholder="Ex: Un homme d'affaires élégant, traits fins, style whiteboard minimaliste..."
-                    value={prompt}
-                    onChange={e => onPromptChange(e.target.value)}
-                    rows={5}
-                    className="w-full rounded-2xl border border-stone-200 bg-stone-50 p-6 text-base font-medium focus:ring-0 focus:outline-none resize-none"
-                />
-            </div>
-
-            <Button
-                onClick={onSubmit}
-                disabled={loading || !name || !prompt}
-                className="w-full h-16 bg-stone-800 hover:bg-stone-900 text-white rounded-[2rem] font-black text-lg shadow-2xl shadow-stone-200 gap-3 active:scale-[0.98] transition-all">
-                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Sparkles className="h-6 w-6 fill-current" />}
-                Générer le modèle
-            </Button>
         </div>
     );
 }

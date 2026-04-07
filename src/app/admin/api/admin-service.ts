@@ -307,7 +307,14 @@ export class AdminService extends BaseService<any> {
     async createModel(data: any): Promise<any> {
         return this.apiFetch<any>("/v1/characters", {
             method: "POST",
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
+        });
+    }
+
+    async generateCharacterImage(baseModelId: string, prompt: string): Promise<{ success: boolean; imageUrl: string; error?: string }> {
+        return this.apiFetch<any>("/v1/characters/generate", {
+            method: "POST",
+            body: JSON.stringify({ baseModelId, prompt }),
         });
     }
 

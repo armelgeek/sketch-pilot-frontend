@@ -23,10 +23,8 @@ export function Footer() {
 
           {/* Links */}
           <div className="md:col-span-1">
-            <h4 className="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-zinc-900 mb-6">Legal</h4>
+            <h4 className="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-zinc-900 mb-6">Liens</h4>
             <nav className="flex flex-col gap-4">
-              <Link href="/privacy" className="text-sm font-medium text-zinc-500 hover:text-amber-500 transition-colors">Privacy Policy</Link>
-              <Link href="/cgu" className="text-sm font-medium text-zinc-500 hover:text-amber-500 transition-colors">Terms of Service</Link>
               <Link href="/contact" className="text-sm font-medium text-zinc-500 hover:text-amber-500 transition-colors">Contact</Link>
             </nav>
           </div>

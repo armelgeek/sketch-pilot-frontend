@@ -5,6 +5,7 @@ import { StoryboardFilmstrip } from "./StoryboardFilmstrip";
 import { StoryboardSceneControls } from "./StoryboardSceneControls";
 import { StoryboardSidebar } from "./StoryboardSidebar";
 import { useStudioStore } from "../store";
+import { useEffect } from "react";
 
 interface StoryboardTabContentProps {
     currentSceneIndex?: number;
@@ -17,11 +18,23 @@ export function StoryboardTabContent({
     repromptIndex,
     onRegenerateImage
 }: StoryboardTabContentProps) {
-    const { activeTab, selectedSceneId, activeVideo } = useStudioStore();
+    const { activeTab, selectedSceneId, setSelectedSceneId, activeVideo } = useStudioStore();
 
     if (activeTab !== "storyboard") return null;
 
     const displayScenes = (activeVideo?.scenes?.length ? activeVideo.scenes : activeVideo?.script?.scenes) || [];
+
+    // Auto-select first scene if nothing is selected or if current selection is invalid
+    useEffect(() => {
+        if (displayScenes.length > 0) {
+            const currentSelectedExists = displayScenes.some((s: any, i: number) => (s.id || `s${i + 1}`) === selectedSceneId);
+            if (!currentSelectedExists) {
+                const firstId = displayScenes[0].id || "s1";
+                setSelectedSceneId(firstId);
+            }
+        }
+    }, [displayScenes, selectedSceneId, setSelectedSceneId]);
+
     const activeScene = displayScenes.find((s: any, i: number) => (s.id || `s${i + 1}`) === selectedSceneId);
 
     return (
@@ -46,6 +59,11 @@ export function StoryboardTabContent({
                         <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
                             {/* Left Column: Adaptive Preview & Controls */}
                             <div className="flex-1 flex flex-col gap-6 min-w-0 relative z-10">
+                                {/* Technical Controls ABOVE preview */}
+                                <div className="max-w-3xl mx-auto w-full mb-6">
+                                    <StoryboardSceneControls />
+                                </div>
+
                                 <div className="flex-1 flex min-h-0 bg-white  border border-zinc-200/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] rounded-md">
                                     <div className="max-w-full max-h-full transition-all duration-300 relative group">
                                         <StoryboardCanvas
@@ -53,11 +71,6 @@ export function StoryboardTabContent({
                                             repromptIndex={repromptIndex}
                                         />
                                     </div>
-                                </div>
-
-                                {/* Restored Technical Controls below preview */}
-                                <div className="max-w-3xl mx-auto w-full">
-                                    <StoryboardSceneControls />
                                 </div>
                             </div>
 

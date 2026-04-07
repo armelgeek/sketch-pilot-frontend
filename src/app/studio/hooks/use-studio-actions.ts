@@ -24,19 +24,39 @@ export function useStudioActions() {
         updateSceneInStore
     } = useStudioStore();
 
-    const { startProgress, stopProgress } = useSSEProgress();
+    const { startProgress, updateProgress, stopProgress } = useSSEProgress();
 
     const handleSaveScript = useCallback(async () => {
         if (!activeVideo) return;
+        const { sceneEdits } = useStudioStore.getState();
         try {
+            const currentScenes = activeVideo.scenes || activeVideo.script?.scenes || [];
+            const updatedScenes = currentScenes.map((s: any, i: number) => {
+                const sId = s.id || `s${i + 1}`;
+                const edits = sceneEdits[sId] || {};
+                return { ...s, ...edits };
+            });
+
             await videosService.update(activeVideo.id, {
-                script: activeVideo.script,
-                scenes: activeVideo.script?.scenes || [],
+                script: activeVideo.script ? { ...activeVideo.script, scenes: updatedScenes } : undefined,
+                scenes: updatedScenes,
+                title: activeVideo.title,
+                options: {
+                    ...activeVideo.options,
+                    backgroundMusic: audioOptions.musicId === "none" ? undefined : audioOptions.musicId,
+                    kokoroVoicePreset: audioOptions.voicePreset as any,
+                    narrationVolume: audioOptions.voiceVolume / 100,
+                    backgroundMusicVolume: audioOptions.musicVolume / 100,
+                    assCaptions: {
+                        ...(activeVideo.options?.assCaptions || {}),
+                        ...captionOptions,
+                    },
+                }
             });
         } catch (err: any) {
-            setError(err.message || "Erreur lors de la sauvegarde du script");
+            setError(err.message || "Erreur lors de la sauvegarde");
         }
-    }, [activeVideo, setError]);
+    }, [activeVideo, audioOptions, captionOptions, setError]);
 
     const handleAnimate = useCallback(async (cancelVideo: (id: string) => void) => {
         if (!activeVideo) return;
@@ -51,6 +71,7 @@ export function useStudioActions() {
                 },
             });
             const response = await videosService.generateScenes(activeVideo.id);
+            updateProgress(0, "Demarrage de la generation...", response.jobId);
             return response.jobId;
         } catch (err: any) {
             setError(err.message || "Erreur lors du démarrage de la génération des visuels");
@@ -79,7 +100,17 @@ export function useStudioActions() {
             const nVol = audioOptions.voiceVolume / 100;
             const mVol = audioOptions.musicVolume / 100;
 
+            const { sceneEdits } = useStudioStore.getState();
+            const currentScenes = activeVideo.scenes || activeVideo.script?.scenes || [];
+            const updatedScenes = currentScenes.map((s: any, i: number) => {
+                const sId = s.id || `s${i + 1}`;
+                const edits = sceneEdits[sId] || {};
+                return { ...s, ...edits };
+            });
+
             await videosService.update(activeVideo.id, {
+                scenes: updatedScenes,
+                script: activeVideo.script ? { ...activeVideo.script, scenes: updatedScenes } : undefined,
                 options: {
                     ...activeVideo.options,
                     backgroundMusic: audioOptions.musicId === "none" ? undefined : audioOptions.musicId,
@@ -98,6 +129,7 @@ export function useStudioActions() {
                 backgroundMusicVolume: mVol,
                 assCaptions: captionOptions,
             });
+            updateProgress(0, "Demarrage de l'assemblage...", r.jobId);
             return r.jobId;
         } catch (err: any) {
             setError(err.message || "Erreur lors de l'assemblage de la vidéo finale");

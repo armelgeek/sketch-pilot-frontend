@@ -31,13 +31,13 @@ export function FinalCTASection() {
             href="/register"
             className="inline-flex items-center gap-3 px-8 py-4 bg-zinc-950 text-white text-sm font-semibold rounded-full hover:bg-zinc-800 transition-colors group"
           >
-            Get started free
+            Start creating now
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
 
           <span className="flex items-center gap-2 text-sm text-zinc-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            No credit card required
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            Quality-first AI Video Studio
           </span>
         </div>
 

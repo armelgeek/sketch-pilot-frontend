@@ -50,9 +50,6 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
     const [formData, setFormData] = useState<any>(initialData || {
         name: "",
         description: "",
-        gender: "unknown",
-        age: "unknown",
-        voiceId: "",
         stylePrefix: "",
         artistPersona: "",
         isStandard: true,
@@ -169,71 +166,6 @@ export function ModelForm({ initialData, onSubmit, onCancel, isLoading, title }:
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label className="font-extrabold text-xs uppercase tracking-widest text-zinc-400 pl-1">Genre</Label>
-                                    <Select
-                                        value={formData.gender || "unknown"}
-                                        onValueChange={(val) => setFormData({ ...formData, gender: val })}
-                                    >
-                                        <SelectTrigger className="h-12 rounded-2xl border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 font-bold">
-                                            <div className="flex items-center gap-2">
-                                                <Users2 className="h-4 w-4 text-zinc-400" />
-                                                <SelectValue placeholder="Choisir le genre" />
-                                            </div>
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-xl">
-                                            <SelectItem value="male">Homme (Male)</SelectItem>
-                                            <SelectItem value="female">Femme (Female)</SelectItem>
-                                            <SelectItem value="unknown">Inconnu / Neutre</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="font-extrabold text-xs uppercase tracking-widest text-zinc-400 pl-1">Âge</Label>
-                                    <Select
-                                        value={formData.age || "unknown"}
-                                        onValueChange={(val) => setFormData({ ...formData, age: val })}
-                                    >
-                                        <SelectTrigger className="h-12 rounded-2xl border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 font-bold">
-                                            <div className="flex items-center gap-2">
-                                                <UserCircle2 className="h-4 w-4 text-zinc-400" />
-                                                <SelectValue placeholder="Choisir l'âge" />
-                                            </div>
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-xl">
-                                            <SelectItem value="child">Enfant (Child)</SelectItem>
-                                            <SelectItem value="youth">Jeune (Youth)</SelectItem>
-                                            <SelectItem value="senior">Sénior (Senior)</SelectItem>
-                                            <SelectItem value="unknown">Inconnu</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="font-extrabold text-xs uppercase tracking-widest text-zinc-400 pl-1">Voix par défaut</Label>
-                                <Select
-                                    value={formData.voiceId || ""}
-                                    onValueChange={(val) => setFormData({ ...formData, voiceId: val })}
-                                >
-                                    <SelectTrigger className="h-12 rounded-2xl border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 font-bold">
-                                        <div className="flex items-center gap-2">
-                                            <Mic2 className="h-4 w-4 text-zinc-400" />
-                                            <SelectValue placeholder="Aucune voix associée" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-xl max-h-[300px]">
-                                        <SelectItem value="none">Aucune voix associée</SelectItem>
-                                        {voices?.map((voice: any) => (
-                                            <SelectItem key={voice.id} value={voice.presetId}>
-                                                {voice.name} ({voice.provider} - {voice.language})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
 
                             <div className="flex items-center justify-between p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4">

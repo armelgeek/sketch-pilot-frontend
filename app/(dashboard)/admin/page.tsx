@@ -155,6 +155,7 @@ export default function AdminOverviewPage() {
                             { label: "Ajouter de la musique", href: "/admin/assets?type=music" },
                             { label: "Éditer les prompts", href: "/admin/prompts" },
                             { label: "Gérer les modèles", href: "/admin/models" },
+                            { label: "Gérer les tarifs", href: "/admin/pricing" },
                         ].map((link) => (
                             <Link
                                 key={link.href}

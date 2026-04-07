@@ -7,6 +7,8 @@ import { cn } from "@/src/lib/utils";
 import { useStudioStore, StudioTab } from "../store";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
 import { CreditsWidget } from "@/src/components/organisms/credits-widget";
+import { useState, useRef, useEffect } from "react";
+
 
 interface StudioHeaderProps {
     onNext: () => void;
@@ -31,8 +33,41 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
         visualsGenerated,
         generating,
         assembling,
-        activeVideo
+        activeVideo,
+        setVideo
     } = useStudioStore();
+
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [titleValue, setTitleValue] = useState(activeVideo?.title || "Projet sans titre");
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (activeVideo?.title && !isEditingTitle) {
+            setTitleValue(activeVideo.title);
+        }
+    }, [activeVideo?.title, isEditingTitle]);
+
+    useEffect(() => {
+        if (isEditingTitle && titleInputRef.current) {
+            titleInputRef.current.focus();
+        }
+    }, [isEditingTitle]);
+
+    const handleTitleSave = () => {
+        setIsEditingTitle(false);
+        if (activeVideo && titleValue.trim() !== activeVideo.title) {
+            setVideo({ ...activeVideo, title: titleValue.trim() || undefined });
+            // The actual DB save happens via useStudioActions.handleSaveScript or auto-save.
+        }
+    };
+
+    const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleTitleSave();
+        if (e.key === "Escape") {
+            setTitleValue(activeVideo?.title || "Projet sans titre");
+            setIsEditingTitle(false);
+        }
+    };
 
     const effectiveStepId: StudioTab = showProductionModal ? "production" : activeTab;
     const effectiveStepIndex = STEPS.findIndex(s => s.id === effectiveStepId);
@@ -53,10 +88,26 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
                     <ChevronLeft className="h-4 w-4" />
                 </div>
 
-                <div className="flex flex-col min-w-0">
-                    <h1 className="text-[14px] font-black text-zinc-900 truncate tracking-tight">
-                        {activeVideo?.title || "Projet sans titre"}
-                    </h1>
+                <div className="flex flex-col min-w-0 flex-1">
+                    {isEditingTitle ? (
+                        <input
+                            ref={titleInputRef}
+                            type="text"
+                            value={titleValue}
+                            onChange={(e) => setTitleValue(e.target.value)}
+                            onBlur={handleTitleSave}
+                            onKeyDown={handleTitleKeyDown}
+                            className="text-[14px] font-black text-zinc-900 bg-zinc-50 border border-zinc-300 rounded px-1 -ml-1 outline-none focus:ring-2 focus:ring-amber-500 w-full"
+                        />
+                    ) : (
+                        <h1
+                            className="text-[14px] font-black text-zinc-900 truncate tracking-tight cursor-text hover:text-zinc-600 transition-colors"
+                            onClick={() => setIsEditingTitle(true)}
+                            title="Cliquez pour renommer"
+                        >
+                            {activeVideo?.title || "Projet sans titre"}
+                        </h1>
+                    )}
                     <div className="flex items-center gap-2 mt-[-2px]">
                         <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 px-1.5 py-0.5 rounded border border-emerald-100/50 leading-none">Studio Workspace</span>
                     </div>

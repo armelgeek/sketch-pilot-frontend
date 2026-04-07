@@ -94,7 +94,9 @@ export default function StudioPage({ params }: StudioPageProps) {
 
     // Initial Data Load
     useEffect(() => {
-        const loadData = async () => {
+        let cancelled = false;
+
+        const doLoad = async (isRetry = false) => {
             try {
                 const [video, voices, models, music] = await Promise.all([
                     videosService.getById(id),
@@ -102,14 +104,29 @@ export default function StudioPage({ params }: StudioPageProps) {
                     adminService.listStandardModels(),
                     adminService.listPublicMusic(),
                 ]);
+                if (cancelled) return;
+
+                const hasScenes = (video.scenes?.length ?? 0) > 0 || (video.script?.scenes?.length ?? 0) > 0;
+
                 setVideo(video);
                 setLists(voices || [], models.data || [], music || []);
+
+                // If scenes are empty on first load, it may be a scriptOnly race — retry once after 2s
+                if (!hasScenes && !isRetry) {
+                    setTimeout(() => { if (!cancelled) doLoad(true); }, 2000);
+                }
             } catch (err) {
                 console.error("[Studio] Failed to load video data:", err);
             }
         };
-        loadData();
+
+        // Reset stale video state before fetching so we always show a spinner for fresh data
+        setVideo(null);
+        doLoad();
+
+        return () => { cancelled = true; };
     }, [id, setVideo, setLists]);
+
 
     if (!activeVideo) {
         return (

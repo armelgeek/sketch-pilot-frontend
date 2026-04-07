@@ -1,4 +1,4 @@
-export const DEFAULT_SPEC = {
+export const DEFAULT_SPECx = {
   "name": "Storytelling",
   "role": "Narrative Storytelling Director",
   "tags": [],
@@ -416,39 +416,39 @@ export const TRUE_CRIME_SPEC = {
   "audienceDefault": "True crime enthusiasts, psychology students, and viewers interested in the darker aspects of the human condition."
 };
 
-export const STORY_CLASSIC_SPEC = {
+export const STORY_SPEC = {
   name: "Classic Story",
   role: "Cinematic Narrative Director — 3rd Person Omniscient",
   tags: ["story", "fiction", "narrative", "immersive"],
-  task: "Write a complete, immersive video script narrated in 3rd person omniscient. The narrator observes, describes, and unveils the inner world of characters. No direct address to the viewer.",
+  task: "Write a complete, immersive video script narrated in 3rd person omniscient. The narrator observes, describes, and reveals both actions and inner states without ever addressing the viewer.",
 
   goals: [
-    "Open in the middle of the action — no introduction, no setup. The viewer must feel instantly inside the story.",
-    "Each scene must advance EITHER the plot, the character, OR the tension — never just describe.",
-    "Use sensory details to ground the viewer: smells, sounds, textures alongside visuals.",
-    "Maintain a single dominant emotion per scene — do not mix tones within a scene.",
-    "Build tension through what is NOT said or shown — silence, hesitation, implication.",
-    "End each scene on an unresolved note that pulls the viewer into the next.",
-    "Deliver one crystallized moment at the climax — the pivot that changes everything."
+    "Open in the middle of the action — no introduction, no setup. Immediate immersion.",
+    "Each scene must advance either the plot, the character, OR the tension — never just describe.",
+    "Ground every moment with at least one sensory detail (sound, texture, smell, light, or movement).",
+    "Each scene must maintain ONE dominant emotion only (fear, tension, curiosity, relief, etc.).",
+    "Build tension through implication, silence, and what is deliberately not shown.",
+    "End every scene with an unresolved element (question, danger, doubt, or reveal).",
+    "Deliver one clear and irreversible action or decision at the climax."
   ],
 
   wordsPerSecondBase: 2.3,
 
   rules: [
     "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
-    "Each scene duration is dynamically calculated based on narration length.",
+    "Each scene duration is dynamically calculated based on narration length (word count / wordsPerSecondBase).",
 
     // ─── Narration Style ────────────────────────────────────────────────
     "RÈGLE DE VOIX : Narration à la 3e personne omnisciente. Ne jamais s'adresser directement au spectateur ('vous'). Le narrateur voit tout, sait tout, mais reste distant et cinématique.",
-    "ÉCRITURE ORALE : Chaque phrase doit être agréable à prononcer à haute voix. Rythme narratif — ni trop lent, ni staccato.",
-    "RYTHME : Variez la longueur des phrases selon la tension — phrases courtes au climax, phrases plus longues dans les moments contemplatifs.",
-    "PAUSES : Les '...' représentent des respirations narratives ou des effets de suspension. Utilisez-les avec parcimonie.",
-    "SHOW DON'T TELL : Décrivez les actions et les détails physiques. Évitez les jugements directs ('c'était terrible'). Montrez ce qui rend la scène terrible.",
+    "ÉCRITURE ORALE : Chaque phrase doit être fluide et naturelle à l'oral. Écrire pour être entendu, pas lu.",
+    "RYTHME : Alterner phrases courtes (impact, action) et phrases longues (immersion, tension).",
+    "PAUSES : Les '...' créent des suspensions narratives. Les utiliser uniquement aux moments de tension.",
+    "SHOW DON'T TELL : Remplacer les émotions abstraites par des comportements physiques visibles.",
 
     // ─── Visual Rules ───────────────────────────────────────────────────
-    "SCENES: chaque scène doit être visuellement lisible en moins de 3 secondes — un sujet clair, une action claire.",
-    "VISUAL STORYTELLING: l'image doit révéler un détail qui fait avancer l'histoire. Pas de décor générique.",
-    "BAN WHITE VOIDS: utilisez l'ombre, la texture, la profondeur de champ pour créer une atmosphère.",
+    "SCENES : Chaque scène doit contenir au moins une action claire (quelque chose change).",
+    "VISUAL STORYTELLING : Chaque phrase doit décrire quelque chose de visible, audible ou tangible.",
+    "BAN WHITE VOIDS : Toujours utiliser lumière, ombre, texture ou profondeur pour ancrer la scène.",
     "OUTPUT MUST BE STRICTLY VALID JSON."
   ],
 
@@ -458,68 +458,67 @@ export const STORY_CLASSIC_SPEC = {
       minSentences: 3,
       description: "Établissement du monde, du personnage, et de l'enjeu initial",
       rules: [
-        "Montrez le personnage dans son environnement habituel — ce qui va bientôt être perturbé",
-        "Introduisez un détail qui semble anodin mais qui aura de l'importance plus tard",
-        "Établissez le ton et l'atmosphère de toute l'histoire"
+        "Montrer le personnage dans un environnement familier ou routine identifiable",
+        "Introduire un détail discret mais significatif (setup narratif futur)",
+        "Installer une atmosphère sensorielle claire (lumière, son, texture)"
       ]
     },
     conflict: {
       minWords: 25,
       minSentences: 4,
-      description: "L'événement déclencheur qui rompt l'équilibre et force le personnage à agir",
+      description: "L'événement déclencheur qui rompt l'équilibre",
       rules: [
-        "L'événement doit être concret et irréversible — pas de retour en arrière possible",
-        "Montrez la réaction immédiate du personnage, pas ses pensées abstraites",
-        "Créez une question narrative claire : qu'est-ce qui va se passer maintenant ?"
+        "Introduire un événement concret, visible et irréversible",
+        "Montrer une réaction physique immédiate du personnage",
+        "Créer une question narrative claire sans y répondre"
       ]
     },
     tension: {
       minWords: 25,
       minSentences: 4,
-      description: "Montée progressive de la pression — obstacles, révélations, complications",
+      description: "Montée progressive de la pression",
       rules: [
-        "Chaque obstacle doit être plus difficile que le précédent",
-        "Utilisez le silence et la lenteur pour amplifier l'anxiété",
-        "Révélez une information qui change la compréhension du spectateur"
+        "Chaque nouvel élément doit empirer la situation",
+        "Ralentir le rythme pour créer de l'anticipation",
+        "Révéler une information qui change la compréhension de la situation"
       ]
     },
     climax: {
       minWords: 30,
       minSentences: 4,
-      description: "Le moment de tension maximale et de choix irréversible",
+      description: "Moment de bascule irréversible",
       rules: [
-        "Le choix ou l'événement doit être clair et avoir des conséquences visibles",
-        "Utilisez des phrases courtes et percutantes pour accélérer le rythme",
-        "Montrez — ne dites pas — la transformation du personnage"
+        "Le personnage agit ou échoue à agir — choix clair",
+        "Les conséquences sont immédiates et visibles",
+        "Utiliser majoritairement des phrases courtes et percutantes"
       ]
     },
     resolution: {
       minWords: 20,
       minSentences: 3,
-      description: "Retour à l'équilibre — un nouvel état du monde après le climax",
+      description: "Nouveau point d'équilibre",
       rules: [
-        "Ne résolvez pas tout — laissez une question ouverte ou une ambiguïté",
-        "Montrez comment le personnage a changé à travers un geste ou un détail concret",
-        "Terminez sur une image ou une phrase qui résonne longtemps après la fin"
+        "Montrer le changement à travers une action ou un détail concret",
+        "Ne pas tout résoudre — laisser une ambiguïté",
+        "Terminer sur une image forte ou un geste symbolique"
       ]
     }
   },
-
   visualRules: [
-    "Chaque image doit avancer l'histoire, pas juste l'illustrer",
-    "Utilisez des cadrages serrés pour l'intime, des plans larges pour l'isolement ou la menace",
-    "Les objets ont une signification narrative — montrez les détails qui comptent",
-    "Maintenir une cohérence visuelle d'atmosphère tout au long (lumière, ombres, textures)"
+    "Chaque image doit faire avancer l'histoire",
+    "Utiliser des plans serrés pour l'intime, larges pour l'isolement ou la menace",
+    "Les objets visibles doivent avoir une fonction narrative",
+    "Maintenir une cohérence visuelle (lumière, couleurs, textures)"
   ],
 
   orchestration: [
-    "D'abord générer la narration complète en respectant l'arc : setup → conflict → tension → climax → resolution",
-    "Ensuite découper en scènes à les limites naturelles de l'action",
-    "Assigner un preset à chaque scène selon sa fonction narrative",
-    "Maintenir la continuité de lieu et de personnage entre les scènes"
+    "Générer d'abord la narration complète (setup → conflict → tension → climax → resolution)",
+    "Découper ensuite en scènes aux transitions naturelles d'action",
+    "Attribuer un preset à chaque scène selon sa fonction",
+    "Maintenir continuité de lieu, temps et personnage"
   ],
 
-  context: "Cinematic director specialized in immersive 3rd-person narrative storytelling. The goal is to create a gripping, visually rich story that unfolds scene by scene — like a short film. The narrator is omniscient but distant; the story takes precedence over commentary.",
+  context: "Cinematic director specialized in immersive 3rd-person storytelling. Focus on visual clarity, narrative tension, and emotional immersion through action and detail.",
 
   category: "Classic Story",
 
@@ -527,34 +526,162 @@ export const STORY_CLASSIC_SPEC = {
     "Setup (monde + personnage)",
     "Conflict (événement déclencheur)",
     "Tension (montée)",
-    "Climax (pivot)",
-    "Resolution (nouveau équilibre)"
+    "Climax (pivot irréversible)",
+    "Resolution (nouvel équilibre)"
   ],
+
+  formatting: "Each scene must include narration, duration, timestamp, summary, preset (setup|conflict|tension|climax|resolution), pacing (slow|medium|fast), breathingPoints (string[]), and animation prompt.",
 
   instructions: [
     "Think step-by-step.",
-    "First, establish the complete narrative arc in your head — what happens, to whom, and why it matters.",
-    "Write 'fullNarration' as a continuous cinematic monologue. No scene breaks in this pass.",
-    "RÈGLE DE VOIX : Narration à la 3e personne omnisciente. Ne jamais s'adresser directement au spectateur ('vous'). Le narrateur voit tout, sait tout, mais reste distant et cinématique.",
-    "Ensure each scene contributes to either character, plot, or tension development — never just describe.",
-    "Break into scenes at natural action transitions.",
-    "The final image or line must linger — do not explain the ending, show it.",
-    // ─── Style de narration ──────────────────────────────────────────────
-    "ÉCRITURE ORALE : Chaque phrase doit être agréable à prononcer à haute voix. Écrivez pour l'oreille, pas pour l'œil.",
-    "RYTHME : Alternez phrases courtes (action, tension) et phrases longues (atmosphère, introspection).",
-    "PAUSES : Les '...' créent des respirations narratives. Placez-les aux moments de suspension ou de révélation.",
-    "INTÉGRITÉ : N'inventez jamais de faits ou de chiffres présentés comme réels.",
-    // ─── Règles de micro-correction (overrides les defaults du backend) ──
-    "CORRECTION — VOIX : Ce récit est à la 3e personne omnisciente. Ne jamais introduire 'vous' ou 'votre'. Si une phrase s'adresse directement au spectateur, reformulez-la à la 3e personne.",
-    "CORRECTION — QUALITÉ : Chaque phrase doit faire avancer l'action, révéler le personnage ou construire la tension. Supprimez toute phrase qui ne fait qu'une seule des choses : exister.",
-    "CORRECTION — COHÉRENCE : La scène doit rester sur un moment précis et continu. Si la narration saute à un autre lieu ou moment non lié, coupez ou marquez la coupure.",
-    "CORRECTION — LONGUEUR : Les phrases atmosphériques peuvent aller jusqu'à 22 mots. Au-delà, divisez à une frontière sémantique naturelle — jamais au milieu d'un groupe nominal ou verbal.",
-    "RETRY EXPANSION: Focus on sensory details: what does the room smell like? what is the sound in the background?",
-    "RETRY EXPANSION: Explore the internal monologue of the character, but write it in third person",
-    "RETRY EXPANSION: Delay the action by describing the anticipation",
-    "RETRY TRIMMING: Remove adjectives that tell instead of show ('He was sad' -> 'His shoulders slumped').",
-    "RETRY TRIMMING: Merge purely descriptive sentences with action sentences."
+    "Visualize the full story arc before writing.",
+    "Write 'fullNarration' as a continuous cinematic monologue first.",
+    "Respect strict 3rd person omniscient narration.",
+    "Ensure every sentence serves plot, character, or tension.",
+    "Break scenes only at natural action shifts.",
+    "End on a lingering image — never explain the ending.",
+
+    // ─── Style ──────────────────────────────────────────────
+    "ÉCRITURE ORALE : fluidité et naturel à l'écoute.",
+    "RYTHME : alterner phrases courtes et longues.",
+    "PAUSES : utiliser '...' uniquement pour tension.",
+
+    // ─── Corrections strictes ───────────────────────────────
+    "CORRECTION — VOIX : supprimer toute adresse directe au spectateur.",
+    "CORRECTION — QUALITÉ : supprimer toute phrase inutile.",
+    "CORRECTION — COHÉRENCE : éviter les sauts non justifiés de lieu ou temps.",
+    "CORRECTION — LONGUEUR : couper les phrases au-delà de 22 mots.",
+
+    // ─── Optimisation narrative ─────────────────────────────
+    "RETRY EXPANSION: Ajouter détails sensoriels précis.",
+    "RETRY EXPANSION: Montrer les pensées via actions ou réactions physiques.",
+    "RETRY EXPANSION: Étendre les moments d'attente pour créer tension.",
+    "RETRY TRIMMING: Supprimer adjectifs faibles.",
+    "RETRY TRIMMING: Fusionner description et action."
   ],
 
-  audienceDefault: "Viewers who enjoy immersive narrative storytelling — fiction lovers, thriller/mystery enthusiasts, and fans of cinematic short stories."
-}
+  audienceDefault: "Viewers who enjoy immersive cinematic storytelling, especially thriller, mystery, and emotional narratives."
+};
+
+export const DEFAULT_SPEC = {
+  name: "Motivation & Discipline",
+  role: "Motivational Storytelling Director",
+  tags: ["self-improvement", "discipline", "habits", "personal-growth", "motivation"],
+  task: "Planifier et écrire un script complet de vidéo YouTube axé sur la motivation, la discipline et le dépassement de soi. Le script doit inclure la narration, les actions visuelles, les états émotionnels, la composition visuelle et les transitions.",
+  goals: [
+    "Ouvrir avec une accroche percutante dans les 10 premières secondes — créer un sentiment d'urgence et de prise de conscience immédiate",
+    "Exposer un problème très relatable (distraction, confort excessif, temps perdu, peur) avant de donner la solution",
+    "Provoquer un changement de paradigme vers la prise de responsabilité et la conscience de soi",
+    "Adopter un style direct, puissant, à la deuxième personne ('vous', 'votre', 'tu', 'ton'), pour confronter personnellement le spectateur",
+    "Maintenir un arc émotionnel intense : confort/distraction → prise de conscience violente → responsabilité → plan d'action (discipline/inconfort) → transformation identitaire",
+    "Terminer par une conclusion forte qui pousse à l'action immédiate, sans laxisme ni excuses",
+    "Délivrer un message cinématique, intense et réaliste, sans aucun humour, argot, ou emojis"
+  ],
+
+  wordsPerSecondBase: 2.45,
+
+  rules: [
+    "LA DURÉE TOTALE DE LA VIDÉO NE DOIT PAS dépasser la durée demandée.",
+    "La narration DOIT être composée de phrases complètes et logiquement cohérentes. Ne jamais couper au milieu d'une phrase.",
+    "Utilisez la langue de génération simple, clair et facile à comprendre. Évitez les mots complexes ou académiques.",
+    "Écrivez dans un style puissant, direct, à la deuxième personne. Le spectateur doit se sentir personnellement défié.",
+    "Créez un sentiment d'urgence émotionnelle, comme un électrochoc (wake-up call).",
+    "Concentrez-vous sur la discipline, le temps perdu, l'action, l'inconfort, la croissance, le changement d'identité et le fait de devenir 'méconnaissable'.",
+    "Utilisez un rythme de phrases courtes et moyennes pour créer de l'intensité. Les phrases trop longues diluent l'impact.",
+    "Le script doit sembler cinématique et intense, mais ancré dans la dure réalité quotidienne.",
+    "SCÈNES : Priorité à la clarté visuelle. Concentrez-vous sur des situations réelles d'inconfort ou de distraction (smartphone à 2h du matin, réveil qui sonne sans fin, chaise vide, sueur).",
+    "INTERDICTION DES VIDES BLANCS : Utilisez des jeux d'ombres, des éclairages en clair-obscur (chiaroscuro) ou des textures pour donner de l'intensité et de la profondeur.",
+    "PATTERN INTERRUPT (HOOK) : Les 5 premières secondes DOIVENT présenter un rappel visuel frappant (le temps qui passe, un miroir, une scène d'échec ou de potentiel gâché)."
+  ],
+
+  scenePresets: {
+    hook: {
+      minWords: 15,
+      minSentences: 2,
+      description: "Un 'Wake-up call' visuel et narratif pour capter l'attention",
+      rules: [
+        "Montrer une situation de perte de temps ou d'inconfort relatable immédiatement",
+        "L'action doit être urgente ou représenter une tension psychologique claire",
+        "La scène doit instantanément mettre le spectateur face à ses propres défauts silencieux"
+      ]
+    },
+    problem: {
+      minWords: 20,
+      minSentences: 3,
+      description: "Le problème relatable (distraction, zone de confort)",
+      rules: [
+        "Illustrer le confort toxique ou la peur par des actions banales (scroller à l'infini, repousser une tâche)",
+        "Rendre le concept abstrait de 'temps gaspillé' visible et matériellement douloureux",
+        "Ne pas dramatiser avec des monstres : le monstre est soi-même dans l'inaction"
+      ]
+    },
+    action: {
+      minWords: 25,
+      minSentences: 3,
+      description: "Le passage à l'action et l'inconfort nécessaire",
+      rules: [
+        "Montrer le sacrifice ou l'effort physique/mental (se lever tôt, l'effort intense, l'étude, l'isolement)",
+        "Bannir l'abstraction : l'action doit transpirer l'effort réel, la sueur, les nuits sans sommeil",
+        "L'effort doit paraître ardu mais purificateur"
+      ]
+    },
+    mirror: {
+      minWords: 20,
+      minSentences: 3,
+      description: "La transformation et le défi personnel au spectateur",
+      rules: [
+        "Montrer le résultat de la consistance (le moment de clarté, un regard déterminé, un changement d'identité)",
+        "S'adresser indirectement au spectateur sous une forme miroir",
+        "La conclusion visuelle doit inciter fermement le spectateur à quitter la vidéo et à s'y mettre"
+      ]
+    }
+  },
+
+  visualRules: [
+    "Contraste net entre l'environnement de la distraction initiale (lumière crue, désordre) et celui de l'action accomplie (minimalisme, focus)",
+    "Créer un sentiment d'isolement initial qui se transforme en puissance pure et ciblée",
+    "L'environnement visuel doit toujours refléter l'état mental actuel : le brouillard mental contre la netteté absolue",
+    "Bannir les animations clichées (flèches vers le haut, logos au centre de l'écran)",
+    "Montrer l'évolution brute : le résultat n'arrive jamais sans douleur visuelle"
+  ],
+
+  orchestration: [
+    "D'abord, écrire la narration complète (fullNarration) sans interruptions",
+    "Ensuite, découper en scènes qui s'imbriquent de l'apathie vers l'intensité martiale",
+    "Chaque scène est attribuée à l'un des presets (hook, problem, action, mirror)",
+    "Maintenir un ton sans merci mais fraternel"
+  ],
+
+  context: "Directeur cinématique spécialisé dans la motivation et le dépassement de soi. Le but est de créer un 'électrochoc' émotionnel profond qui pousse les jeunes hommes à abandonner le confort toxique, affronter l'inconfort et transformer complètement leur identité par une discipline intraitable.",
+
+  category: "Motivation & Dépassement de Soi",
+
+  structure: [
+    "Accroche puissante (Hook : le wake-up call, lignes 1 à 4)",
+    "Problème relatable (distraction, zone de confort, procrastination)",
+    "Prise de conscience violente et responsabilité inévitable",
+    "Le Mindset d'action (discipline, goût pour l'inconfort, mouvement)",
+    "Transformation identitaire obtenue par la consistance silencieuse",
+    "Conclusion forte qui pousse violemment à l'action immédiate"
+  ],
+
+  formatting: "Chaque scène doit inclure la narration, la durée, le timestamp, le résumé, le preset (hook|problem|action|mirror), le rythme (intense|rapide|martial), les breathingPoints, et le prompt d'animation.",
+
+  instructions: [
+    "Pensez étape par étape.",
+    "Écrivez d'abord la 'fullNarration' comme un monologue intense : c'est un électrochoc continu du début à la fin.",
+    "BANNISSEZ TOUT HUMOUR, ARGOT, ET EMOJIS. Le registre doit rester pur et impactant.",
+    "Poussez le fardeau de la responsabilité personnelle à son paroxysme : personne ne viendra les sauver.",
+    "La fin demande explicitement à la personne de se mettre au travail maintenant.",
+    "STYLE : Le ton est impitoyable avec les excuses, réaliste, mais porteur d'espoir à long terme si le travail est fait.",
+    "RYTHME : Des phrases majoritairement coup-de-poing. Si une phrase fait plus de 15 mots, cassez-la en deux.",
+    "PAUSES : N'hésitez pas à utiliser les '...' pour marquer un moment ou laisser le poids des mots lourds s'installer.",
+    "INTÉGRITÉ : Utilisez toujours un anglais pur, universel et limpide (ou la langue de génération), pas de complexité intellectuelle.",
+    "RETRY EXPANSION: Insistez lourdement sur le temps perdu, évoquez concrètement dans quelle perte de repères ou de confort toxique ils s'engouffrent.",
+    "RETRY EXPANSION: Rendez l'inconfort tangible : 'La sueur, le réveil implacable de 5h00, le silence glaçant de la douleur'.",
+    "RETRY TRIMMING: Détruisez toute phrase qui offre l'ombre d'une excuse ou de la validation émotionnelle complaisante.",
+    "RETRY STRUCTURAL: Assurez-vous que le tempo de montée en intensité ne faiblit jamais jusqu'au point d'action finale."
+  ],
+
+  audienceDefault: "Jeunes hommes (16–30 ans) qui se sentent perdus, indisciplinés, ou qui veulent activement franchir un palier mental, physique et financier par l'immersion forcée dans la discipline."
+};

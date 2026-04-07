@@ -9,6 +9,7 @@ import {
   ProcessSection,
   VoiceoverSection,
   ConsistentCharacterSection,
+  FeaturesSection,
   PricingPreviewSection,
   FAQSection
 } from "@/src/components/home";
@@ -25,6 +26,7 @@ export default function HomePage() {
         <ProcessSection />
         <VoiceoverSection />
         <ConsistentCharacterSection />
+        <FeaturesSection />
         <PricingPreviewSection isAuthenticated={!!session?.user} />
         <FAQSection />
       </main>

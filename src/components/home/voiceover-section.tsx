@@ -1,70 +1,51 @@
 "use client";
 
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 
 const languages = [
-    { name: "English", code: "us", active: true },
-    { name: "Français", code: "fr", active: false },
-    { name: "日本語", code: "jp", active: false },
-    { name: "Español", code: "es", active: false },
-    { name: "Deutsch", code: "de", active: false },
-    { name: "Italiano", code: "it", active: false },
-    { name: "Português", code: "br", active: false },
-    { name: "Русский", code: "ru", active: false },
-    { name: "العربية", code: "sa", active: false },
-    { name: "한국어", code: "kr", active: false },
-    { name: "Svenska", code: "se", active: false },
-    { name: "Nederlands", code: "nl", active: false },
+    { name: "English", sub: "2.4B speakers", flag: "🇺🇸", active: true },
+    { name: "Français", sub: "320M speakers", flag: "🇫🇷", active: false },
+    { name: "Español", sub: "600M speakers", flag: "🇪🇸", active: false },
+    { name: "Português", sub: "260M speakers", flag: "🇧🇷", active: false },
 ];
 
-const getFlagEmoji = (countryCode: string) => {
-    const codePoints = countryCode
-        .toUpperCase()
-        .split("")
-        .map((char) => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
-};
-
-// Handle special flag mapping for languages vs typical regions
-const flagMap: Record<string, string> = {
-    us: "🇺🇸", fr: "🇫🇷", jp: "🇯🇵", es: "🇪🇸", de: "🇩🇪", it: "🇮🇹",
-    br: "🇧🇷", ru: "🇷🇺", sa: "🇸🇦", kr: "🇰🇷", se: "🇸🇪", nl: "🇳🇱"
-};
+const waveHeights = [
+    [4, 9, 6, 11, 5],
+    [6, 4, 9, 5, 7],
+    [7, 4, 10, 6, 4],
+    [5, 8, 4, 10, 6],
+];
 
 export function VoiceoverSection() {
     return (
-        <section className="relative py-24 md:py-32 bg-white border-t border-zinc-100 overflow-hidden" id="voiceover">
-            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] -z-10 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.06),transparent_70%)] blur-[120px] pointer-events-none animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] -z-10 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.04),transparent_70%)] blur-[120px] pointer-events-none animate-pulse delay-1000" />
-
-            <div className="mx-auto max-w-6xl px-6 lg:px-8">
+        <section className="relative py-24 md:py-32 bg-white border-t border-zinc-100" id="voiceover">
+            <div className="mx-auto max-w-5xl px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
 
-                    {/* Left Content */}
-                    <div className="max-w-xl">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="h-px w-8 bg-zinc-300" />
-                            <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-400">
+                    {/* Left */}
+                    <div>
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="h-px w-5 bg-zinc-300" />
+                            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-zinc-400">
                                 AI Voiceover
                             </span>
                         </div>
 
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight text-zinc-950 leading-[1.1] mb-6">
-                            Your story, <br />
-                            <span className="text-amber-500 font-extrabold bg-amber-100 px-2">every language.</span>
+                        <h2 className="text-4xl md:text-5xl font-heading font-extrabold tracking-tight text-zinc-950 leading-[1.1] mb-4">
+                            Your story,<br />
+                            <span className="text-amber-500 bg-amber-100 px-1.5 rounded">every language.</span>
                         </h2>
 
-                        <p className="text-lg text-zinc-500 leading-relaxed max-w-md mb-10">
-                            10+ languages, 30+ expressive voices — warm, dramatic, playful. Reach any audience, anywhere, instantly.
+                        <p className="text-[15px] text-zinc-500 leading-relaxed max-w-[300px] mb-7">
+                            Expressive AI voices in the world's biggest YouTube markets. One script, global reach.
                         </p>
 
                         <Button
                             asChild
                             size="lg"
-                            className="h-14 px-8 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border border-zinc-200 shadow-sm transition-all group"
-                            variant="outline"
+                            className="h-12 px-6 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white shadow-none transition-all group"
                         >
                             <Link href="/register">
                                 Start generating
@@ -73,74 +54,56 @@ export function VoiceoverSection() {
                         </Button>
                     </div>
 
-                    {/* Right Visual Component */}
-                    <div className="relative mx-auto w-full max-w-md animate-in fade-in zoom-in-95 duration-1000">
-                        {/* Background Glow */}
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-amber-100 to-amber-50 blur-2xl opacity-50 z-0" />
+                    {/* Right */}
+                    <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6">
+                        <div className="flex items-center justify-between mb-5">
+                            <span className="text-sm font-bold text-zinc-900">Languages</span>
+                            <span className="text-[11px] font-semibold text-zinc-500 bg-white border border-zinc-200 rounded-full px-3 py-1">
+                                <strong className="text-zinc-900">4</strong> available
+                            </span>
+                        </div>
 
-                        {/* Main App Window - Light Mode */}
-                        <div className="relative z-10 bg-white rounded-[2rem] p-6 shadow-sm border border-zinc-200/80">
+                        <div className="grid grid-cols-2 gap-2.5">
+                            {languages.map((lang, i) => (
+                                <div
+                                    key={lang.name}
+                                    className={`relative flex items-center gap-3 p-4 rounded-2xl border transition-colors cursor-pointer ${lang.active
+                                        ? "bg-amber-50 border-amber-300"
+                                        : "bg-white border-zinc-200 hover:border-zinc-300"
+                                        }`}
+                                >
+                                    {lang.active && (
+                                        <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                                    )}
 
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-8">
-                                <h3 className="text-zinc-950 font-bold leading-tight text-lg">
-                                    Available languages
-                                </h3>
-                                <div className="px-4 py-1.5 rounded-full border border-zinc-200 bg-zinc-50">
-                                    <span className="text-[11px] text-zinc-500 font-medium">
-                                        <span className="text-zinc-900 font-bold">12</span> languages
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Grid */}
-                            <div className="grid grid-cols-3 gap-3 mb-6">
-                                {languages.map((lang) => (
-                                    <div
-                                        key={lang.code}
-                                        className={`relative p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer group ${lang.active
-                                            ? "bg-zinc-50 border-amber-300 shadow-sm"
-                                            : "bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200"
-                                            }`}
-                                    >
-                                        {/* Active Indicator */}
-                                        {lang.active && (
-                                            <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                        )}
-
-                                        {/* Flag container */}
-                                        <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-lg border border-zinc-200/50 shadow-inner">
-                                            {flagMap[lang.code] || getFlagEmoji(lang.code)}
-                                        </div>
-
-                                        {/* Name */}
-                                        <span className={`text-[10px] sm:text-[11px] font-bold ${lang.active ? "text-zinc-900" : "text-zinc-500"}`}>
-                                            {lang.name}
-                                        </span>
-
-                                        {/* Waveform Micro */}
-                                        <div className="flex items-center gap-0.5 h-2 opacity-30 group-hover:opacity-60 transition-opacity">
-                                            {[3, 5, 2, 4].map((h, i) => (
-                                                <div key={i} className="w-[1.5px] bg-zinc-900 rounded-full" style={{ height: `${h}px` }} />
-                                            ))}
-                                        </div>
+                                    {/* Flag */}
+                                    <div className="w-9 h-9 rounded-full bg-zinc-100 border border-black/5 flex items-center justify-center text-xl shrink-0">
+                                        {lang.flag}
                                     </div>
-                                ))}
-                            </div>
 
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <span className="block text-[13px] font-bold text-zinc-900">{lang.name}</span>
+                                        <span className="block text-[11px] text-zinc-400 font-medium mt-0.5">{lang.sub}</span>
+                                    </div>
 
+                                    {/* Wave */}
+                                    <div className="flex items-center gap-0.5 h-3.5 shrink-0">
+                                        {waveHeights[i].map((h, j) => (
+                                            <div
+                                                key={j}
+                                                className={`w-[2.5px] rounded-full ${lang.active ? "bg-amber-400" : "bg-zinc-300"}`}
+                                                style={{ height: `${h}px` }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
                 </div>
             </div>
-
-            <style>{`
-        @keyframes soundWave {
-          0%, 100% { transform: scaleY(0.5); }
-          50% { transform: scaleY(1); }
-        }
-      `}</style>
         </section>
     );
 }

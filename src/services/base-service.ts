@@ -24,8 +24,10 @@ export class BaseService<T> {
             ...options,
         });
         if (!res.ok) {
-            const error = await res.json().catch(() => ({ error: `API error: ${res.status}` }));
-            throw new Error(error.error || `API error: ${res.status}`);
+            const errorData = await res.json().catch(() => ({ error: `API error: ${res.status}` }));
+            const error = new Error(errorData.error || `API error: ${res.status}`);
+            (error as any).status = res.status;
+            throw error;
         }
         return res.json() as Promise<R>;
     }

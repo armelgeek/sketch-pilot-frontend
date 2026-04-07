@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -11,6 +12,7 @@ import { useSignUp } from "@/src/hooks/use-sign-up";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const { loading, error, signUpWithEmail, signUpWithGoogle } = useSignUp({
     redirectTo: "/pricing"
   });
@@ -30,7 +32,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-sm border border-zinc-100">
+    <Card className="w-full max-w-md mx-4 bg-white rounded-2xl shadow-sm border border-zinc-100">
       <CardHeader className="text-center pb-4">
         <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-zinc-900 text-white shadow-md text-lg mx-auto mb-3">✏️</div>
         <CardTitle className="text-2xl font-black tracking-tight text-zinc-900">Créer un compte</CardTitle>
@@ -110,18 +112,28 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password" className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Mot de passe</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-              disabled={loading}
-              minLength={8}
-              className="rounded-xl border-zinc-200 bg-zinc-50 focus:bg-white"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                minLength={8}
+                className="rounded-xl border-zinc-200 bg-zinc-50 focus:bg-white pr-10"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-600"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             <p className="text-xs text-zinc-400 font-medium">Minimum 8 caractères</p>
           </div>
           <button

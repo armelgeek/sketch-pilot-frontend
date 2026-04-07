@@ -153,11 +153,11 @@ export class VideosService extends BaseService<Video> {
     }
 
     async update(id: string, data: Partial<Video>): Promise<Video> {
-        const response = await this.apiFetch<{ success: boolean; video: Video }>(`${this.endpoint}/${id}`, {
+        const response = await this.apiFetch<{ success: boolean; data: Video }>(`${this.endpoint}/${id}`, {
             method: "PATCH",
             body: JSON.stringify(data),
         });
-        return response.video;
+        return response.data;
     }
 
     async generateThumbnail(videoId: string, options: {
@@ -171,7 +171,11 @@ export class VideosService extends BaseService<Video> {
         });
     }
 
-
+    async deleteVideo(id: string): Promise<{ success: boolean }> {
+        return this.apiFetch<{ success: boolean }>(`${this.endpoint}/${id}`, {
+            method: "DELETE",
+        });
+    }
 }
 
 export const videosService = new VideosService();

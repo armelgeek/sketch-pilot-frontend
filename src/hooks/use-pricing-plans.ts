@@ -11,13 +11,13 @@ export function usePricingPlans() {
     setError(null);
     try {
       const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
-      const response = await fetch(`${apiUrl}/v1/subscription-plans`, {
+      const response = await fetch(`${apiUrl}/v1/pricing/plans`, {
         headers: { "Content-Type": "application/json" }
       });
       if (!response.ok) throw new Error("Failed to fetch plans");
       const data = await response.json();
-      setPlans(data.data || []);
-      return data.data;
+      setPlans(data.plans || []);
+      return data.plans;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error fetching plans";
       setError(message);

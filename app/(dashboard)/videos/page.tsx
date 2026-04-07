@@ -47,123 +47,176 @@ export default function VideosPage() {
     failed: videos.filter((v) => v.status === "failed").length,
   };
 
-  const goTo = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const goTo = (p: number) => {
+    // @ts-ignore
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-20">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8 pb-32">
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-3 border border-red-200 bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span className="flex-1">{error}</span>
-          <button onClick={() => setError(null)}><X className="h-4 w-4 opacity-40 hover:opacity-100" /></button>
-        </div>
-      )}
-
-      {/* Stats row */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { icon: Film, label: "Total", value: videos.length, cls: "text-zinc-400" },
-          { icon: CheckCircle2, label: "Terminées", value: counts.completed, cls: "text-emerald-500" },
-          { icon: Clock, label: "En cours", value: counts.processing, cls: "text-amber-500" },
-          { icon: XCircle, label: "Échecs", value: counts.failed, cls: "text-red-400" },
-        ].map(({ icon: Icon, label, value, cls }) => (
-          <div key={label} className="bg-white border border-zinc-100 rounded-xl p-4 flex items-center gap-3">
-            <Icon className={cn("h-4 w-4 shrink-0", cls)} />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{label}</p>
-              <p className="text-lg font-bold text-zinc-900 leading-none mt-0.5">{value}</p>
-            </div>
+        {/* ── HEADER & CTA ── */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Mes Vidéos</h1>
+            <p className="text-sm text-zinc-500 mt-1.5 max-w-lg">
+              Retrouvez l'historique complet de vos projets vidéo générés par l'IA. Visionnez, modifiez et téléchargez vos créations.
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-300" />
-          <input
-            placeholder="Rechercher…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 h-9 rounded-lg border border-zinc-200 text-sm placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 bg-white"
-          />
-        </div>
-        <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-1">
-          {STATUS_OPTIONS.map((o) => (
-            <button
-              key={o.value}
-              onClick={() => { setStatus(o.value); setPage(1); }}
-              className={cn(
-                "px-3 h-7 text-sm font-semibold rounded-md transition-all whitespace-nowrap",
-                status === o.value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700"
-              )}
-            >
-              {o.label}
+          <Link href="/dashboard">
+            <button className="hidden md:flex items-center gap-2 h-11 px-6 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25 active:scale-95">
+              <Plus className="h-4 w-4" /> Créer un projet
             </button>
-          ))}
+          </Link>
         </div>
-      </div>
 
-      {/* Loading skeletons */}
-      {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-3">
-              <div className="aspect-video rounded-xl bg-zinc-100 animate-pulse" />
-              <div className="h-3 w-2/3 bg-zinc-100 rounded animate-pulse" />
-              <div className="h-3 w-1/3 bg-zinc-100 rounded animate-pulse" />
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center gap-3 border border-red-200 bg-red-50/50 text-red-700 rounded-2xl px-5 py-4 text-sm animate-in fade-in">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+            <span className="flex-1 font-medium">{error}</span>
+            <button onClick={() => setError(null)} className="p-1 hover:bg-red-100 rounded-md transition-colors">
+              <X className="h-4 w-4 opacity-70" />
+            </button>
+          </div>
+        )}
+
+        {/* ── STATS ROW ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { icon: Film, label: "Vidéos Totales", value: videos.length, iconCls: "text-zinc-600 bg-zinc-100", cls: "border-zinc-200" },
+            { icon: CheckCircle2, label: "Générations Réussies", value: counts.completed, iconCls: "text-emerald-600 bg-emerald-50", cls: "border-emerald-100" },
+            { icon: Clock, label: "Projets En Cours", value: counts.processing, iconCls: "text-amber-600 bg-amber-50", cls: "border-amber-100 hover:border-amber-200" },
+            { icon: XCircle, label: "Projets Échoués", value: counts.failed, iconCls: "text-red-500 bg-red-50", cls: "border-red-100" },
+          ].map(({ icon: Icon, label, value, iconCls, cls }) => (
+            <div key={label} className={cn("bg-white border rounded-[1.25rem] p-5 flex flex-col justify-between h-32 transition-all hover:shadow-md", cls)}>
+              <div className="flex items-center justify-between">
+                <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", iconCls)}>
+                  <Icon className="h-5 w-5" />
+                </div>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none mb-1">{value}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 line-clamp-1">{label}</p>
+              </div>
             </div>
           ))}
         </div>
-      )}
 
-      {/* Empty state */}
-      {!loading && !error && paginated.length === 0 && (
-        <div className="border border-zinc-100 rounded-2xl bg-white flex flex-col items-center py-24 text-center">
-          <div className="h-12 w-12 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center mb-4">
-            <FileVideo className="h-5 w-5 text-zinc-300" />
+        {/* ── FILTERS & SEARCH ── */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-zinc-50 border border-zinc-100 p-2 rounded-2xl">
+          <div className="relative flex-1 w-full max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              placeholder="Rechercher une vidéo..."
+              value={search}
+              // @ts-ignore
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-transparent hover:border-zinc-200 bg-transparent text-sm font-medium focus:bg-white focus:outline-none focus:border-zinc-300 focus:shadow-sm transition-all"
+            />
           </div>
-          <p className="font-semibold text-zinc-800">
-            {search || status !== "all" ? "Aucun résultat" : "Aucune vidéo"}
-          </p>
-          <p className="text-zinc-400 mt-1 mb-6">
-            {search || status !== "all" ? "Essayez de modifier vos filtres." : "Créez votre première vidéo pour commencer."}
-          </p>
-          {!search && status === "all" && (
-            <Link href="/dashboard">
-              <button className="flex items-center gap-2 h-9 px-5 rounded-full bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors">
-                <Plus className="h-3.5 w-3.5" /> Démarrer
+          <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-xl p-1 shadow-sm w-full sm:w-auto overflow-x-auto hide-scrollbar">
+            {STATUS_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                // @ts-ignore
+                onClick={() => { setStatus(o.value); setPage(1); }}
+                className={cn(
+                  "px-4 h-9 text-xs font-bold rounded-lg transition-all whitespace-nowrap",
+                  status === o.value ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                {o.label}
               </button>
-            </Link>
-          )}
+            ))}
+          </div>
         </div>
-      )}
 
-      {/* Grid */}
-      {!loading && paginated.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {paginated.map((v) => <VideoCard key={v.id} video={v} showActions />)}
-        </div>
-      )}
+        {/* ── LOADING SKELETONS ── */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3 p-3 rounded-2xl bg-white border border-zinc-100 shadow-sm animate-pulse">
+                <div className="aspect-video rounded-xl bg-zinc-100 w-full" />
+                <div className="h-4 w-2/3 bg-zinc-100 rounded-md" />
+                <div className="h-3 w-1/3 bg-zinc-100 rounded-md" />
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 pt-4 border-t border-zinc-100">
-          <button onClick={() => goTo(page - 1)} disabled={page === 1} className="h-8 w-8 rounded-lg border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 disabled:opacity-30">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => goTo(p)} className={cn("h-8 w-8 rounded-lg text-xs font-semibold", p === page ? "bg-zinc-900 text-white" : "text-zinc-400 hover:text-zinc-900")}>
-              {p}
+        {/* ── EMPTY STATE ── */}
+        {!loading && !error && paginated.length === 0 && (
+          <div className="border-2 border-dashed border-zinc-200 rounded-[2rem] bg-zinc-50/50 flex flex-col items-center justify-center py-24 text-center">
+            <div className="h-20 w-20 rounded-3xl bg-white shadow-lg border border-zinc-100 flex items-center justify-center mb-6">
+              <FileVideo className="h-8 w-8 text-zinc-300" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-900 tracking-tight">
+              {search || status !== "all" ? "Aucun projet trouvé" : "Aucune vidéo générée"}
+            </h3>
+            <p className="text-sm font-medium text-zinc-500 mt-2 mb-8 max-w-sm">
+              {search || status !== "all"
+                ? "Modifiez vos termes de recherche ou vos filtres pour voir d'autres résultats."
+                : "Commencez par transformer vos idées en animations vidéo en créant un nouveau projet depuis le studio."}
+            </p>
+            {!search && status === "all" && (
+              <Link href="/dashboard">
+                <button className="flex items-center gap-2 h-12 px-8 rounded-xl bg-zinc-900 text-white text-sm font-bold hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-zinc-900/20">
+                  <Plus className="h-4 w-4" /> Démarrer un projet
+                </button>
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* ── LOADING SKELETONS ── */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3 p-3 rounded-2xl bg-white border border-zinc-100 shadow-sm animate-pulse">
+                <div className="aspect-video rounded-xl bg-zinc-100 w-full" />
+                <div className="h-4 w-2/3 bg-zinc-100 rounded-md" />
+                <div className="h-3 w-1/3 bg-zinc-100 rounded-md" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── GRID ── */}
+        {!loading && paginated.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginated.map((v) => (
+              <VideoCard
+                key={v.id}
+                video={v}
+                showActions
+                onDelete={() => setVideos(videos.filter(vid => vid.id !== v.id))}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── PAGINATION ── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-8">
+            <button onClick={() => goTo(page - 1)} disabled={page === 1} className="h-10 w-10 rounded-xl border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:border-zinc-300 disabled:opacity-40 transition-colors">
+              <ChevronLeft className="h-5 w-5" />
             </button>
-          ))}
-          <button onClick={() => goTo(page + 1)} disabled={page === totalPages} className="h-8 w-8 rounded-lg border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 disabled:opacity-30">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-xl p-1 shadow-sm">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button key={p} onClick={() => goTo(p)} className={cn("h-8 w-10 rounded-lg text-sm font-bold transition-colors", p === page ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900")}>
+                  {p}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => goTo(page + 1)} disabled={page === totalPages} className="h-10 w-10 rounded-xl border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:border-zinc-300 disabled:opacity-40 transition-colors">
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
