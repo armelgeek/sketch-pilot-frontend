@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, RefreshCw, Sparkles, Globe, Zap } from "lucide-react";
+import { ChevronRight, RefreshCw, Sparkles, Globe, Zap, Clapperboard } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import TextareaAutosize from "react-textarea-autosize";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/src/components/ui/select";
 import { videosService } from "@/src/services/videos-service";
+import { seriesService, type Series } from "@/src/services/series-service";
 import type { VideoIdea, Video } from "@/src/services/videos-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
 import { useSSEProgress } from "@/src/contexts/sse-progress-context";
@@ -22,6 +24,8 @@ const adminService = new AdminService();
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const seriesIdFromUrl = searchParams.get("seriesId");
   const { data: session } = useSession();
 
   const [script, setScript] = useState("");
@@ -32,7 +36,9 @@ export default function DashboardPage() {
   const [prompts, setPrompts] = useState<any[]>([]);
   const [characterModels, setCharacterModels] = useState<any[]>([]);
   const [personalModels, setPersonalModels] = useState<any[]>([]);
+  const [userSeries, setUserSeries] = useState<Series[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>(seriesIdFromUrl || "");
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [duration, setDuration] = useState<string>("60");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
@@ -47,16 +53,18 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [pData, charData, myData, vData] = await Promise.all([
+        const [pData, charData, myData, vData, sData] = await Promise.all([
           adminService.listPublicPrompts({ limit: 100 }),
           adminService.listStandardModels(),
           adminService.listModels(),
-          videosService.getAll()
+          videosService.getAll(),
+          seriesService.getAll()
         ]);
         setPrompts(pData.data || []);
         setCharacterModels(charData.data || []);
         setPersonalModels(myData.data || []);
         setRecentVideos(vData || []);
+        setUserSeries(sData || []);
 
         if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
         if (!selectedCharacterId) {
@@ -74,9 +82,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (session?.user?.language) setLanguage(session.user.language);
-    if (session?.user?.defaultPromptId) setSelectedPromptId(session.user.defaultPromptId);
-    if (session?.user?.defaultCharacterId) setSelectedCharacterId(session.user.defaultCharacterId);
-  }, [session?.user?.language, session?.user?.defaultPromptId, session?.user?.defaultCharacterId]);
+    if (!selectedSeriesId || selectedSeriesId === "none") {
+      if (session?.user?.defaultPromptId) setSelectedPromptId(session.user.defaultPromptId);
+      if (session?.user?.defaultCharacterId) setSelectedCharacterId(session.user.defaultCharacterId);
+    }
+  }, [session?.user?.language, session?.user?.defaultPromptId, session?.user?.defaultCharacterId, selectedSeriesId]);
+
+  // Auto-fill Niche/Character when a series is selected
+  useEffect(() => {
+    if (selectedSeriesId && selectedSeriesId !== "none" && userSeries.length > 0) {
+      const s = userSeries.find(item => item.id === selectedSeriesId);
+      if (s) {
+        if (s.promptId) setSelectedPromptId(s.promptId);
+        if (s.characterModelId) setSelectedCharacterId(s.characterModelId);
+      }
+    }
+  }, [selectedSeriesId, userSeries]);
 
   const { progress: realProgress, message: realMessage, isFinished, videoId: generatedVideoId, error: jobError } =
     useVideoProgress(jobId);
@@ -122,9 +143,10 @@ export default function DashboardPage() {
         videoType: selectedPrompt?.category || selectedPrompt?.name || "explainer",
         videoGenre: (selectedPrompt?.category || "").toLowerCase().includes("storytelling") ? "storytelling" : "general",
         characterModelId: selectedCharacterId || session?.user?.defaultCharacterId || undefined,
+        seriesId: selectedSeriesId && selectedSeriesId !== "none" ? selectedSeriesId : undefined,
       };
 
-      const response = await videosService.generate(finalScript, options);
+      const response = await videosService.generate(finalScript || "AUTO_CONTINUE", options);
       if (response.jobId) {
         setJobId(response.jobId);
       } else {
@@ -270,6 +292,34 @@ export default function DashboardPage() {
             </SelectContent>
           </Select>
 
+          {/* Series Selection */}
+          <Select
+            value={selectedSeriesId}
+            onValueChange={(val) => {
+              setSelectedSeriesId(val);
+              if (val && val !== "none") {
+                const s = userSeries.find(item => item.id === val);
+                if (s) {
+                  if (s.promptId) setSelectedPromptId(s.promptId);
+                  if (s.characterModelId) setSelectedCharacterId(s.characterModelId);
+                }
+              }
+            }}
+          >
+            <SelectTrigger className="h-8 text-xs font-medium bg-white border border-stone-200 rounded-lg px-3 gap-1.5 shadow-none focus:ring-0 w-auto">
+              <Clapperboard className="h-3.5 w-3.5 text-stone-400" />
+              <span className="text-stone-700">
+                {userSeries.find(s => s.id === selectedSeriesId)?.title || "Série (Optionnel)"}
+              </span>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-stone-100 shadow-xl">
+              <SelectItem value="none" className="text-xs italic text-stone-400">Aucune série</SelectItem>
+              {userSeries.map((s) => (
+                <SelectItem key={s.id} value={s.id} className="text-xs">{s.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {updatingPrefs && <RefreshCw className="h-3 w-3 text-stone-400 animate-spin" />}
         </div>
 
@@ -326,10 +376,13 @@ export default function DashboardPage() {
                     {CREDIT_COSTS.SCRIPT_GENERATION} cr.
                   </span>
                 )}
-                <button type="button" onClick={handleGenerate} disabled={!script.trim() || generating}
-                  title={`Générer — ${CREDIT_COSTS.SCRIPT_GENERATION} crédits`}
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={(!script.trim() && (selectedSeriesId === "none" || !selectedSeriesId)) || generating}
+                  title={(!script.trim() && (selectedSeriesId === "none" || !selectedSeriesId)) ? "Veuillez entrer un sujet" : `Générer — ${CREDIT_COSTS.SCRIPT_GENERATION} crédits`}
                   className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all",
-                    script.trim() && !generating
+                    (script.trim() || (selectedSeriesId && selectedSeriesId !== "none")) && !generating
                       ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95"
                       : "bg-stone-100 text-stone-300 cursor-not-allowed"
                   )}>
