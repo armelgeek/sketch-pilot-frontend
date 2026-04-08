@@ -32,7 +32,8 @@ interface CharacterStudioProps {
 export function CharacterStudio({ selectedId, characterModels, personalModels, onSelect, children }: CharacterStudioProps) {
     const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [tab, setTab] = useState<"explorer" | "collection">("explorer");
+    const initialTab = (personalModels.length > 0) ? "collection" : "explorer";
+    const [tab, setTab] = useState<"explorer" | "collection">(initialTab);
     const [search, setSearch] = useState("");
 
     const handleSelect = (id: string) => { onSelect(id); setOpen(false); };

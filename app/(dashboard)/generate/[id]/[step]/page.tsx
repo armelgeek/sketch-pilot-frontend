@@ -34,6 +34,7 @@ export default function StudioPage({ params }: StudioPageProps) {
         setShowProductionModal,
         setVisualsGenerated,
         setGenerating,
+        setAssembling,
         setRegeneratingSceneId,
     } = useStudioStore();
 
@@ -76,6 +77,27 @@ export default function StudioPage({ params }: StudioPageProps) {
             stopProgress();
         }
     }, [animateFinished, animateStatus, animateJobId, id, router, setTab, setVisualsGenerated, setGenerating, stopProgress, setVideo]);
+
+    // ── Final assembly (render video) ──────────────────────────────────────────
+    const [assembleJobId, setAssembleJobId] = useState<string | undefined>();
+    const { isFinished: assembleFinished, status: assembleStatus } =
+        useVideoProgress(assembleJobId);
+
+    useEffect(() => {
+        if (!assembleJobId || !assembleFinished) return;
+
+        // Reset jobId first to stop tracking
+        setAssembleJobId(undefined);
+        setAssembling(false);
+
+        if (assembleStatus === "completed") {
+            setShowProductionModal(false);
+            stopProgress();
+            router.push(`/videos/${id}`);
+        } else {
+            stopProgress();
+        }
+    }, [assembleFinished, assembleStatus, assembleJobId, id, router, setAssembling, setShowProductionModal, stopProgress]);
 
     // ── Per-scene image reprompt ───────────────────────────────────────────────
     const [repromptJobId, setRepromptJobId] = useState<string | undefined>();
@@ -168,7 +190,10 @@ export default function StudioPage({ params }: StudioPageProps) {
             {activeTab !== "script" && (
                 <StudioHeader
                     onNext={() => { }}
-                    onAssemble={handleAssemble}
+                    onAssemble={async () => {
+                        const jobId = await handleAssemble();
+                        if (jobId) setAssembleJobId(jobId);
+                    }}
                 />
             )}
             <StudioErrorBar />
@@ -199,7 +224,10 @@ export default function StudioPage({ params }: StudioPageProps) {
             </main>
 
             <ProductionModal
-                onAssemble={handleAssemble}
+                onAssemble={async () => {
+                    const jobId = await handleAssemble();
+                    if (jobId) setAssembleJobId(jobId);
+                }}
                 onSkipMusic={() => { }}
             />
         </div>

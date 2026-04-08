@@ -59,7 +59,10 @@ export default function DashboardPage() {
         setRecentVideos(vData || []);
 
         if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
-        if (charData.data?.length > 0 && !selectedCharacterId) setSelectedCharacterId(charData.data[0].id);
+        if (!selectedCharacterId) {
+          const initialId = session?.user?.defaultCharacterId || myData.data?.[0]?.id || charData.data?.[0]?.id;
+          if (initialId) setSelectedCharacterId(initialId);
+        }
       } catch (err) {
         // silently fail
       } finally {
