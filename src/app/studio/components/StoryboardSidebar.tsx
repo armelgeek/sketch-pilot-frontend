@@ -2,8 +2,9 @@
 
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
-import { Sparkles, RefreshCw, Copy, Trash2 } from "lucide-react";
+import { Sparkles, RefreshCw, Copy, Trash2, Zap } from "lucide-react";
 import { useStudioStore } from "../store";
+import { CREDIT_COSTS } from "@/src/lib/credit-costs";
 
 interface StoryboardSidebarProps {
     onRegenerateImage: (sceneId: string, index: number, prompt?: string) => void;
@@ -60,6 +61,10 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                             ? <RefreshCw className="h-4 w-4 animate-spin text-emerald-400" />
                             : <Sparkles className="h-4 w-4 text-emerald-400" />}
                         Régénérer
+                        <span className="flex items-center gap-0.5 bg-white/10 border border-white/20 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white/70 ml-auto">
+                            <Zap className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                            {CREDIT_COSTS.IMAGE_REPROMPT}
+                        </span>
                     </Button>
                 </div>
             </div>

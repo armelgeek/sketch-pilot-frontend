@@ -13,6 +13,8 @@ export interface ProgressState {
     currentSceneIndex?: number;
     error?: string;
     promptsUrl?: string;
+    options?: any; // Added
+    totalScenes?: number; // Number of scenes from script
 }
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
@@ -85,6 +87,8 @@ export function useVideoProgress(jobId?: string) {
                         lastSceneIndex: lastIdx,
                         currentSceneIndex: msgCurrentIdx !== undefined ? msgCurrentIdx : prev.currentSceneIndex,
                         promptsUrl: data.promptsUrl || prev.promptsUrl,
+                        options: data.options || prev.options, // Added
+                        totalScenes: data.totalScenes || prev.totalScenes, // Added
                     };
                 });
             });

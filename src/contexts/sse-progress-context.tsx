@@ -14,14 +14,21 @@ interface SSEProgressState {
     progress: number;
     message: string;
     title?: string;
-    jobId?: string; // Track jobId for useVideoProgress
+    options?: any;
+    totalScenes?: number;
+    jobId?: string;
     onCancel?: () => void;
+    isReconnecting?: boolean;
+    // Scene stream data (for real-time storyboard updates)
+    lastScene?: any;
+    lastSceneIndex?: number;
+    status?: string;
 }
 
 interface SSEProgressContextValue {
     state: SSEProgressState;
     startProgress: (options?: SSEProgressOptions) => void;
-    updateProgress: (progress: number, message: string, jobId?: string) => void;
+    updateProgress: (progress: number, message: string, jobId?: string, options?: any, totalScenes?: number) => void;
     stopProgress: () => void;
 }
 
@@ -34,6 +41,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
         message: "",
         title: undefined,
         onCancel: undefined,
+        isReconnecting: false,
     });
 
     const startProgress = useCallback((options?: SSEProgressOptions) => {
@@ -47,12 +55,29 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
         });
     }, []);
 
-    const updateProgress = useCallback((progress: number, message: string, jobId?: string) => {
-        setState((prev) => ({ ...prev, progress, message, jobId: jobId || prev.jobId }));
+    const updateProgress = useCallback((progress: number, message: string, jobId?: string, options?: any, totalScenes?: number) => {
+        setState((prev) => ({
+            ...prev,
+            progress,
+            message,
+            jobId: jobId || prev.jobId,
+            options: options || prev.options,
+            totalScenes: totalScenes !== undefined ? totalScenes : prev.totalScenes
+        }));
     }, []);
 
     const stopProgress = useCallback(() => {
-        setState({ active: false, progress: 0, message: "", title: undefined, jobId: undefined, onCancel: undefined });
+        setState({
+            active: false,
+            progress: 0,
+            message: "",
+            title: undefined,
+            jobId: undefined,
+            onCancel: undefined,
+            isReconnecting: false,
+            options: undefined,
+            totalScenes: undefined
+        });
     }, []);
 
     // ── SSE Synchronization Logic ─────────────────────────────────────────────
@@ -62,26 +87,36 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
     useEffect(() => {
         if (!state.active || !state.jobId) return;
 
-        // Sync SSE progress to context state
-        if (sse.progress !== state.progress || sse.message !== state.message) {
-            updateProgress(sse.progress, sse.message);
+        // Sync progress + scene data from SSE stream
+        const progressChanged = sse.progress !== state.progress || sse.message !== state.message || sse.totalScenes !== state.totalScenes;
+        const sceneChanged = sse.lastScene !== state.lastScene || sse.lastSceneIndex !== state.lastSceneIndex;
+
+        if (progressChanged || sceneChanged) {
+            setState(prev => ({
+                ...prev,
+                progress: sse.progress,
+                message: sse.message,
+                jobId: state.jobId,
+                options: sse.options || prev.options,
+                totalScenes: sse.totalScenes || prev.totalScenes,
+                lastScene: sse.lastScene || prev.lastScene,
+                lastSceneIndex: sse.lastSceneIndex,
+                status: sse.status,
+            }));
+        }
+
+        if (sse.isReconnecting !== state.isReconnecting) {
+            setState(prev => ({ ...prev, isReconnecting: sse.isReconnecting }));
         }
 
         // Handle auto-completion
         if (sse.status === "completed" && state.active) {
-            // Give it a small delay so user sees 100%
             const t = setTimeout(() => {
                 stopProgress();
             }, 2000);
             return () => clearTimeout(t);
         }
-
-        // Handle failure
-        if (sse.status === "failed" && state.active) {
-            // We keep it active so the error message is visible, 
-            // but the dots stop animating (isDone check in overlay)
-        }
-    }, [sse.progress, sse.message, sse.status, state.active, state.jobId, updateProgress, stopProgress]);
+    }, [sse.progress, sse.message, sse.status, sse.lastScene, sse.lastSceneIndex, sse.totalScenes, state.active, state.jobId, stopProgress]);
 
     return (
         <SSEProgressContext.Provider value={{ state, startProgress, updateProgress, stopProgress }}>

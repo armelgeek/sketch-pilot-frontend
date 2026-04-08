@@ -133,7 +133,16 @@ export const useStudioStore = create<StudioState>((set) => ({
     setIsInserting: (isInserting) => set({ isInserting }),
     setInsertIndex: (insertIndex) => set({ insertIndex }),
     setNewNarration: (newNarration) => set({ newNarration }),
-    setLists: (availableVoices, availableModels, musicTracks) => set({ availableVoices, availableModels, musicTracks }),
+    setLists: (voices, models, music) => set((state) => {
+        const updates: any = { availableVoices: voices, availableModels: models, musicTracks: music };
+        if (voices.length > 0 && (state.audioOptions.voicePreset === "af_heart" || !state.audioOptions.voicePreset)) {
+            updates.audioOptions = {
+                ...state.audioOptions,
+                voicePreset: voices[0].presetId || voices[0].id
+            };
+        }
+        return updates;
+    }),
     setSceneEdits: (sceneEdits) => set({ sceneEdits }),
     updateSceneEdit: (id, field, value) => set((state) => ({
         sceneEdits: {

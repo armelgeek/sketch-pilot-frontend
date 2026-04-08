@@ -76,6 +76,7 @@ export class VideosService extends BaseService<Video> {
 
     async getById(id: string): Promise<Video> {
         const response = await this.apiFetch<any>(`${this.endpoint}/${id}`);
+
         return response.data || response.video || response;
     }
 
@@ -175,6 +176,10 @@ export class VideosService extends BaseService<Video> {
         return this.apiFetch<{ success: boolean }>(`${this.endpoint}/${id}`, {
             method: "DELETE",
         });
+    }
+
+    async listThumbnailTemplates(): Promise<{ success: boolean, data: any[] }> {
+        return this.apiFetch<any>(`${this.endpoint}/thumbnail-templates`);
     }
 }
 

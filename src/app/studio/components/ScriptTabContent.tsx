@@ -3,8 +3,9 @@ import { ScriptEditor } from "@/src/components/organisms/script-editor";
 
 import { useStudioStore } from "../store";
 import { useStudioActions } from "../hooks/use-studio-actions";
-import { Save, Wand2, Check, ChevronLeft } from "lucide-react";
+import { Save, Wand2, Check, ChevronLeft, Zap } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { estimateStoryboardCost } from "@/src/lib/credit-costs";
 
 interface ScriptTabContentProps {
     onScenesChange: (newScenes: any[]) => void;
@@ -25,6 +26,8 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate, onSh
         ? (activeVideo.scenes?.length ? activeVideo.scenes : activeVideo.script?.scenes) ?? []
         : [];
 
+    const storyboardCost = estimateStoryboardCost(displayScenes.length);
+
     return (
         <div className="flex flex-col flex-1 h-full bg-[#F9F8F5] overflow-hidden relative">
             {/* Custom Validation Header */}
@@ -39,7 +42,7 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate, onSh
 
                     <div className="flex flex-col min-w-0">
                         <h1 className="text-[14px] font-black text-zinc-900 truncate tracking-tight">
-                            {activeVideo?.title || "Projet sans titre"}
+                            {activeVideo?.title || activeVideo?.topic || "Projet sans titre"}
                         </h1>
                         <div className="flex items-center gap-2 mt-[-2px]">
                             <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-50/50 px-1.5 py-0.5 rounded border border-amber-100/50 leading-none">
@@ -67,6 +70,12 @@ export function ScriptTabContent({ onScenesChange, onSaveScript, onAnimate, onSh
                                 <Wand2 className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" />
                             )}
                             <span>{visualsGenerated ? "Suivant" : "Générer le storyboard"}</span>
+                            {!visualsGenerated && !generating && storyboardCost > 0 && (
+                                <span className="flex items-center gap-0.5 bg-white/10 border border-white/20 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white/70 ml-1">
+                                    <Zap className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                                    {storyboardCost}
+                                </span>
+                            )}
                         </button>
                     )}
 

@@ -14,7 +14,7 @@ export class BaseService<T> {
         if (!(options?.body instanceof FormData)) {
             headers["Content-Type"] = "application/json";
         }
-
+        console.log('[API_URL]', `${BASE_URL}${path}`)
         const res = await fetch(`${BASE_URL}${path}`, {
             credentials: "include",
             headers: {

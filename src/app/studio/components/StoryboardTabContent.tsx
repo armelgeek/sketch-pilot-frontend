@@ -5,6 +5,7 @@ import { StoryboardFilmstrip } from "./StoryboardFilmstrip";
 import { StoryboardSceneControls } from "./StoryboardSceneControls";
 import { StoryboardSidebar } from "./StoryboardSidebar";
 import { useStudioStore } from "../store";
+import { useStoryboardSSESync } from "../hooks/use-storyboard-sse-sync";
 import { useEffect } from "react";
 
 interface StoryboardTabContentProps {
@@ -19,6 +20,9 @@ export function StoryboardTabContent({
     onRegenerateImage
 }: StoryboardTabContentProps) {
     const { activeTab, selectedSceneId, setSelectedSceneId, activeVideo } = useStudioStore();
+
+    // Bridge SSE scene data to Zustand so visuals appear in real-time
+    useStoryboardSSESync();
 
     if (activeTab !== "storyboard") return null;
 

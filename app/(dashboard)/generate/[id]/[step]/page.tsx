@@ -53,15 +53,29 @@ export default function StudioPage({ params }: StudioPageProps) {
 
     useEffect(() => {
         if (!animateJobId || !animateFinished) return;
-        stopProgress();
-        setGenerating(false);
+
+        // Stop tracking job
         setAnimateJobId(undefined);
+
         if (animateStatus === "completed") {
-            setVisualsGenerated(true);
-            setTab("storyboard");
-            router.replace(`/generate/${id}/storyboard`);
+            // Refetch video to get new scene images before switching tab
+            videosService.getById(id)
+                .then((updatedVideo) => {
+                    setVideo(updatedVideo);
+                    setVisualsGenerated(true);
+                    setTab("storyboard");
+                    router.replace(`/generate/${id}/storyboard`);
+                })
+                .catch(console.error)
+                .finally(() => {
+                    setGenerating(false);
+                    stopProgress();
+                });
+        } else {
+            setGenerating(false);
+            stopProgress();
         }
-    }, [animateFinished, animateStatus, animateJobId, id, router, setTab, setVisualsGenerated, setGenerating, stopProgress]);
+    }, [animateFinished, animateStatus, animateJobId, id, router, setTab, setVisualsGenerated, setGenerating, stopProgress, setVideo]);
 
     // ── Per-scene image reprompt ───────────────────────────────────────────────
     const [repromptJobId, setRepromptJobId] = useState<string | undefined>();
@@ -108,7 +122,20 @@ export default function StudioPage({ params }: StudioPageProps) {
 
                 const hasScenes = (video.scenes?.length ?? 0) > 0 || (video.script?.scenes?.length ?? 0) > 0;
 
+                // CRITICAL: Determine if visuals are already generated to show "Next" instead of "Generate"
+                const hasActuallyGeneratedScenes = (video.scenes?.length || 0) > 0;
+
+                // We consider visuals generated ONLY if scenes exist AND they actually have solid imageUrls.
+                // Statuses like "draft" or "script_generated" definitely mean NO visuals.
+                const hasActualImages = hasActuallyGeneratedScenes && video.scenes!.every((s: any) => s.imageUrl && s.imageUrl.length > 10);
+
+                // Fallback: If status is completed but we're missing some images, we still consider the run "completed" for navigation purposes.
+                const statusAllowsVisuals = ['completed'].includes(video.status);
+
+                const hasVisuals = hasActualImages || statusAllowsVisuals;
+
                 setVideo(video);
+                setVisualsGenerated(!!hasVisuals);
                 setLists(voices || [], models.data || [], music || []);
 
                 // If scenes are empty on first load, it may be a scriptOnly race — retry once after 2s

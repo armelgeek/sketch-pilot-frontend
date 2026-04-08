@@ -38,14 +38,15 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
     } = useStudioStore();
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [titleValue, setTitleValue] = useState(activeVideo?.title || "Projet sans titre");
+    const [titleValue, setTitleValue] = useState(activeVideo?.title || activeVideo?.topic || "Projet sans titre");
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (activeVideo?.title && !isEditingTitle) {
-            setTitleValue(activeVideo.title);
+        const bestTitle = activeVideo?.title || activeVideo?.topic || "Projet sans titre";
+        if (bestTitle && !isEditingTitle) {
+            setTitleValue(bestTitle);
         }
-    }, [activeVideo?.title, isEditingTitle]);
+    }, [activeVideo?.title, activeVideo?.topic, isEditingTitle]);
 
     useEffect(() => {
         if (isEditingTitle && titleInputRef.current) {
@@ -64,7 +65,7 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
     const handleTitleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") handleTitleSave();
         if (e.key === "Escape") {
-            setTitleValue(activeVideo?.title || "Projet sans titre");
+            setTitleValue(activeVideo?.title || activeVideo?.topic || "Projet sans titre");
             setIsEditingTitle(false);
         }
     };
@@ -105,7 +106,7 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
                             onClick={() => setIsEditingTitle(true)}
                             title="Cliquez pour renommer"
                         >
-                            {activeVideo?.title || "Projet sans titre"}
+                            {activeVideo?.title || activeVideo?.topic || "Projet sans titre"}
                         </h1>
                     )}
                     <div className="flex items-center gap-2 mt-[-2px]">

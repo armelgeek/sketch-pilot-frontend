@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/src/components/ui/slider";
 import { cn } from "@/src/lib/utils";
 import { useStudioStore } from "../store";
+import { CREDIT_COSTS } from "@/src/lib/credit-costs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,8 @@ export function ProductionModal({ onAssemble, onSkipMusic }: ProductionModalProp
 
     if (!showProductionModal) return null;
 
-    const coinCost = activeVideo?.options?.resolution === "1080p" ? 10 : 5;
+    const resolution = activeVideo?.options?.resolution || '1080p';
+    const coinCost = (resolution === '1080p' ? CREDIT_COSTS.EXPORT_1080P : CREDIT_COSTS.EXPORT_720P) + CREDIT_COSTS.TTS_VOICE;
 
     return (
         <div
@@ -231,7 +233,10 @@ function ModalFooter({
                     className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold h-8 px-4 rounded-lg gap-1.5 shadow-sm shadow-emerald-200/50"
                 >
                     <Zap className="h-3.5 w-3.5 fill-current" />
-                    Rendu — {coinCost} 🪙
+                    Rendu
+                    <span className="flex items-center gap-0.5 bg-white/20 border border-white/20 rounded-md px-1.5 py-0.5 text-[9px] font-black">
+                        {coinCost} cr.
+                    </span>
                 </Button>
             )}
         </div>

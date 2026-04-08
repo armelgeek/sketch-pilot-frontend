@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, RefreshCw, Sparkles, Globe } from "lucide-react";
+import { ChevronRight, RefreshCw, Sparkles, Globe, Zap } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import TextareaAutosize from "react-textarea-autosize";
@@ -16,6 +16,7 @@ import { AdminService } from "@/src/app/admin/api/admin-service";
 import { CharacterStudio } from "./components/character-studio";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { cn } from "@/src/lib/utils";
+import { CREDIT_COSTS } from "@/src/lib/credit-costs";
 
 const adminService = new AdminService();
 
@@ -315,14 +316,23 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={handleGenerate} disabled={!script.trim() || generating}
-                className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all",
-                  script.trim() && !generating
-                    ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95"
-                    : "bg-stone-100 text-stone-300 cursor-not-allowed"
-                )}>
-                {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              </button>
+              <div className="flex items-center gap-2">
+                {script.trim() && !generating && (
+                  <span className="flex items-center gap-0.5 text-[10px] font-semibold text-stone-400">
+                    <Zap className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                    {CREDIT_COSTS.SCRIPT_GENERATION} cr.
+                  </span>
+                )}
+                <button type="button" onClick={handleGenerate} disabled={!script.trim() || generating}
+                  title={`Générer — ${CREDIT_COSTS.SCRIPT_GENERATION} crédits`}
+                  className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all",
+                    script.trim() && !generating
+                      ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95"
+                      : "bg-stone-100 text-stone-300 cursor-not-allowed"
+                  )}>
+                  {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>

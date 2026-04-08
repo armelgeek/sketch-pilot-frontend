@@ -17,6 +17,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 import { videosService } from "@/src/services/videos-service";
 import { useHeaderStore } from "@/src/components/layout/header-store";
+import { BackgroundProgressBadge } from "@/src/components/videos/background-progress-badge"; // Added
 
 const navItems = [
   { href: "/dashboard", label: "Nouvelle video", icon: Plus },
@@ -108,6 +109,7 @@ export function DashboardSidebar() {
             </nav>
           </div>
 
+          <BackgroundProgressBadge collapsed={collapsed} />
         </div>
       </div>
 

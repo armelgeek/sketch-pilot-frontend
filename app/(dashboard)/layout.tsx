@@ -25,18 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/login");
       return;
     }
-
-    if (!isPending && session && pathname !== "/onboarding") {
-      const hasCredits = (subscriptionStatus?.remainingCredits ?? 0) > 0;
-      const hasActiveSub = subscriptionStatus?.status === "active" || subscriptionStatus?.status === "trialing";
-      const isAdmin = pathname?.startsWith("/admin");
-
-      // Si pas de crédits et pas d'abo actif, et qu'on n'est pas déjà sur l'admin
-      if (!hasCredits && !hasActiveSub && !isAdmin) {
-        router.push("/onboarding");
-      }
-    }
-  }, [session, isPending, router, pathname, subscriptionStatus]);
+  }, [session, isPending, router, pathname]);
 
   if (isPending) {
     return (
@@ -51,7 +40,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const isAdminRoute = pathname?.startsWith("/admin");
-  const isOnboarding = pathname === "/onboarding";
 
   if (isAdminRoute) {
     return (
@@ -65,14 +53,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </main>
         </div>
-      </div>
-    );
-  }
-
-  if (isOnboarding) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA]">
-        {children}
       </div>
     );
   }

@@ -60,16 +60,24 @@ export function ThumbnailStudio({ video, onClose }: ThumbnailStudioProps) {
 
     const { data: characterRes } = useQuery({
         queryKey: ["character", characterModelId],
-        queryFn: () => adminService.listModels({ search: characterModelId }),
+        queryFn: async () => {
+            const [stdRes, myRes] = await Promise.all([
+                adminService.listStandardModels(),
+                adminService.listModels()
+            ]);
+            // Combine both arrays so we can find user's or standard character
+            const allModels = [...(stdRes.data || []), ...(myRes.data || [])];
+            return allModels.find(c => c.id === characterModelId);
+        },
         enabled: !!characterModelId,
     });
 
     const { data: globalTemplatesRes } = useQuery({
         queryKey: ["thumbnail-templates"],
-        queryFn: () => adminService.listThumbnailTemplates(),
+        queryFn: () => videosService.listThumbnailTemplates(),
     });
 
-    const character = characterRes?.data?.find((c: any) => c.id === characterModelId) ?? characterRes?.data?.[0];
+    const character = characterRes;
     const characterInspirations: string[] = character?.thumbnailInspirations ?? [];
     const globalInspirations: string[] = globalTemplatesRes?.data?.map((t: any) => t.imageUrl) ?? [];
 
