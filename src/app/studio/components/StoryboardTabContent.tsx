@@ -62,11 +62,11 @@ export function StoryboardTabContent({
                     {activeScene ? (
                         <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
                             {/* Left Column: Adaptive Preview & Controls */}
-                            <div className="flex-1 flex flex-col gap-6 min-w-0 relative z-10">
+                            <div className="flex-1 flex flex-col items-center justify-center gap-6 min-w-0 relative z-10">
                                 {/* Technical Controls ABOVE preview */}
-                                <div className="max-w-3xl mx-auto w-full mb-6">
+                                {/*<div className="max-w-3xl mx-auto w-full mb-6">
                                     <StoryboardSceneControls />
-                                </div>
+                                </div>**/}
 
                                 <div className="flex-1 flex min-h-0 bg-white  border border-zinc-200/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] rounded-md">
                                     <div className="max-w-full max-h-full transition-all duration-300 relative group">

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Video, Zap, ChevronLeft, ChevronRight,
   LogOut, Plus, Settings, LifeBuoy, Search, ChevronsUpDown, User, CreditCard,
-  Wand2, Sparkles
+  Wand2, Sparkles, Film
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { useSession, signOut } from "@/src/lib/auth-client";
@@ -22,6 +22,7 @@ import { BackgroundProgressBadge } from "@/src/components/videos/background-prog
 const navItems = [
   { href: "/dashboard", label: "Nouvelle video", icon: Plus },
   { href: "/videos", label: "Mes Vidéos", icon: Video },
+  { href: "/series", label: "Mes Sagas", icon: Film },
   { href: "/characters", label: "Mes Personnages", icon: Wand2 }
 ];
 

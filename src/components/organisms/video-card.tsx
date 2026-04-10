@@ -46,8 +46,12 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
     const router = useRouter();
     const [isStudioOpen, setIsStudioOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isResuming, setIsResuming] = useState(false);
     const [currentTitle, setCurrentTitle] = useState(video.title || video.topic || "Sans titre");
     const [tempTitle, setTempTitle] = useState(currentTitle);
+    const { resumeVideo } = useVideoProgress();
+
 
     const handleRename = async () => {
         if (!tempTitle.trim() || tempTitle === currentTitle) {
@@ -87,7 +91,49 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
         }
     };
 
+    const handleGenerateNextEpisode = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isGenerating) return;
+
+        try {
+            setIsGenerating(true);
+            const options = {
+                ...(video.options || {}),
+                type: 'series',
+                seriesId: video.seriesId,
+                episodeNumber: (video.episodeNumber || 0) + 1,
+                scriptOnly: true
+            };
+
+            const response = await videosService.generate(video.topic, options);
+            if (response.videoId) {
+                router.push(`/generate/${response.videoId}/script`);
+            }
+        } catch (err) {
+            console.error("Failed to generate next episode:", err);
+            alert("Erreur lors de la génération de la suite.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleResume = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isResuming) return;
+        try {
+            setIsResuming(true);
+            await resumeVideo(video.id);
+            router.refresh();
+        } catch (err) {
+            console.error("Failed to resume video:", err);
+            alert("Erreur lors de la reprise.");
+        } finally {
+            setIsResuming(false);
+        }
+    };
+
     return (
+
         <>
             <div
                 className={cn(
@@ -127,12 +173,17 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
                     </div>
 
                     {/* Thumbnail badge */}
-                    {video.options?.thumbnailVariations?.length > 0 && (
+                    {video.seriesId ? (
+                        <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2.5 py-1 bg-blue-600/90 backdrop-blur-sm rounded-lg text-white shadow-lg border border-blue-400/30">
+                            <Sparkles className="h-3 w-3 text-blue-200" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Épisode {video.episodeNumber || '?'}</span>
+                        </div>
+                    ) : video.options?.thumbnailVariations?.length > 0 ? (
                         <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded-md text-white">
                             <ImageIcon className="h-3 w-3 text-amber-400" />
                             <span className="text-[10px] font-semibold">Miniature</span>
                         </div>
-                    )}
+                    ) : null}
 
                     {/* Actions dropdown */}
                     {showActions && (
@@ -158,9 +209,23 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
                                     {editPath && (
                                         <DropdownMenuItem
                                             className="rounded-xl h-10 px-3 text-xs font-semibold gap-2.5 cursor-pointer"
-                                            onClick={(e) => { e.stopPropagation(); router.push(editPath); }}
+                                            onClick={(e) => { e.stopPropagation(); router.push(editPath!); }}
                                         >
                                             <Play className="h-3.5 w-3.5 opacity-50" /> Ouvrir
+                                        </DropdownMenuItem>
+                                    )}
+                                    {video.seriesId && video.status === "completed" && (
+                                        <DropdownMenuItem
+                                            className="rounded-xl h-10 px-3 text-xs font-semibold gap-2.5 cursor-pointer text-blue-600 hover:bg-blue-50"
+                                            disabled={isGenerating}
+                                            onClick={handleGenerateNextEpisode}
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <Sparkles className="h-3.5 w-3.5" />
+                                            )}
+                                            {isGenerating ? "Génération..." : "Générer la suite"}
                                         </DropdownMenuItem>
                                     )}
                                     {video.status === "completed" && video.videoUrl && (
@@ -192,7 +257,22 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
                                     >
                                         <Share2 className="h-3.5 w-3.5 opacity-50" /> Partager
                                     </DropdownMenuItem>
+                                    {(video.status === "failed" || video.status === "cancelled") && (
+                                        <DropdownMenuItem
+                                            className="rounded-xl h-10 px-3 text-xs font-semibold gap-2.5 cursor-pointer text-violet-600 hover:bg-violet-50"
+                                            disabled={isResuming}
+                                            onClick={handleResume}
+                                        >
+                                            {isResuming ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <Play className="h-3.5 w-3.5" />
+                                            )}
+                                            {isResuming ? "Reprise..." : "Reprendre la génération"}
+                                        </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuSeparator className="mx-2 my-1" />
+
                                     <DropdownMenuItem
                                         className="rounded-xl h-10 px-3 text-xs font-semibold gap-2.5 cursor-pointer text-red-500 hover:bg-red-50"
                                         onClick={handleDelete}
@@ -264,7 +344,7 @@ function VideoProgressIndicator({ video }: { video: Video }) {
                         cy="24"
                         r="20"
                         fill="none"
-                        stroke="#F59E0B"
+                        stroke="#1D9E75"
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeDasharray={2 * Math.PI * 20}

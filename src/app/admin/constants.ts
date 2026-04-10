@@ -12,8 +12,12 @@ export const DEFAULT_SPECx = {
     "End by turning the mirror on the viewer — not just judging others, but inviting self-examination",
     "Deliver one single memorable formulation that crystallizes the entire message"
   ],
-
   "wordsPerSecondBase": 2.45,
+  "narrativeProgression": "hook → reveal → tension → résolution → conclusion",
+  "structuralConstraints": [
+    "Dernière scène: preset 'conclusion' obligatoire",
+    "Utilisez une scène 'bridge' juste avant la finale pour tension"
+  ],
   "rules": [
     // ─── Pacing & Duration ──────────────────────────────────────────────
     "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
@@ -429,10 +433,15 @@ export const STORY_SPEC = {
     "Each scene must maintain ONE dominant emotion only (fear, tension, curiosity, relief, etc.).",
     "Build tension through implication, silence, and what is deliberately not shown.",
     "End every scene with an unresolved element (question, danger, doubt, or reveal).",
-    "Deliver one clear and irreversible action or decision at the climax."
   ],
 
   wordsPerSecondBase: 2.3,
+
+  narrativeProgression: "setup → conflict → tension → climax → resolution",
+  structuralConstraints: [
+    "Dernière scène: preset 'resolution' obligatoire",
+    "Passez par un 'climax' juste avant la résolution pour l'action irréversible"
+  ],
 
   rules: [
     "TOTAL VIDEO DURATION MUST NOT exceed the requested duration.",
@@ -564,6 +573,69 @@ export const STORY_SPEC = {
 };
 
 export const DEFAULT_SPEC = {
+  "name": "History Horror",
+  "role": "Contreur d'horreur historique et de légendes sombres",
+  "tags": ["horror", "history", "legend", "dark-past"],
+  "task": "Planifier et écrire un script complet de saga d'horreur historique. Le récit doit s'ancrer dans le passé (Moyen-Âge, ère Victorienne, etc.) et mêler faits historiques et terreur surnaturelle.",
+  "goals": [
+    "Ouvrir sur un vestige du passé ou une archive oubliée dans les 10 premières secondes",
+    "Ancrer le récit dans une époque précise via des détails matériels (bougies, parchemins, architecture)",
+    "Utiliser le contraste entre la normalité d'une époque et l'irruption de l'horreur mythique ou réelle",
+    "Adopter un ton de conteur ancien, solennel et inquiétant",
+    "Maintenir une esthétique de film d'époque sombre et granuleuse"
+  ],
+  "wordsPerSecondBase": 2.22,
+  "rules": [
+    "ÉPOQUE : L'histoire doit paraître authentique à sa période (pas d'anachronismes).",
+    "NARRATION : Langage soutenu, presque littéraire, évoquant les chroniques anciennes.",
+    "VISUEL : Éclairage naturel d'époque (flambeaux, lune, bougies). Ombres massives.",
+    "MYTHE : L'horreur doit être liée à une légende, un péché du passé ou une malédiction ancienne.",
+
+  ],
+  "scenePresets": {
+    "hook": {
+      "minWords": 15,
+      "minSentences": 2,
+      "description": "Entrer dans l'histoire par un détail d'époque troublant",
+      "rules": [
+        "Focus sur un objet historique ou une architecture ancienne",
+        "Établir immédiatement la période temporelle"
+      ]
+    },
+    "reveal": {
+      "minWords": 22,
+      "minSentences": 3,
+      "description": "L'horreur surgit d'un fait historique ou d'une superstition",
+      "rules": [
+        "Mêler le quotidien d'autrefois à l'inexplicable",
+        "Utiliser des textures d'époque (pierre froide, bois usé, fer forgé)"
+      ]
+    }
+  },
+  "visualRules": [
+    "Aesthetic : 'Dark Academia meets Period Horror'",
+    "Lighting : 'Candlelight focus, heavy chiaroscuro, faded color palette'",
+    "Prompts : 'historical horror style, 19th century aesthetic, ancient ruins, flickering candlelight, sepia tones, cinematic historical drama, eerie period costumes'"
+  ],
+  "context": "Narrateur d'histoires sombres spécialisé dans les recoins les plus glauques de l'histoire humaine. Le but est de faire revivre les terreurs du passé pour montrer que le mal est intemporel.",
+  "category": "Horror & History",
+  "structure": [
+    "Vestige du Passé (Hook)",
+    "Contexte Historique (Normalité d'autrefois)",
+    "Émergence de la Malédiction (Reveal)",
+    "Destin Tragique (Cliffhanger)"
+  ],
+  "formatting": "Chaque scène doit inclure la narration, la durée, le résumé, le preset, le pacing (slow|tense), et l'animation prompt.",
+  "instructions": [
+    "Évitez tout terme trop moderne dans la narration.",
+    "Utilisez les croyances et superstitions de l'époque choisie comme moteurs de peur.",
+    "La conclusion doit suggérer que l'horreur du passé nous hante encore aujourd'hui.",
+    "Visez une immersion totale dans le 'vieux monde'."
+  ],
+  "audienceDefault": "Passionnés d'histoire, de légendes urbaines anciennes et de suspense gothique."
+};
+
+export const DEFAULT_CSPEC = {
   name: "Motivation & Discipline",
   role: "Motivational Storytelling Director",
   tags: ["self-improvement", "discipline", "habits", "personal-growth", "motivation"],

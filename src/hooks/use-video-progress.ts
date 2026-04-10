@@ -53,6 +53,21 @@ export function useVideoProgress(jobId?: string) {
         const connect = () => {
             if (explicitlyClosed) return;
 
+            // ABANDON after too many failures
+            const MAX_RETRIES = 12;
+            if (retryCount >= MAX_RETRIES) {
+                console.error(`[SSE] Max retries (${MAX_RETRIES}) reached for job: ${jobId}. Abandoning.`);
+                setState((prev) => ({
+                    ...prev,
+                    status: "failed",
+                    error: "Connexion perdue. La génération a peut-être échoué ou met trop de temps à répondre.",
+                    message: "Le serveur ne répond plus. Veuillez vérifier vos vidéos ou réessayer.",
+                }));
+                setIsFinished(true);
+                explicitlyClosed = true;
+                return;
+            }
+
             console.log(`[SSE] Connecting to job: ${jobId} (Attempt: ${retryCount})`);
             eventSource = new EventSource(`${BASE_URL}/v1/videos/jobs/${jobId}/stream`, {
                 withCredentials: true,
@@ -208,6 +223,24 @@ export function useVideoProgress(jobId?: string) {
         }
     }, [jobId]);
 
+    const resumeVideo = useCallback(async (videoId: string) => {
+        if (!videoId) return;
+        try {
+            const response = await fetch(`${BASE_URL}/v1/videos/${videoId}/resume`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.info("Pipeline resumed with new JobID:", data.jobId);
+                return data.jobId;
+            }
+        } catch (error) {
+            console.error("Failed to resume video:", error);
+        }
+    }, [jobId]);
+
     const rescriptVideo = useCallback(async (videoId: string) => {
         if (!videoId) return;
         try {
@@ -256,27 +289,28 @@ export function useVideoProgress(jobId?: string) {
             setDisplayProgress((prev) => {
                 const target = state.progress;
 
-                // If we are behind the actual progress, move toward it quickly (easing)
+                // 1. CATCH-UP LOGIC (Strictly follow backend)
                 if (prev < target) {
                     const diff = target - prev;
+                    // Faster easing (10% per 100ms) for better reactivity
                     const step = Math.max(0.1, diff * 0.1);
                     return Math.min(target, prev + step);
                 }
 
-                // CRAWLING LOGIC: If we reached target but not finished, crawl slowly
-                // This gives the "alive" feeling the user requested.
-                if (prev >= target && target < 100) {
-                    // Slow down as we get closer to 99%
+                // 2. CRAWLING LOGIC (Subtle "alive" feeling)
+                // Only crawl if we've passed the initial script phase
+                if (prev >= target && target < 100 && target > 15) {
                     const remaining = 99 - prev;
                     if (remaining > 0) {
-                        const crawlStep = Math.max(0.01, remaining * 0.005);
+                        // Extremely subtle crawl (0.01% max) to avoid outrunning reality
+                        const crawlStep = Math.max(0.001, remaining * 0.001);
                         return Math.min(99, prev + crawlStep);
                     }
                 }
 
                 return prev;
             });
-        }, 150); // Fluid updates every 150ms
+        }, 100);
 
         return () => clearInterval(interval);
     }, [state.progress, state.status, isFinished]);
@@ -291,6 +325,7 @@ export function useVideoProgress(jobId?: string) {
         reset,
         cancelVideo,
         restartVideo,
+        resumeVideo,
         rescriptVideo,
         insertScene
     };

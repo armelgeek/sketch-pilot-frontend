@@ -15,6 +15,7 @@ import { videosService } from "@/src/services/videos-service";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { useVideoProgress } from "@/src/hooks/use-video-progress";
 import { useSSEProgress } from "@/src/contexts/sse-progress-context";
+import { Sparkles } from "lucide-react";
 
 const adminService = new AdminService();
 
@@ -143,6 +144,7 @@ export default function StudioPage({ params }: StudioPageProps) {
                 if (cancelled) return;
 
                 const hasScenes = (video.scenes?.length ?? 0) > 0 || (video.script?.scenes?.length ?? 0) > 0;
+                const isGeneratingScript = video.status === 'queued' || video.status === 'processing';
 
                 // CRITICAL: Determine if visuals are already generated to show "Next" instead of "Generate"
                 const hasActuallyGeneratedScenes = (video.scenes?.length || 0) > 0;
@@ -160,12 +162,14 @@ export default function StudioPage({ params }: StudioPageProps) {
                 setVisualsGenerated(!!hasVisuals);
                 setLists(voices || [], models.data || [], music || []);
 
-                // If scenes are empty on first load, it may be a scriptOnly race — retry once after 2s
-                if (!hasScenes && !isRetry) {
-                    setTimeout(() => { if (!cancelled) doLoad(true); }, 2000);
+                // If scenes are empty and we are still in a state that suggests generation, poll every 2s
+                if (!hasScenes && (isGeneratingScript || video.status === 'draft') && !cancelled) {
+                    setTimeout(() => doLoad(), 2000);
                 }
             } catch (err) {
                 console.error("[Studio] Failed to load video data:", err);
+                // On error, try once more after 5s
+                if (!cancelled) setTimeout(() => doLoad(), 5000);
             }
         };
 
@@ -177,10 +181,30 @@ export default function StudioPage({ params }: StudioPageProps) {
     }, [id, setVideo, setLists]);
 
 
-    if (!activeVideo) {
+    if (!activeVideo || (!activeVideo.scenes?.length && !activeVideo.script?.scenes?.length)) {
+        const isGenerating = activeVideo?.status === 'queued' || activeVideo?.status === 'processing';
+
         return (
-            <div className="flex items-center justify-center min-h-screen bg-white">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-300 border-t-zinc-900"></div>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-white gap-6 p-8 text-center">
+                <div className="relative">
+                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-zinc-100 border-t-blue-600"></div>
+                    {isGenerating && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Sparkles className="h-4 w-4 text-blue-500 animate-pulse" />
+                        </div>
+                    )}
+                </div>
+                <div className="space-y-2 max-w-xs">
+                    <h3 className="font-black text-zinc-900 tracking-tight text-lg">
+                        {isGenerating ? "Rédaction de votre script..." : "Chargement du studio..."}
+                    </h3>
+                    <p className="text-zinc-500 text-sm leading-relaxed">
+                        {isGenerating
+                            ? "Votre suite narrative est en cours d'écriture par notre IA. Cela prend environ 15-20 secondes."
+                            : "Nous préparons votre espace de création."
+                        }
+                    </p>
+                </div>
             </div>
         );
     }

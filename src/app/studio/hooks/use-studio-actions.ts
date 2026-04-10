@@ -25,6 +25,7 @@ export function useStudioActions() {
     } = useStudioStore();
 
     const { startProgress, updateProgress, stopProgress } = useSSEProgress();
+    const { resumeVideo, cancelVideo } = useVideoProgress();
 
     const handleSaveScript = useCallback(async () => {
         if (!activeVideo) return;
@@ -65,7 +66,7 @@ export function useStudioActions() {
             startProgress({
                 title: "Génération des visuels",
                 onCancel: () => {
-                    cancelVideo(activeVideo.id);
+                    if (cancelVideo && activeVideo) cancelVideo(activeVideo.id);
                     setGenerating(false);
                     stopProgress();
                 },
@@ -96,7 +97,14 @@ export function useStudioActions() {
         if (!activeVideo) return;
         try {
             setAssembling(true);
-            startProgress({ title: "Assemblage final" });
+            startProgress({
+                title: "Assemblage final",
+                onCancel: () => {
+                    if (cancelVideo && activeVideo) cancelVideo(activeVideo.id);
+                    setAssembling(false);
+                    stopProgress();
+                }
+            });
             const nVol = audioOptions.voiceVolume / 100;
             const mVol = audioOptions.musicVolume / 100;
 

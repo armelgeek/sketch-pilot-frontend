@@ -23,6 +23,9 @@ interface StudioState {
     activeVideo: Video | null;
     activeTab: StudioTab;
     selectedSceneId: string;
+    generationMode: 'standalone' | 'series' | 'quotes';
+    selectedSeriesId: string | null;
+
 
     // ─── UI Status ────────────────────────────────────────────────────────────
     generating: boolean;
@@ -51,6 +54,8 @@ interface StudioState {
     availableVoices: any[];
     availableModels: any[];
     musicTracks: any[];
+    availableSeries: any[];
+
 
     // ─── Actions ──────────────────────────────────────────────────────────────
     setVideo: (video: Video | null) => void;
@@ -63,7 +68,11 @@ interface StudioState {
     setError: (error: string | null) => void;
     setAudioOptions: (options: Partial<AudioOptions>) => void;
     setCaptionOptions: (options: Partial<CaptionOptions>) => void;
+    setGenerationMode: (mode: 'standalone' | 'series' | 'quotes') => void;
+    setSelectedSeriesId: (id: string | null) => void;
+    setAvailableSeries: (series: any[]) => void;
     setIsPlayingAudio: (val: boolean) => void;
+
     setShowProductionModal: (val: boolean) => void;
     setShowSuccessModal: (val: boolean) => void;
     setProductionStep: (step: 0 | 1 | 2) => void;
@@ -82,6 +91,9 @@ export const useStudioStore = create<StudioState>((set) => ({
     activeVideo: null,
     activeTab: "script",
     selectedSceneId: "s1",
+    generationMode: 'standalone',
+    selectedSeriesId: null,
+
     generating: false,
     assembling: false,
     visualsGenerated: false,
@@ -115,6 +127,8 @@ export const useStudioStore = create<StudioState>((set) => ({
     availableVoices: [],
     availableModels: [],
     musicTracks: [],
+    availableSeries: [],
+
 
     setVideo: (video) => set({ activeVideo: video }),
     setTab: (activeTab) => set({ activeTab }),
@@ -126,7 +140,11 @@ export const useStudioStore = create<StudioState>((set) => ({
     setError: (error) => set({ error }),
     setAudioOptions: (options) => set((state) => ({ audioOptions: { ...state.audioOptions, ...options } })),
     setCaptionOptions: (options) => set((state) => ({ captionOptions: { ...state.captionOptions, ...options } })),
+    setGenerationMode: (generationMode) => set({ generationMode }),
+    setSelectedSeriesId: (selectedSeriesId) => set({ selectedSeriesId }),
+    setAvailableSeries: (availableSeries) => set({ availableSeries }),
     setIsPlayingAudio: (isPlayingAudio) => set({ isPlayingAudio }),
+
     setShowProductionModal: (showProductionModal) => set({ showProductionModal }),
     setShowSuccessModal: (showSuccessModal) => set({ showSuccessModal }),
     setProductionStep: (productionStep) => set({ productionStep }),

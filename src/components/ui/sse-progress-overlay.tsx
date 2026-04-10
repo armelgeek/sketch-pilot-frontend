@@ -1,29 +1,21 @@
 "use client";
 
-import { X, Sparkles, Wand2, Calculator, Film } from "lucide-react";
+import { X, Sparkles, Wand2, Calculator, Film, Check } from "lucide-react";
 import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 
-function getPhase(progress: number, isDone: boolean, options?: any) {
-    if (isDone) return options?.scriptOnly ? "Script prêt" : "Vidéo prête";
-    if (options?.scriptOnly) return "Rédaction du script...";
-    if (progress < 15) return "Analyse du script";
-    if (progress < 70) return "Génération du storyboard";
-    if (progress < 85) return "Synthèse audio";
-    return "Rendu final";
-}
-
 function getIcon(progress: number, isDone: boolean, options?: any) {
-    const cls = "h-4 w-4";
-    if (isDone) return <Sparkles className={cls} />;
+    const cls = "h-3.5 w-3.5";
+    if (isDone) return <Check className={cls} />;
     if (options?.scriptOnly || progress < 15) return <Calculator className={cls} />;
     if (progress < 70) return <Wand2 className={cls} />;
-    return <Film className={cls} />;
+    if (progress < 85) return <Film className={cls} />;
+    return <Sparkles className={cls} />;
 }
 
 export function SSEProgressOverlay() {
-    const { state, stopProgress } = useSSEProgress();
+    const { state, stopProgress, hideOverlay, cancelCurrentJob } = useSSEProgress();
 
     const [visible, setVisible] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -31,43 +23,33 @@ export function SSEProgressOverlay() {
 
     const isDone = state.progress >= 100;
 
-    const phase = useMemo(
-        () => getPhase(state.progress, isDone, state.options),
-        [state.progress, isDone]
-    );
-
     const icon = useMemo(
         () => getIcon(state.progress, isDone, state.options),
-        [state.progress, isDone]
+        [state.progress, isDone, state.options]
     );
 
-    // 🎯 Smooth progress (anti-jump SSE)
     useEffect(() => {
         let raf: number;
-
         const animate = () => {
             setDisplayProgress((prev) => {
                 const diff = state.progress - prev;
                 if (Math.abs(diff) < 0.1) return state.progress;
-                return prev + diff * 0.08; // easing
+                return prev + diff * 0.08;
             });
             raf = requestAnimationFrame(animate);
         };
-
         animate();
         return () => cancelAnimationFrame(raf);
     }, [state.progress]);
 
-    // 🎉 confetti safe
     useEffect(() => {
         if (isDone && state.active && window.innerWidth > 768) {
-            confetti({ particleCount: 120, spread: 60 });
+            confetti({ particleCount: 100, spread: 55, colors: ["#1D9E75", "#0F6E56", "#9FE1CB"] });
         }
     }, [isDone, state.active]);
 
-    // mount animation
     useEffect(() => {
-        if (state.active) {
+        if (state.overlayVisible) {
             setMounted(true);
             requestAnimationFrame(() => setVisible(true));
         } else {
@@ -75,126 +57,115 @@ export function SSEProgressOverlay() {
             const t = setTimeout(() => setMounted(false), 250);
             return () => clearTimeout(t);
         }
-    }, [state.active]);
+    }, [state.overlayVisible]);
 
     if (!mounted) return null;
 
-    const cancel = () => {
-        state.onCancel?.();
-        stopProgress();
+    const cancel = async () => {
+        await cancelCurrentJob();
     };
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
             style={{
-                backgroundColor: `rgba(0,0,0,${visible ? 0.55 : 0})`,
-                transition: "background-color 0.25s ease",
+                backgroundColor: `rgba(0,0,0,${visible ? 0.18 : 0})`,
+                backdropFilter: visible ? "blur(4px)" : "none",
+                transition: "background-color 0.25s ease, backdrop-filter 0.25s ease",
             }}
         >
             {/* CARD */}
             <div
-                className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 p-7 shadow-2xl will-change-transform"
+                className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm will-change-transform"
                 style={{
                     transform: visible
                         ? "translateY(0) scale(1)"
-                        : "translateY(12px) scale(0.96)",
+                        : "translateY(10px) scale(0.97)",
                     opacity: visible ? 1 : 0,
-                    transition:
-                        "transform 0.35s cubic-bezier(0.2,1,0.3,1), opacity 0.25s ease",
+                    transition: "transform 0.35s cubic-bezier(0.2,1,0.3,1), opacity 0.25s ease",
                 }}
             >
                 {/* HEADER */}
                 <div className="flex items-center gap-2 mb-6">
-                    <span className="text-violet-400 transition-transform duration-300">
-                        {icon}
-                    </span>
-
-                    <span
-                        key={phase}
-                        className="text-sm font-semibold text-white animate-fadeSlide"
-                    >
-                        {phase}
-                    </span>
 
                     {!isDone && (
-                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
                     )}
+
+                    {/* CLOSE BUTTON */}
+                    <button
+                        onClick={hideOverlay}
+                        className="ml-2 p-1 rounded-full hover:bg-zinc-100 text-zinc-300 hover:text-zinc-500 transition"
+                        title="Fermer (laisse la génération tourner en arrière-plan)"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
                 </div>
 
                 {/* PROGRESS */}
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+                <div className="h-px w-full bg-zinc-200 rounded-full overflow-hidden mb-4 relative">
                     <div
-                        className="h-full bg-violet-500 will-change-transform"
+                        className="absolute left-0 top-0 h-full bg-[#1D9E75] rounded-full"
                         style={{
-                            transform: `translateX(${displayProgress - 100}%)`,
-                            transition: "transform 0.2s linear",
+                            width: `${displayProgress}%`,
+                            transition: "width 0.2s linear",
                         }}
                     />
                 </div>
 
                 {/* STATUS */}
-                <div className="flex justify-between text-xs mb-6">
-                    <span className="text-white/30 uppercase tracking-wider">
-                        {state.isReconnecting
-                            ? "Reconnexion..."
-                            : isDone
-                                ? "Terminé"
-                                : "En cours"}
+                <div className="flex justify-between items-center mb-6">
+                    <span className="text-[10px] uppercase tracking-widest text-zinc-400">
+                        {state.status === "failed"
+                            ? "Échec"
+                            : state.isReconnecting
+                                ? "Reconnexion..."
+                                : isDone
+                                    ? "Terminé"
+                                    : "En cours"}
                     </span>
-
-                    <span className="font-bold text-white/60 tabular-nums">
+                    <span className="text-xs font-medium text-zinc-500 tabular-nums">
                         {Math.round(displayProgress)}%
                     </span>
                 </div>
 
-                {/* ACTION */}
-                {isDone ? (
-                    <div className="flex justify-center text-xs text-violet-400 gap-2 animate-fadeIn">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Prêt pour visualisation
+                {state.status === "failed" && state.message && (
+                    <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-100">
+                        <p className="text-[11px] text-red-600 leading-normal font-medium">
+                            {state.message}
+                        </p>
                     </div>
-                ) : state.onCancel ? (
-                    <button
-                        onClick={cancel}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl py-2 text-xs text-white/40 hover:text-white hover:bg-white/5 transition"
-                    >
-                        <X className="h-3.5 w-3.5" />
-                        Annuler
-                    </button>
-                ) : null}
+                )}
+
+                {/* ACTION */}
+                <div className="border-t border-zinc-100 pt-4">
+                    {isDone ? (
+                        <div className="flex items-center justify-center gap-2 text-xs text-[#1D9E75] animate-fadeIn">
+                            <Check className="h-3 w-3" />
+                            Prêt pour visualisation
+                        </div>
+                    ) : state.active ? (
+                        <button
+                            onClick={cancel}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl py-1.5 text-xs text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition"
+                        >
+                            <X className="h-3 w-3" />
+                            Annuler la génération
+                        </button>
+                    ) : null}
+                </div>
             </div>
 
             {/* ANIMATIONS */}
             <style jsx>{`
-        .animate-fadeSlide {
-          animation: fadeSlide 0.35s cubic-bezier(0.2, 1, 0.3, 1);
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeSlide {
-          from {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
+                .animate-fadeIn {
+                    animation: fadeIn 0.4s ease;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 }

@@ -85,6 +85,8 @@ export const videoTypeSpecificationSchema = z.object({
     formatting: z.string(),
     instructions: z.array(z.string()),
     // Advanced / Narrative attributes
+    narrativeProgression: z.string().optional(),
+    structuralConstraints: z.array(z.string()).optional(),
     visualRules: z.array(z.string()).optional(),
     orchestration: z.array(z.string()).optional(),
     outputFormat: z.string().optional(),

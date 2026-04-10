@@ -23,6 +23,8 @@ interface SSEProgressState {
     lastScene?: any;
     lastSceneIndex?: number;
     status?: string;
+    videoId?: string;
+    overlayVisible: boolean;
 }
 
 interface SSEProgressContextValue {
@@ -30,6 +32,9 @@ interface SSEProgressContextValue {
     startProgress: (options?: SSEProgressOptions) => void;
     updateProgress: (progress: number, message: string, jobId?: string, options?: any, totalScenes?: number) => void;
     stopProgress: () => void;
+    hideOverlay: () => void;
+    showOverlay: () => void;
+    cancelCurrentJob: () => Promise<void>;
 }
 
 const SSEProgressContext = createContext<SSEProgressContextValue | null>(null);
@@ -42,6 +47,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
         title: undefined,
         onCancel: undefined,
         isReconnecting: false,
+        overlayVisible: false,
     });
 
     const startProgress = useCallback((options?: SSEProgressOptions) => {
@@ -52,6 +58,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
             title: options?.title,
             jobId: options?.jobId,
             onCancel: options?.onCancel,
+            overlayVisible: true,
         });
     }, []);
 
@@ -76,8 +83,17 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
             onCancel: undefined,
             isReconnecting: false,
             options: undefined,
-            totalScenes: undefined
+            totalScenes: undefined,
+            overlayVisible: false,
         });
+    }, []);
+
+    const hideOverlay = useCallback(() => {
+        setState(prev => ({ ...prev, overlayVisible: false }));
+    }, []);
+
+    const showOverlay = useCallback(() => {
+        setState(prev => ({ ...prev, overlayVisible: true }));
     }, []);
 
     // ── SSE Synchronization Logic ─────────────────────────────────────────────
@@ -102,6 +118,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
                 lastScene: sse.lastScene || prev.lastScene,
                 lastSceneIndex: sse.lastSceneIndex,
                 status: sse.status,
+                videoId: sse.videoId || prev.videoId,
             }));
         }
 
@@ -118,8 +135,25 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
         }
     }, [sse.progress, sse.message, sse.status, sse.lastScene, sse.lastSceneIndex, sse.totalScenes, state.active, state.jobId, stopProgress]);
 
+    const cancelCurrentJob = useCallback(async () => {
+        if (state.onCancel) {
+            state.onCancel();
+        } else if (state.videoId) {
+            await sse.cancelVideo(state.videoId);
+        }
+        stopProgress();
+    }, [state.onCancel, state.videoId, sse.cancelVideo, stopProgress]);
+
     return (
-        <SSEProgressContext.Provider value={{ state, startProgress, updateProgress, stopProgress }}>
+        <SSEProgressContext.Provider value={{
+            state,
+            startProgress,
+            updateProgress,
+            stopProgress,
+            hideOverlay,
+            showOverlay,
+            cancelCurrentJob
+        }}>
             {children}
         </SSEProgressContext.Provider>
     );

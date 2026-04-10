@@ -26,9 +26,12 @@ export interface Video {
     scenes?: any[];
     options?: any;
     characterModelId?: string;
+    seriesId?: string;
+    episodeNumber?: number;
     title?: string;
     createdAt?: string;
     created_at?: string;
+
 }
 
 export interface VideoGenerationOptions {
@@ -44,7 +47,11 @@ export interface VideoGenerationOptions {
     backgroundMusic?: string;
     promptId?: string;
     characterDescription?: string;
+    seriesId?: string;
+    episodeNumber?: number;
+    type?: 'standalone' | 'series' | 'quotes';
     [key: string]: any; // For any other options passed down
+
 }
 
 export interface ScriptGenerationResponse {
