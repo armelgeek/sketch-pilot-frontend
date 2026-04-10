@@ -5,12 +5,18 @@ import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 
-function getIcon(progress: number, isDone: boolean, options?: any) {
-    const cls = "h-3.5 w-3.5";
+function getIcon(message: string, isDone: boolean) {
+    const cls = "h-4 w-4";
     if (isDone) return <Check className={cls} />;
-    if (options?.scriptOnly || progress < 15) return <Calculator className={cls} />;
-    if (progress < 70) return <Wand2 className={cls} />;
-    if (progress < 85) return <Film className={cls} />;
+
+    const msg = message || "";
+    if (msg.includes("[Étape 1/3]")) return <Calculator className={cls} />;
+    if (msg.includes("[Étape 2/3]")) return <Wand2 className={cls} />;
+    if (msg.includes("[Étape 3/3]")) {
+        if (msg.includes("audio")) return <Film className={cls} />;
+        return <Sparkles className={cls} />;
+    }
+
     return <Sparkles className={cls} />;
 }
 
@@ -24,8 +30,8 @@ export function SSEProgressOverlay() {
     const isDone = state.progress >= 100;
 
     const icon = useMemo(
-        () => getIcon(state.progress, isDone, state.options),
-        [state.progress, isDone, state.options]
+        () => getIcon(state.message, isDone),
+        [state.message, isDone]
     );
 
     useEffect(() => {
@@ -88,14 +94,27 @@ export function SSEProgressOverlay() {
                 {/* HEADER */}
                 <div className="flex items-center gap-2 mb-6">
 
+                    {/* ICON & MESSAGE */}
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-xl ${isDone ? 'bg-[#1D9E75]/10 text-[#1D9E75]' : 'bg-zinc-100 text-zinc-500'}`}>
+                            {icon}
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+
+                            <p className="text-[11px] text-zinc-400 font-medium truncate">
+                                {state.message || "Préparation..."}
+                            </p>
+                        </div>
+                    </div>
+
                     {!isDone && (
-                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+                        <span className="h-2 w-2 rounded-full bg-[#1D9E75] animate-pulse shrink-0" />
                     )}
 
                     {/* CLOSE BUTTON */}
                     <button
                         onClick={hideOverlay}
-                        className="ml-2 p-1 rounded-full hover:bg-zinc-100 text-zinc-300 hover:text-zinc-500 transition"
+                        className="p-1 rounded-full hover:bg-zinc-100 text-zinc-300 hover:text-zinc-500 transition shrink-0"
                         title="Fermer (laisse la génération tourner en arrière-plan)"
                     >
                         <X className="h-4 w-4" />

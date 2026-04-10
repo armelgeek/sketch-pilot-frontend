@@ -289,22 +289,28 @@ export function useVideoProgress(jobId?: string) {
             setDisplayProgress((prev) => {
                 const target = state.progress;
 
-                // 1. CATCH-UP LOGIC (Strictly follow backend)
+                // 1. RESET LOGIC: If target is significantly lower than prev, snap or ease back quickly
+                if (prev > target + 5) {
+                    // Quick reset: 20% per 100ms
+                    return Math.max(target, prev - 20);
+                }
+
+                // 2. CATCH-UP LOGIC (Strictly follow backend)
                 if (prev < target) {
                     const diff = target - prev;
-                    // Faster easing (10% per 100ms) for better reactivity
-                    const step = Math.max(0.1, diff * 0.1);
+                    // Faster easing (15% per 100ms) for better reactivity
+                    const step = Math.max(0.1, diff * 0.15);
                     return Math.min(target, prev + step);
                 }
 
-                // 2. CRAWLING LOGIC (Subtle "alive" feeling)
-                // Only crawl if we've passed the initial script phase
-                if (prev >= target && target < 100 && target > 15) {
-                    const remaining = 99 - prev;
+                // 3. CRAWLING LOGIC (Subtle "alive" feeling)
+                // Remove hardcoded target > 15 condition to allow crawling in all phases
+                if (prev >= target && target < 100) {
+                    const remaining = 99.5 - prev;
                     if (remaining > 0) {
                         // Extremely subtle crawl (0.01% max) to avoid outrunning reality
                         const crawlStep = Math.max(0.001, remaining * 0.001);
-                        return Math.min(99, prev + crawlStep);
+                        return Math.min(99.5, prev + crawlStep);
                     }
                 }
 
