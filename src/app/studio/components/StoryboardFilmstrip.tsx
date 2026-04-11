@@ -28,10 +28,11 @@ interface StoryboardFilmstripProps {
     vertical?: boolean;
 }
 
-function SortableSceneItem({ scene, index, vertical }: { scene: any; index: number; vertical?: boolean }) {
+function SortableSceneItem({ scene, index, vertical, aspectRatio }: { scene: any; index: number; vertical?: boolean, aspectRatio?: string }) {
     const { selectedSceneId, setSelectedSceneId } = useStudioStore();
     const sId = scene.id || `s${index + 1}`;
     const isAct = selectedSceneId === sId;
+    const isVerticalRatio = aspectRatio === "9:16";
 
     const {
         attributes,
@@ -58,7 +59,8 @@ function SortableSceneItem({ scene, index, vertical }: { scene: any; index: numb
                 {...listeners}
                 onClick={() => setSelectedSceneId(sId)}
                 className={cn(
-                    "relative w-full aspect-video shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                    "relative w-full shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                    isVerticalRatio ? "aspect-[9/16]" : "aspect-video",
                     isAct
                         ? "border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-[1.02] z-10"
                         : "border-zinc-100 hover:border-zinc-300 hover:scale-[1.01]"
@@ -94,12 +96,13 @@ function SortableSceneItem({ scene, index, vertical }: { scene: any; index: numb
             {...listeners}
             onClick={() => setSelectedSceneId(sId)}
             className={cn(
-                "relative w-[200px] shrink-0 flex flex-col gap-1 rounded-md overflow-hidden border-2 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                "relative shrink-0 flex flex-col gap-1 rounded-md overflow-hidden border-2 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                isVerticalRatio ? "w-[100px]" : "w-[200px]",
                 isAct
                     ? "border-emerald-500 shadow-sm shadow-emerald-200/60"
                     : "border-zinc-200/80 hover:border-zinc-300"
             )}>
-            <div className="relative w-full bg-zinc-100 rounded-md overflow-hidden" style={{ aspectRatio: "16/9" }}>
+            <div className="relative w-full bg-zinc-100 rounded-md overflow-hidden" style={{ aspectRatio: isVerticalRatio ? "9/16" : "16/9" }}>
                 {scene.thumbnailUrl || scene.imageUrl ? (
                     <img
                         src={scene.thumbnailUrl || scene.imageUrl}
@@ -205,7 +208,7 @@ export function StoryboardFilmstrip({ vertical }: StoryboardFilmstripProps) {
                         strategy={verticalListSortingStrategy}
                     >
                         {items.map((scene: any, i: number) => (
-                            <SortableSceneItem key={scene.id} scene={scene} index={i} vertical />
+                            <SortableSceneItem key={scene.id} scene={scene} index={i} vertical aspectRatio={activeVideo?.options?.aspectRatio} />
                         ))}
                     </SortableContext>
                 </div>
@@ -229,7 +232,7 @@ export function StoryboardFilmstrip({ vertical }: StoryboardFilmstripProps) {
                         strategy={horizontalListSortingStrategy}
                     >
                         {items.map((scene: any, i: number) => (
-                            <SortableSceneItem key={scene.id} scene={scene} index={i} />
+                            <SortableSceneItem key={scene.id} scene={scene} index={i} aspectRatio={activeVideo?.options?.aspectRatio} />
                         ))}
                     </SortableContext>
                 </div>

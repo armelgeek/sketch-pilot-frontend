@@ -19,6 +19,7 @@ interface SSEProgressState {
     jobId?: string;
     onCancel?: () => void;
     isReconnecting?: boolean;
+    step?: string;
     // Scene stream data (for real-time storyboard updates)
     lastScene?: any;
     lastSceneIndex?: number;
@@ -112,6 +113,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
                 ...prev,
                 progress: sse.progress,
                 message: sse.message,
+                step: sse.step,
                 jobId: state.jobId,
                 options: sse.options || prev.options,
                 totalScenes: sse.totalScenes || prev.totalScenes,

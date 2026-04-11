@@ -2,6 +2,8 @@ import { Barlow_Condensed, Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/src/components/providers";
 import { UtmCapturer } from "@/src/app/tracking";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const headingFont = Barlow_Condensed({
   subsets: ["latin"],
@@ -21,18 +23,23 @@ export const metadata = {
     "Turn any idea into a full faceless YouTube video. No camera. No editing. In 3 minutes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className="light">
+    <html lang={locale} className="light">
       <body className={`${headingFont.variable} ${bodyFont.variable} font-body antialiased bg-[#FAFAFA] text-zinc-950 selection:bg-[#F59E0B]/20 selection:text-[#F59E0B]`}>
-        <Providers>
-          <UtmCapturer />
-          {children}
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            <UtmCapturer />
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

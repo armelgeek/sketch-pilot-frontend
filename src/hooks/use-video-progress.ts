@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 export interface ProgressState {
     progress: number;
@@ -13,13 +14,40 @@ export interface ProgressState {
     currentSceneIndex?: number;
     error?: string;
     promptsUrl?: string;
-    options?: any; // Added
-    totalScenes?: number; // Number of scenes from script
+    options?: any;
+    totalScenes?: number;
 }
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
 
+// Map backend step codes → step-level i18n keys (handled inside the hook)
+function parseStepCode(rawMessage: string): { key: string; index?: string } | null {
+    // Format: "step.composing_scene:3"  or  "step.audio_init"
+    if (!rawMessage?.startsWith("step.")) return null;
+    const withoutPrefix = rawMessage.slice(5); // remove "step."
+    const colonIdx = withoutPrefix.indexOf(":");
+    if (colonIdx === -1) return { key: withoutPrefix };
+    return { key: withoutPrefix.slice(0, colonIdx), index: withoutPrefix.slice(colonIdx + 1) };
+}
+
 export function useVideoProgress(jobId?: string) {
+    const tSteps = useTranslations("steps");
+    const tProgress = useTranslations("progress");
+
+    const resolveMessage = useCallback((rawMessage: string): string => {
+        if (!rawMessage) return tProgress("initializing");
+        // Try step code (format: "step.key" or "step.key:index")
+        const stepCode = parseStepCode(rawMessage);
+        if (stepCode) {
+            try {
+                return tSteps(stepCode.key as any, stepCode.index ? { index: stepCode.index } : undefined);
+            } catch { return rawMessage; }
+        }
+        // Return raw fallback
+        return rawMessage;
+    }, [tSteps, tProgress]);
+
+
     const [state, setState] = useState<ProgressState>({
         progress: 0,
         message: "Initializing...",
@@ -37,7 +65,7 @@ export function useVideoProgress(jobId?: string) {
         // Reset state for new job tracking
         setState({
             progress: 0,
-            message: "Initializing...",
+            message: tProgress("initializing"),
             step: "idle",
             status: "queued",
         });
@@ -60,8 +88,8 @@ export function useVideoProgress(jobId?: string) {
                 setState((prev) => ({
                     ...prev,
                     status: "failed",
-                    error: "Connexion perdue. La génération a peut-être échoué ou met trop de temps à répondre.",
-                    message: "Le serveur ne répond plus. Veuillez vérifier vos vidéos ou réessayer.",
+                    error: tProgress("connection_lost"),
+                    message: tProgress("server_unresponsive"),
                 }));
                 setIsFinished(true);
                 explicitlyClosed = true;
@@ -79,11 +107,20 @@ export function useVideoProgress(jobId?: string) {
                 retryCount = 0;
                 setIsReconnecting(false);
                 setRetryCountState(0);
-                setState((prev) => ({ ...prev, status: data.status, progress: data.progress || 0 }));
+
+                let initialProgress = data.progress || 0;
+                // Avoid stale 100% from previous phases
+                if (initialProgress === 100 && data.status !== "completed") {
+                    initialProgress = 0;
+                }
+
+                setState((prev) => ({ ...prev, status: data.status, progress: initialProgress }));
             });
+
 
             eventSource.addEventListener("progress", (event: any) => {
                 const data = JSON.parse(event.data);
+                console.log("[SSE] DATA:", data);
                 const msgCurrentIdx = data.currentSceneIndex !== undefined ? data.currentSceneIndex : data.sceneIndex;
 
                 setState((prev) => {
@@ -94,7 +131,7 @@ export function useVideoProgress(jobId?: string) {
                     return {
                         ...prev,
                         progress: data.progress !== undefined ? data.progress : prev.progress,
-                        message: data.message || data.step || prev.message,
+                        message: resolveMessage(data.message || data.step || "") || prev.message,
                         step: data.step || prev.step,
                         status: data.status || prev.status,
                         videoId: data.videoId || prev.videoId,
@@ -102,8 +139,8 @@ export function useVideoProgress(jobId?: string) {
                         lastSceneIndex: lastIdx,
                         currentSceneIndex: msgCurrentIdx !== undefined ? msgCurrentIdx : prev.currentSceneIndex,
                         promptsUrl: data.promptsUrl || prev.promptsUrl,
-                        options: data.options || prev.options, // Added
-                        totalScenes: data.totalScenes || prev.totalScenes, // Added
+                        options: data.options || prev.options,
+                        totalScenes: data.totalScenes || prev.totalScenes,
                     };
                 });
             });
@@ -114,7 +151,7 @@ export function useVideoProgress(jobId?: string) {
                     ...prev,
                     progress: data.progress || 100,
                     status: "completed",
-                    message: "Generation finished!",
+                    message: tProgress("completed"),
                     videoUrl: data.videoUrl,
                     thumbnailUrl: data.thumbnailUrl,
                     videoId: data.videoId,
@@ -130,9 +167,9 @@ export function useVideoProgress(jobId?: string) {
                         const data = JSON.parse(event.data);
                         setState((prev) => ({
                             ...prev,
-                            status: "failed",
-                            error: data.error || "Generation failed",
-                            message: data.error || "An error occurred",
+                            status: data.status === "cancelled" ? "draft" : "failed",
+                            error: data.error || tProgress("failed"),
+                            message: data.status === "cancelled" ? tProgress("cancelled") : (data.error || tProgress("unknown_error"))
                         }));
 
                         if (data.retryable === false) {
@@ -288,6 +325,11 @@ export function useVideoProgress(jobId?: string) {
         const interval = setInterval(() => {
             setDisplayProgress((prev) => {
                 const target = state.progress;
+
+                // 1. DOWNWARD LOGIC (Step switch / Reset)
+                if (target < prev) {
+                    return target;
+                }
 
                 // 2. CATCH-UP LOGIC (Strictly follow backend)
                 if (prev < target) {

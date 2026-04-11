@@ -52,6 +52,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
         totalEpisodes: "",
         characterRegistry: {} as Record<string, any>,
         language: "fr",
+        aspectRatio: "9:16",
         duration: "60",
         videoGenre: "Horreur Historique",
         promptId: "",
@@ -71,6 +72,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 totalEpisodes: seriesToEdit.totalEpisodes || "",
                 characterRegistry: seriesToEdit.characterRegistry || {},
                 language: seriesToEdit.language || "fr",
+                aspectRatio: seriesToEdit.aspectRatio || "9:16",
                 duration: seriesToEdit.duration || "60",
                 videoGenre: seriesToEdit.videoGenre || "Horreur Historique",
                 promptId: seriesToEdit.promptId || "",
@@ -86,6 +88,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 totalEpisodes: "",
                 characterRegistry: {},
                 language: "fr",
+                aspectRatio: "9:16",
                 duration: "60",
                 videoGenre: "Horreur Historique",
                 promptId: "",
@@ -459,18 +462,29 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Langue</Label>
-                                            <select
-                                                value={form.language}
-                                                onChange={(e) => setForm({ ...form, language: e.target.value })}
-                                                className="w-full bg-white dark:bg-zinc-900 border border-stone-100 dark:border-zinc-800 rounded-xl h-10 px-3 text-xs font-bold"
-                                            >
-                                                <option value="fr">Français 🇫🇷</option>
-                                                <option value="en">English 🇺🇸</option>
-                                                <option value="es">Español 🇪🇸</option>
-                                                <option value="de">Deutsch 🇩🇪</option>
-                                                <option value="it">Italiano 🇮🇹</option>
-                                            </select>
+                                            <Label className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Ratio d'Aspect</Label>
+                                            <div className="flex bg-white dark:bg-zinc-900 border border-stone-100 dark:border-zinc-800 rounded-xl p-1 gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm({ ...form, aspectRatio: "16:9" })}
+                                                    className={cn(
+                                                        "flex-1 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all",
+                                                        form.aspectRatio === "16:9" ? "bg-stone-900 text-white shadow-md shadow-stone-900/20" : "text-stone-400 hover:text-stone-600"
+                                                    )}
+                                                >
+                                                    16:9
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm({ ...form, aspectRatio: "9:16" })}
+                                                    className={cn(
+                                                        "flex-1 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all",
+                                                        form.aspectRatio === "9:16" ? "bg-stone-900 text-white shadow-md shadow-stone-900/20" : "text-stone-400 hover:text-stone-600"
+                                                    )}
+                                                >
+                                                    9:16
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
@@ -484,6 +498,21 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                                                 <option value="60">60 secondes</option>
                                                 <option value="90">90 secondes</option>
                                                 <option value="120">2 minutes</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Langue</Label>
+                                            <select
+                                                value={form.language}
+                                                onChange={(e) => setForm({ ...form, language: e.target.value })}
+                                                className="w-full bg-white dark:bg-zinc-900 border border-stone-100 dark:border-zinc-800 rounded-xl h-10 px-3 text-xs font-bold"
+                                            >
+                                                <option value="fr">Français 🇫🇷</option>
+                                                <option value="en">English 🇺🇸</option>
+                                                <option value="es">Español 🇪🇸</option>
+                                                <option value="de">Deutsch 🇩🇪</option>
+                                                <option value="it">Italiano 🇮🇹</option>
                                             </select>
                                         </div>
                                     </div>

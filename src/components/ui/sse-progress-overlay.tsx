@@ -3,35 +3,35 @@
 import { X, Sparkles, Wand2, Calculator, Film, Check } from "lucide-react";
 import { useSSEProgress } from "@/src/contexts/sse-progress-context";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import confetti from "canvas-confetti";
 
-function getIcon(message: string, isDone: boolean) {
+function getIcon(step: string | undefined, isDone: boolean) {
     const cls = "h-4 w-4";
     if (isDone) return <Check className={cls} />;
-
-    const msg = message || "";
-    if (msg.includes("[Étape 1/3]")) return <Calculator className={cls} />;
-    if (msg.includes("[Étape 2/3]")) return <Wand2 className={cls} />;
-    if (msg.includes("[Étape 3/3]")) {
-        if (msg.includes("audio")) return <Film className={cls} />;
+    if (step === "script_generation" || step?.startsWith("step.step_1")) return <Calculator className={cls} />;
+    if (step === "composing_scene" || step?.startsWith("step.step_2")) return <Wand2 className={cls} />;
+    if (step === "audio_generation" || step === "rendering" || step?.startsWith("step.step_3")) {
+        if (step?.includes("audio")) return <Film className={cls} />;
         return <Sparkles className={cls} />;
     }
-
     return <Sparkles className={cls} />;
 }
 
 export function SSEProgressOverlay() {
     const { state, stopProgress, hideOverlay, cancelCurrentJob } = useSSEProgress();
+    const t = useTranslations("overlay");
+    const tProgress = useTranslations("progress");
 
     const [visible, setVisible] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [displayProgress, setDisplayProgress] = useState(0);
 
-    const isDone = state.progress >= 100;
+    const isDone = state.status === "completed";
 
     const icon = useMemo(
-        () => getIcon(state.message, isDone),
-        [state.message, isDone]
+        () => getIcon(state.step, isDone),
+        [state.step, isDone]
     );
 
     useEffect(() => {
@@ -60,8 +60,8 @@ export function SSEProgressOverlay() {
             requestAnimationFrame(() => setVisible(true));
         } else {
             setVisible(false);
-            const t = setTimeout(() => setMounted(false), 250);
-            return () => clearTimeout(t);
+            const timer = setTimeout(() => setMounted(false), 250);
+            return () => clearTimeout(timer);
         }
     }, [state.overlayVisible]);
 
@@ -70,6 +70,14 @@ export function SSEProgressOverlay() {
     const cancel = async () => {
         await cancelCurrentJob();
     };
+
+    const statusLabel = state.status === "failed"
+        ? t("status_failed")
+        : state.isReconnecting
+            ? t("status_reconnecting")
+            : isDone
+                ? t("status_done")
+                : t("status_in_progress");
 
     return (
         <div
@@ -102,7 +110,7 @@ export function SSEProgressOverlay() {
                         <div className="flex flex-col min-w-0 flex-1">
 
                             <p className="text-[11px] text-zinc-400 font-medium truncate">
-                                {state.message || "Préparation..."}
+                                {state.message || tProgress("preparing")}
                             </p>
                         </div>
                     </div>
@@ -115,7 +123,7 @@ export function SSEProgressOverlay() {
                     <button
                         onClick={hideOverlay}
                         className="p-1 rounded-full hover:bg-zinc-100 text-zinc-300 hover:text-zinc-500 transition shrink-0"
-                        title="Fermer (laisse la génération tourner en arrière-plan)"
+                        title={t("close_hint")}
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -135,13 +143,7 @@ export function SSEProgressOverlay() {
                 {/* STATUS */}
                 <div className="flex justify-between items-center mb-6">
                     <span className="text-[10px] uppercase tracking-widest text-zinc-400">
-                        {state.status === "failed"
-                            ? "Échec"
-                            : state.isReconnecting
-                                ? "Reconnexion..."
-                                : isDone
-                                    ? "Terminé"
-                                    : "En cours"}
+                        {statusLabel}
                     </span>
                     <span className="text-xs font-medium text-zinc-500 tabular-nums">
                         {Math.round(displayProgress)}%
@@ -161,7 +163,7 @@ export function SSEProgressOverlay() {
                     {isDone ? (
                         <div className="flex items-center justify-center gap-2 text-xs text-[#1D9E75] animate-fadeIn">
                             <Check className="h-3 w-3" />
-                            Prêt pour visualisation
+                            {t("ready")}
                         </div>
                     ) : state.active ? (
                         <button
@@ -169,7 +171,7 @@ export function SSEProgressOverlay() {
                             className="w-full flex items-center justify-center gap-2 rounded-xl py-1.5 text-xs text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition"
                         >
                             <X className="h-3 w-3" />
-                            Annuler la génération
+                            {t("cancel")}
                         </button>
                     ) : null}
                 </div>

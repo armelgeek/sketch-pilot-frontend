@@ -1,0 +1,43 @@
+{
+    "steps": {
+        "pipeline_init": "Initializing pipeline...",
+        "audio_init": "Initializing audio generation...",
+        "assembly_init": "Initializing video assembly...",
+        "upload_audio": "Uploading audio results...",
+        "upload_scenes": "Uploading scene visuals...",
+        "upload_prepare": "Preparing final video package...",
+        "upload_video": "Uploading final video...",
+        "composing_scene": "Scene {index} generated",
+        "upload_reprompt": "Uploading re-generated scene {index}...",
+        "step_1_script": "[Step 1/3] Writing script...",
+        "step_2_images": "[Step 2/3] Generating visuals...",
+        "step_2_download": "[Step 2/3] Downloading scene {index}...",
+        "step_2_scene": "[Step 2/3] Generating scene {index}...",
+        "step_3_audio_prep": "[Step 3/3] Audio preparation: Scene {index}...",
+        "step_3_narration": "[Step 3/3] Stitching final narration...",
+        "step_3_assembly": "[Step 3/3] Assembling video...",
+        "step_3_whisper": "[Step 3/3] Syncing word timings (Whisper AI)..."
+    },
+    "progress": {
+        "initializing": "Initializing...",
+        "preparing": "Preparing...",
+        "completed": "Generation complete!",
+        "failed": "Generation failed",
+        "cancelled": "Generation cancelled.",
+        "reconnecting": "Reconnecting...",
+        "connection_lost": "Connection lost. The generation may have failed or is taking too long.",
+        "server_unresponsive": "Server is not responding. Check your videos or try again.",
+        "connection_error": "Unable to connect to the server. Check your internet connection.",
+        "fetch_error": "A network error occurred. Please try again.",
+        "unknown_error": "An unexpected error occurred."
+    },
+    "overlay": {
+        "status_in_progress": "In progress",
+        "status_done": "Done",
+        "status_failed": "Failed",
+        "status_reconnecting": "Reconnecting...",
+        "close_hint": "Close (generation continues in background)",
+        "cancel": "Cancel generation",
+        "ready": "Ready to view"
+    }
+}

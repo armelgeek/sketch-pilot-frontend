@@ -16,6 +16,9 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
         regeneratingSceneId,
     } = useStudioStore();
 
+    const aspectRatio = activeVideo?.options?.aspectRatio || "16:9";
+    const isVertical = aspectRatio === "9:16";
+
     const displayScenes = (activeVideo?.scenes?.length ? activeVideo.scenes : activeVideo?.script?.scenes) || [];
     const activeSceneIndex = displayScenes.findIndex((s: any, i: number) => (s.id || `s${i + 1}`) === selectedSceneId);
     const activeScene = displayScenes[activeSceneIndex];
@@ -66,11 +69,17 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
                 {activeScene.imageUrl ? (
                     <img
                         src={activeScene.imageUrl}
-                        className="max-w-full max-h-[70vh] w-auto h-auto object-contain block ring-1 ring-zinc-100"
+                        className={cn(
+                            "max-w-full max-h-[70vh] w-auto h-auto object-contain block ring-1 ring-zinc-100",
+                            isVertical ? "aspect-[9/16]" : "aspect-video"
+                        )}
                         alt={`Scène ${activeSceneIndex + 1}`}
                     />
                 ) : (
-                    <div className="w-[600px] aspect-video flex flex-col items-center justify-center bg-zinc-50">
+                    <div className={cn(
+                        "flex flex-col items-center justify-center bg-zinc-50",
+                        isVertical ? "w-[300px] aspect-[9/16]" : "w-[600px] aspect-video"
+                    )}>
                         <Film className="h-12 w-12 mb-3 text-zinc-200" />
                         <p className="text-xs text-zinc-400">Aucun visuel</p>
                     </div>

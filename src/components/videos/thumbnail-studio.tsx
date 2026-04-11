@@ -183,7 +183,8 @@ export function ThumbnailStudio({ video, onClose }: ThumbnailStudioProps) {
                                                 key={i}
                                                 onClick={() => setSelectedTemplate(prev => prev === url ? null : url)}
                                                 className={cn(
-                                                    "relative aspect-video rounded-lg overflow-hidden border transition-all",
+                                                    "relative rounded-lg overflow-hidden border transition-all",
+                                                    currentVideo.options?.aspectRatio === '9:16' ? "aspect-[9/16]" : "aspect-video",
                                                     selectedTemplate === url
                                                         ? "border-blue-500 ring-2 ring-blue-100"
                                                         : "border-zinc-100 hover:border-zinc-300"
@@ -229,7 +230,10 @@ export function ThumbnailStudio({ video, onClose }: ThumbnailStudioProps) {
 
                         {/* Preview Area */}
                         <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
-                            <div className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white transition-all duration-700">
+                            <div className={cn(
+                                "relative w-full rounded-2xl overflow-hidden bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white transition-all duration-700",
+                                currentVideo.options?.aspectRatio === '9:16' ? "aspect-[9/16] max-h-full mx-auto" : "max-w-4xl aspect-video"
+                            )}>
                                 {stage === "idle" && (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center p-12">
                                         <div className="h-16 w-16 rounded-3xl bg-zinc-50 flex items-center justify-center mb-2">
@@ -292,7 +296,7 @@ export function ThumbnailStudio({ video, onClose }: ThumbnailStudioProps) {
                             <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
                                     <div className="h-1 w-1 rounded-full bg-zinc-300" />
-                                    <span className="text-[10px] uppercase tracking-widest font-bold">16:9 Aspect Ratio</span>
+                                    <span className="text-[10px] uppercase tracking-widest font-bold">{currentVideo.options?.aspectRatio || '16:9'} Aspect Ratio</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="h-1 w-1 rounded-full bg-zinc-300" />

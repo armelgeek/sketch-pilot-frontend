@@ -1,0 +1,43 @@
+{
+    "steps": {
+        "pipeline_init": "Initialisation du pipeline...",
+        "audio_init": "Initialisation de la génération audio...",
+        "assembly_init": "Initialisation de l'assemblage vidéo...",
+        "upload_audio": "Envoi des résultats audio...",
+        "upload_scenes": "Envoi des visuels des scènes...",
+        "upload_prepare": "Préparation du package vidéo final...",
+        "upload_video": "Envoi de la vidéo finale...",
+        "composing_scene": "Scène {index} générée",
+        "upload_reprompt": "Envoi de la scène re-générée {index}...",
+        "step_1_script": "[Étape 1/3] Écriture du script...",
+        "step_2_images": "[Étape 2/3] Génération des visuels...",
+        "step_2_download": "[Étape 2/3] Téléchargement de la scène {index}...",
+        "step_2_scene": "[Étape 2/3] Génération scène {index}...",
+        "step_3_audio_prep": "[Étape 3/3] Préparation audio : Scène {index}...",
+        "step_3_narration": "[Étape 3/3] Assemblage de la narration finale...",
+        "step_3_assembly": "[Étape 3/3] Assemblage du montage vidéo...",
+        "step_3_whisper": "[Étape 3/3] Synchronisation des paroles (Whisper AI)..."
+    },
+    "progress": {
+        "initializing": "Initialisation...",
+        "preparing": "Préparation...",
+        "completed": "Génération terminée !",
+        "failed": "Échec de la génération",
+        "cancelled": "Génération annulée.",
+        "reconnecting": "Reconnexion...",
+        "connection_lost": "Connexion perdue. La génération a peut-être échoué ou met trop de temps à répondre.",
+        "server_unresponsive": "Le serveur ne répond plus. Veuillez vérifier vos vidéos ou réessayer.",
+        "connection_error": "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
+        "fetch_error": "Une erreur réseau est survenue. Veuillez réessayer.",
+        "unknown_error": "Une erreur inattendue est survenue."
+    },
+    "overlay": {
+        "status_in_progress": "En cours",
+        "status_done": "Terminé",
+        "status_failed": "Échec",
+        "status_reconnecting": "Reconnexion...",
+        "close_hint": "Fermer (laisse la génération tourner en arrière-plan)",
+        "cancel": "Annuler la génération",
+        "ready": "Prêt pour visualisation"
+    }
+}

@@ -549,6 +549,9 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 }
 
 function CaptionPreview({ style }: { style: string }) {
+    const { activeVideo } = useStudioStore();
+    const isVertical = activeVideo?.options?.aspectRatio === '9:16';
+
     const previewMap: Record<string, React.ReactNode> = {
         colored: <span className="text-sm font-black italic text-white">VOTRE <span className="text-yellow-400">VIDÉO</span></span>,
         scaling: <span className="text-sm font-bold text-white uppercase scale-110 inline-block">TEXTE</span>,
@@ -561,7 +564,10 @@ function CaptionPreview({ style }: { style: string }) {
     };
 
     return (
-        <div className="relative aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-200">
+        <div className={cn(
+            "relative rounded-xl bg-zinc-900 overflow-hidden border border-zinc-200 mx-auto",
+            isVertical ? "aspect-[9/16] max-h-[300px]" : "aspect-video"
+        )}>
             <div
                 className="absolute inset-0 bg-cover bg-center opacity-20"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=60')" }}

@@ -145,7 +145,10 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
                 onClick={() => !showActions && editPath && router.push(editPath)}
             >
                 {/* Thumbnail */}
-                <div className="aspect-video relative rounded-xl overflow-hidden bg-zinc-50">
+                <div className={cn(
+                    "relative rounded-xl overflow-hidden bg-zinc-50",
+                    video.options?.aspectRatio === '9:16' ? "aspect-[9/16]" : "aspect-video"
+                )}>
                     {video.thumbnailUrl ? (
                         <img
                             src={video.thumbnailUrl}
@@ -311,9 +314,16 @@ export function VideoCard({ video, showActions = false, onDelete }: VideoCardPro
                             <span className="text-zinc-200">·</span>
                             <span className="text-[11px] text-zinc-300 font-medium">{date}</span>
                         </div>
-                        {video.status === "completed" && (
-                            <span className="text-[10px] font-semibold text-emerald-400/70">4K</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {video.options?.aspectRatio && (
+                                <span className="text-[10px] font-bold text-zinc-400/80 bg-zinc-100/50 px-1.5 py-0.5 rounded-md">
+                                    {video.options.aspectRatio}
+                                </span>
+                            )}
+                            {video.status === "completed" && (
+                                <span className="text-[10px] font-semibold text-emerald-400/70">4K</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -332,7 +342,9 @@ function VideoProgressIndicator({ video }: { video: Video }) {
     );
 
     // Fallback to initial progress if SSE hasn't synced
-    const activeProgress = rawProgress > 0 ? progress : (video.progress || 0);
+    // If it's processing but rawProgress is 0, we default to 0 to avoid stale '100%' from DB
+    const isProcessing = video.status === "processing" || video.status === "queued" || video.status === "scenes_generated";
+    const activeProgress = rawProgress > 0 ? progress : (isProcessing ? 0 : (video.progress || 0));
 
     return (
         <div className="w-full flex flex-col items-center justify-center space-y-3">

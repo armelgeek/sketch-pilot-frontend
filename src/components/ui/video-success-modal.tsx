@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { X, Download, Share2, Plus, Video, CheckCircle2, Check } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import confetti from "canvas-confetti";
+import { cn } from "@/src/lib/utils";
 
 interface VideoSuccessModalProps {
     videoUrl: string;
@@ -117,14 +118,17 @@ export function VideoSuccessModal({
                 </div>
 
                 {/* Video player */}
-                <div className="mx-5 mb-4 rounded-2xl overflow-hidden bg-zinc-900 shadow-lg">
+                <div className={cn(
+                    "mx-5 mb-4 rounded-2xl overflow-hidden bg-zinc-900 shadow-lg",
+                    aspectRatio === '9:16' ? "aspect-[9/16] max-h-[60vh] mx-auto" : ""
+                )}>
                     <video
                         src={videoUrl}
                         controls
                         autoPlay
                         playsInline
                         poster={thumbnailUrl}
-                        className="w-full max-h-[52vh] object-contain"
+                        className="w-full h-full object-contain"
                     />
                 </div>
 

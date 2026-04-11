@@ -93,7 +93,10 @@ export default function VideoDetailPage() {
 
                 {/* Left Col: Player */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="w-full aspect-video bg-zinc-950 rounded-2xl overflow-hidden shadow-2xl relative border border-zinc-200">
+                    <div className={cn(
+                        "w-full bg-zinc-950 rounded-2xl overflow-hidden shadow-2xl relative border border-zinc-200",
+                        options?.aspectRatio === '9:16' ? "aspect-[9/16] max-h-[80vh] mx-auto" : "aspect-video"
+                    )}>
                         {isCompleted && video.videoUrl ? (
                             <video
                                 src={video.videoUrl}
