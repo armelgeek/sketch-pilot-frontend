@@ -79,6 +79,11 @@ export function SeriesSelector({ seriesList, selectedId, onSelect, onEdit, onAdd
                                 <span className="text-[10px] font-semibold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
                                     {s.lastEpisodeNumber || 0} épisodes
                                 </span>
+                                {s.visualStyleModelId && (
+                                    <span className="text-[10px] font-semibold text-blue-400 bg-blue-50 px-1.5 py-0.5 rounded">
+                                        Style Unifié
+                                    </span>
+                                )}
                                 {s.status === 'active' && (
                                     <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500 bg-blue-50/50 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                         <Sparkles className="h-2 w-2 animate-pulse" /> En cours

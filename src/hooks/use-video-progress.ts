@@ -289,12 +289,6 @@ export function useVideoProgress(jobId?: string) {
             setDisplayProgress((prev) => {
                 const target = state.progress;
 
-                // 1. RESET LOGIC: If target is significantly lower than prev, snap or ease back quickly
-                if (prev > target + 5) {
-                    // Quick reset: 20% per 100ms
-                    return Math.max(target, prev - 20);
-                }
-
                 // 2. CATCH-UP LOGIC (Strictly follow backend)
                 if (prev < target) {
                     const diff = target - prev;

@@ -67,26 +67,34 @@ export default function DashboardPage() {
   const [generationMode, setGenerationMode] = useState<'standalone' | 'series' | 'quotes'>('standalone');
   const [seriesList, setSeriesList] = useState<Series[]>([]);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+  const [activeSeries, setActiveSeries] = useState<Series | null>(null);
   const [showSeriesModal, setShowSeriesModal] = useState(false);
   const [seriesToEdit, setSeriesToEdit] = useState<Series | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [pData, charData, myData, vData, sData] = await Promise.all([
+        const [pData, charData, myData, vData, sData, activeSaga] = await Promise.all([
           adminService.listPublicPrompts({ limit: 100 }),
           adminService.listStandardModels(),
           adminService.listModels(),
           videosService.getAll(),
-          seriesService.getAll()
+          seriesService.getAll(),
+          seriesService.findActive()
         ]);
         setPrompts(pData.data || []);
         setCharacterModels(charData.data || []);
         setPersonalModels(myData.data || []);
         setRecentVideos(vData || []);
         setSeriesList(sData || []);
+        setActiveSeries(activeSaga);
 
-        if (sData?.length > 0) setSelectedSeriesId(sData[0].id);
+        if (activeSaga && !selectedSeriesId) {
+          setSelectedSeriesId(activeSaga.id);
+          setGenerationMode('series');
+        } else if (sData?.length > 0) {
+          setSelectedSeriesId(sData[0].id);
+        }
 
         if (pData.data?.length > 0 && !selectedPromptId) setSelectedPromptId(pData.data[0].id);
         if (!selectedCharacterId) {
@@ -151,6 +159,17 @@ export default function DashboardPage() {
         title: "Initialisation de la vidéo...",
         onCancel: () => { setGenerating(false); setJobId(undefined); stopProgress(); },
       });
+
+      if (generationMode === 'series' && !script.trim() && selectedSeriesId) {
+        // AUTOMATED SERIES GENERATION
+        const response = await seriesService.generateNextEpisode(selectedSeriesId);
+        if (response.jobId) {
+          setJobId(response.jobId);
+        } else {
+          router.push(`/generate/${response.videoId}/script`);
+        }
+        return;
+      }
 
       const selectedPrompt = prompts.find((p) => p.id === selectedPromptId);
       const options: any = {

@@ -12,11 +12,16 @@ import { useRouter } from "next/navigation";
 import { seriesService, Series } from "@/src/services/series-service";
 import { Video, videosService } from "@/src/services/videos-service";
 import { VideoCard } from "@/src/components/organisms/video-card";
-import { Loader2, Film, AlertCircle, Sparkles, Users, Maximize2, X, RefreshCw } from "lucide-react";
+import { useVideoProgress } from "@/src/hooks/use-video-progress";
+import { Loader2, Film, AlertCircle, Sparkles, Users, Maximize2, X, RefreshCw, Trash2, AlertTriangle, Calendar } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { cn } from "@/src/lib/utils";
+import { AdminService } from "@/src/app/admin/api/admin-service";
+import { useQueryClient } from "@tanstack/react-query";
+
+const adminService = new AdminService();
 
 interface SeriesEpisodesDialogProps {
     series: Series | null;
@@ -28,21 +33,54 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
     const [episodes, setEpisodes] = useState<Video[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedVideoId, setGeneratedVideoId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [selectedCharacter, setSelectedCharacter] = useState<{ name: string; data: any } | null>(null);
     const [isRegenerating, setIsRegenerating] = useState(false);
+    const [models, setModels] = useState<any[]>([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const [trackingJobId, setTrackingJobId] = useState<string | null>(null);
+
+    const { progress, message, step, status } = useVideoProgress(trackingJobId || undefined);
 
     const isPrepared = !!(series?.globalContext && Object.keys(series?.characterRegistry || {}).length > 0);
+
+    // Dynamic redirection effect
+    useEffect(() => {
+        if (!trackingJobId || !generatedVideoId || !series) return;
+
+        // When script generation is finished, redirect to storyboard
+        if (status === "completed") {
+            router.push(`/generate/${generatedVideoId}/script`);
+        }
+    }, [status, generatedVideoId, trackingJobId]);
 
     useEffect(() => {
         if (isOpen && series) {
             loadEpisodes();
+            loadModels();
         } else {
             setEpisodes([]);
             setError(null);
         }
     }, [isOpen, series]);
+
+    const loadModels = async () => {
+        try {
+            const [std, pers] = await Promise.all([
+                adminService.listStandardModels(),
+                adminService.listModels()
+            ]);
+            setModels([...(std.data || []), ...(pers.data || [])]);
+        } catch (err) {
+            console.error("Failed to load models for dialog:", err);
+        }
+    };
 
     const loadEpisodes = async () => {
         if (!series) return;
@@ -72,13 +110,14 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
             };
 
             const response = await videosService.generate(`Saga ${series.title}`, options);
-            if (response.videoId) {
-                router.push(`/generate/${response.videoId}/script`);
+            if (response.jobId) {
+                setGeneratedVideoId(response.videoId);
+                setTrackingJobId(response.jobId);
+                // The useEffect will handle redirection when status becomes "completed"
             }
         } catch (err) {
             console.error("Failed to generate next episode:", err);
             alert("Erreur lors de la génération de la suite.");
-        } finally {
             setIsGenerating(false);
         }
     };
@@ -102,6 +141,22 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
         }
     };
 
+    const handleDeleteSeries = async () => {
+        if (!series?.id) return;
+        setIsDeleting(true);
+        try {
+            await seriesService.delete(series.id);
+            alert("La saga a été supprimée avec succès.");
+            queryClient.invalidateQueries({ queryKey: ["series"] });
+            onClose();
+        } catch (error) {
+            alert("Impossible de supprimer la saga.");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
 
     if (!series) return null;
 
@@ -115,17 +170,44 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                     </div>
 
                     <div className="relative z-10">
-                        <DialogHeader className="mb-6">
+                        <DialogHeader className="mb-6 text-left">
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="px-2 py-0.5 rounded bg-blue-500 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-blue-500/20">Saga Narrative</span>
                                 <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">• {episodes.length} Épisodes</span>
                             </div>
-                            <DialogTitle className="text-3xl font-black tracking-tight leading-tight">
-                                {series.title}
-                            </DialogTitle>
-                            <DialogDescription className="text-zinc-400 text-sm mt-2 max-w-xl line-clamp-2">
-                                {series.description || "Aucune description pour cet univers."}
-                            </DialogDescription>
+                            <div className="flex items-center justify-between gap-4">
+                                <DialogTitle className="text-3xl font-black tracking-tight leading-tight">
+                                    {series.title}
+                                </DialogTitle>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="h-8 px-3 text-[10px] font-bold text-red-400 hover:text-red-500 hover:bg-red-500/10 uppercase tracking-widest transition-colors rounded-xl border border-red-500/20"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                    Supprimer la Saga
+                                </Button>
+                            </div>
+                            <div className="flex items-center gap-4 mt-1">
+                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1.5">
+                                    <Calendar className="h-3 w-3" />
+                                    Créée le {series.createdAt ? new Date(series.createdAt).toLocaleDateString() : "Date inconnue"}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 mt-4">
+                                <DialogDescription className="text-zinc-400 text-sm flex-1 line-clamp-2">
+                                    {series.description || "Aucune description pour cet univers."}
+                                </DialogDescription>
+                                {series.visualStyleModelId && (
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Style Saga</span>
+                                        <div className="h-10 w-10 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+                                            <div className="h-full w-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] font-bold uppercase">Saga</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </DialogHeader>
                     </div>
                 </div>
@@ -267,12 +349,29 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                                     <button
                                         onClick={handleRegenerateImage}
                                         disabled={isRegenerating}
-                                        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed w-fit"
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking_widest transition-all disabled:opacity-60 disabled:cursor-not-allowed w-fit"
                                     >
                                         {isRegenerating
                                             ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Génération...</>
                                             : <><RefreshCw className="h-3.5 w-3.5" /> Régénérer l&apos;image</>}
                                     </button>
+
+                                    {series.visualStyleModelId && (
+                                        <div className="pt-4 border-t border-zinc-100 mt-4">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Style Saga Unifié</p>
+                                            <div className="flex items-center gap-3 bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                                                <img
+                                                    src={models.find(m => m.id === series.visualStyleModelId)?.images?.[0] || models.find(m => m.id === series.visualStyleModelId)?.thumbnailUrl}
+                                                    className="h-10 w-10 rounded-xl object-cover shadow-sm"
+                                                    alt="Style"
+                                                />
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] font-bold text-zinc-900 truncate">{models.find(m => m.id === series.visualStyleModelId)?.name || "Modèle personnalisé"}</p>
+                                                    <p className="text-[9px] text-zinc-500 font-medium">Référence visuelle de la saga</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -323,7 +422,63 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                             {isGenerating ? "Génération..." : `Générer l'épisode ${episodes.length + 1}`}
                         </Button>
                     </div>
+
+                    {/* Progress feedback when generating */}
+                    {isGenerating && trackingJobId && (
+                        <div className="mt-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+                                    {status === "completed" ? "Prêt !" : message || "Initialisation..."}
+                                </span>
+                                <span className="text-[10px] font-bold text-zinc-400">{progress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-zinc-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500 transition-all duration-500 ease-out"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            <p className="text-[9px] text-zinc-400 italic">Veuillez ne pas fermer cette fenêtre pendant la création du script.</p>
+                        </div>
+                    )}
                 </div>
+                {showDeleteConfirm && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-white/80 backdrop-blur-md animate-in fade-in duration-200">
+                        <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-stone-100 p-8 space-y-6 text-center animate-in zoom-in-95 duration-300">
+                            <div className="h-20 w-20 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                                <AlertTriangle className="h-10 w-10 text-red-500" />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-black text-stone-900 uppercase tracking-tight">Supprimer la Saga ?</h3>
+                                <p className="text-sm text-stone-500 leading-relaxed">
+                                    Cette action est irréversible. La structure de la saga et son historique seront supprimés. Les épisodes déjà générés resteront dans votre historique vidéo.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 rounded-2xl h-12 font-bold uppercase tracking-widest text-[10px]"
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    disabled={isDeleting}
+                                >
+                                    Annuler
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    className="flex-1 rounded-2xl h-12 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-red-500/20"
+                                    onClick={handleDeleteSeries}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        "Oui, Supprimer"
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     );

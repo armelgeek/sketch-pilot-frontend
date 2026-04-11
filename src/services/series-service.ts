@@ -59,6 +59,11 @@ export class SeriesService extends BaseService<Series> {
         return response.data;
     }
 
+    async findActive(): Promise<Series | null> {
+        const response = await this.apiFetch<{ success: boolean; data: Series | null }>(`${this.endpoint}/active`);
+        return response.data;
+    }
+
     async create(data: CreateSeriesDTO): Promise<Series> {
         const response = await this.apiFetch<{ success: boolean; data: Series }>(this.endpoint, {
             method: "POST",
@@ -88,12 +93,13 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    getPrepareStreamUrl(data: { title: string; description?: string; language?: string; promptId?: string }): string {
+    getPrepareStreamUrl(data: { title: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string }): string {
         const params = new URLSearchParams();
         params.append("title", data.title);
         if (data.description) params.append("description", data.description);
         if (data.language) params.append("language", data.language);
         if (data.promptId) params.append("promptId", data.promptId);
+        if (data.visualStyleModelId) params.append("visualStyleModelId", data.visualStyleModelId);
 
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
         return `${baseUrl}${this.endpoint}/prepare/stream?${params.toString()}`;
@@ -110,6 +116,27 @@ export class SeriesService extends BaseService<Series> {
             { method: 'POST' }
         );
         return response;
+    }
+
+    async generateNextEpisode(id: string): Promise<{ success: boolean; jobId: string; videoId: string }> {
+        const response = await this.apiFetch<any>(`${this.endpoint}/${id}/generate-next`, {
+            method: "POST",
+        });
+        return response;
+    }
+
+    async promote(id: string, data: { type: 'character' | 'location', name: string, thumbnailUrl: string }): Promise<{ success: boolean }> {
+        const response = await this.apiFetch<any>(`${this.endpoint}/${id}/promote`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        });
+        return response;
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.apiFetch<{ success: boolean }>(`${this.endpoint}/${id}`, {
+            method: "DELETE",
+        });
     }
 }
 

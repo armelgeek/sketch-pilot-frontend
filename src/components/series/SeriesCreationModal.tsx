@@ -13,7 +13,7 @@ import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Label } from "@/src/components/ui/label";
 import { seriesService, type Series } from "@/src/services/series-service";
-import { Loader2, Plus, Sparkles, Settings2, BookOpen, ChevronRight, Users, Trash2, UserPlus, Info } from "lucide-react";
+import { Loader2, Plus, Sparkles, Settings2, BookOpen, ChevronRight, Users, Trash2, UserPlus, Info, X, Maximize2 } from "lucide-react";
 import { AdminService } from "@/src/app/admin/api/admin-service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { cn } from "@/src/lib/utils";
@@ -38,6 +38,9 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
     const [error, setError] = useState<string | null>(null);
     const [step, setStep] = useState<'basics' | 'roadmap' | 'casting'>('basics');
     const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+    const [zoomImage, setZoomImage] = useState<string | null>(null);
+
+    const [isBatchGeneratingPortraits, setIsBatchGeneratingPortraits] = useState(false);
 
     // Models for casting
     const [models, setModels] = useState<any[]>([]);
@@ -114,7 +117,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 ...prev.characterRegistry,
                 [`Personnage ${Object.keys(prev.characterRegistry).length + 1}`]: {
                     description: "",
-                    modelId: ""
+                    // modelId removed: simplified modeling
                 }
             }
         }));
@@ -179,7 +182,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 title: form.title,
                 description: form.description,
                 language: form.language,
-                promptId: form.promptId
+                promptId: form.promptId,
+                visualStyleModelId: form.visualStyleModelId
             });
 
             const es = new EventSource(streamUrl, { withCredentials: true });
@@ -188,6 +192,21 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 const data = JSON.parse(event.data);
                 if (data.progress !== undefined) setPreparationProgress(data.progress);
                 if (data.message) setPreparationMessage(data.message);
+            });
+
+            es.addEventListener("character_portrait", (event: any) => {
+                const data = JSON.parse(event.data);
+                // Partial update of a single character portrait
+                setForm(prev => ({
+                    ...prev,
+                    characterRegistry: {
+                        ...prev.characterRegistry,
+                        [data.name]: {
+                            ...prev.characterRegistry[data.name],
+                            thumbnailUrl: data.imageUrl
+                        }
+                    }
+                }));
             });
 
             es.addEventListener("final", (event: any) => {
@@ -207,7 +226,6 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 setIsPreparing(false);
                 setPreparationProgress(null);
                 setStep('roadmap');
-                // No toast needed here, the step change is clear feedback
             });
 
             es.addEventListener("error", (event: any) => {
@@ -231,16 +249,18 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
         }
     };
 
+
     const handleGeneratePortrait = async (charName: string) => {
         const char = form.characterRegistry[charName];
-        if (!char || !char.modelId || !char.portraitPrompt) {
-            alert("Veuillez sélectionner un modèle et avoir un prompt visuel.");
+        const effectiveModelId = form.visualStyleModelId;
+        if (!char || !effectiveModelId || !char.portraitPrompt) {
+            alert("Veuillez sélectionner un modèle global (Étape 1) et avoir un prompt visuel.");
             return;
         }
 
         try {
             setGeneratingCharacters(prev => ({ ...prev, [charName]: true }));
-            const result = await adminService.generateCharacterImage(char.modelId, char.portraitPrompt);
+            const result = await adminService.generateCharacterImage(effectiveModelId, char.portraitPrompt);
             if (result.success && result.imageUrl) {
                 handleUpdateCharacter(charName, charName, { ...char, thumbnailUrl: result.imageUrl });
             } else {
@@ -256,28 +276,55 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
 
     const handleGenerateAllPortraits = async () => {
         const charactersToGenerate = Object.entries(form.characterRegistry).filter(
-            ([_, char]) => char.modelId && char.portraitPrompt && !char.thumbnailUrl
+            ([_, char]) => form.visualStyleModelId && char.portraitPrompt && !char.thumbnailUrl
         );
 
-        if (charactersToGenerate.length === 0) {
-            alert("Aucun personnage éligible pour la génération (besoin d'un modèle et d'un prompt).");
-            return;
-        }
+        if (charactersToGenerate.length === 0) return;
 
+        setIsBatchGeneratingPortraits(true);
         for (const [name, _] of charactersToGenerate) {
             await handleGeneratePortrait(name);
         }
+        setIsBatchGeneratingPortraits(false);
     };
+
+    // Auto-generation is now handled by the backend
+    /*
+    useEffect(() => {
+        const hasRegistry = Object.keys(form.characterRegistry).length > 0;
+        const hasStyle = !!form.visualStyleModelId;
+        const missingThumbnails = Object.values(form.characterRegistry).some(c => !c.thumbnailUrl);
+
+        if (hasRegistry && hasStyle && missingThumbnails && !isBatchGeneratingPortraits) {
+            // Only auto-trigger if we are not in basics anymore
+            if (step !== 'basics') {
+                handleGenerateAllPortraits();
+            }
+        }
+    }, [form.characterRegistry, form.visualStyleModelId, step, isBatchGeneratingPortraits]);
+    */
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (step === 'basics') {
-            await handleAIPrepare();
+            if (!form.title) return;
+            setLoading(true);
+            try {
+                await handleAIPrepare();
+            } finally {
+                setLoading(false);
+            }
             return;
         }
 
         if (step === 'roadmap') {
             setStep('casting');
+            return;
+        }
+
+        const isMissingPortraits = Object.values(form.characterRegistry).some(char => !char.thumbnailUrl);
+        if (isMissingPortraits) {
+            setError("Veuillez générer les portraits de tous vos personnages avant de lancer la saga.");
             return;
         }
 
@@ -651,30 +698,25 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                                                 </div>
 
                                                 <div className="w-32 space-y-2">
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 text-center">Modèle IA</p>
-                                                    <div className="relative group/avatar cursor-pointer">
-                                                        <Avatar className="h-20 w-20 mx-auto rounded-3xl border-2 border-dashed border-stone-200 group-hover/avatar:border-blue-400 transition-all">
-                                                            <AvatarImage src={models.find(m => m.id === data.modelId)?.images?.[0] || models.find(m => m.id === data.modelId)?.thumbnailUrl} />
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 text-center">Style Global</p>
+                                                    <div className="relative group/avatar cursor-zoom-in" onClick={() => data.thumbnailUrl && setZoomImage(data.thumbnailUrl)}>
+                                                        <Avatar className="h-20 w-20 mx-auto rounded-3xl border-2 border-stone-100 shadow-sm transition-transform group-hover/avatar:scale-105 duration-300">
+                                                            <AvatarImage src={data.thumbnailUrl || (models.find(m => m.id === form.visualStyleModelId)?.images?.[0] || models.find(m => m.id === form.visualStyleModelId)?.thumbnailUrl)} />
                                                             <AvatarFallback className="bg-stone-50 text-stone-300">
                                                                 <Users className="h-6 w-6" />
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <select
-                                                            value={data.modelId}
-                                                            onChange={(e) => handleUpdateCharacter(name, name, { ...data, modelId: e.target.value })}
-                                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                                        >
-                                                            <option value="">-- Aucun --</option>
-                                                            {models.map(m => (
-                                                                <option key={m.id} value={m.id}>{m.name}</option>
-                                                            ))}
-                                                        </select>
+                                                        {data.thumbnailUrl && (
+                                                            <div className="absolute top-0 right-0 p-1 opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-bl-xl border-l border-b border-stone-100">
+                                                                <Maximize2 className="h-3 w-3 text-blue-500" />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         onClick={() => handleGeneratePortrait(name)}
-                                                        disabled={generatingCharacters[name] || !data.modelId || !data.portraitPrompt}
+                                                        disabled={generatingCharacters[name] || !form.visualStyleModelId || !data.portraitPrompt}
                                                         className="w-full h-7 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 text-[9px] font-black uppercase tracking-widest gap-2 mt-1"
                                                     >
                                                         {generatingCharacters[name] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
@@ -731,17 +773,18 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={loading || !form.title}
+                                disabled={loading || !form.title || (step === 'casting' && Object.values(form.characterRegistry).some(char => !char.thumbnailUrl))}
                                 className={cn(
                                     "flex-[2] text-white font-black uppercase tracking-[0.2em] transition-all shadow-xl rounded-2xl h-14 text-[11px] gap-2 active:scale-95",
-                                    step === 'basics' ? "bg-stone-900 shadow-stone-900/20" : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20"
+                                    step === 'basics' ? "bg-stone-900 shadow-stone-900/20" : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20",
+                                    (step === 'casting' && Object.values(form.characterRegistry).some(char => !char.thumbnailUrl)) && "opacity-50 grayscale cursor-not-allowed"
                                 )}
                             >
-                                {loading ? (
+                                {loading || isPreparing ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
                                     <>
-                                        {step === 'basics' ? "Vers la Bible" : step === 'roadmap' ? "Vers le Casting" : (isEdit ? "Mettre à jour" : "Lancer la Saga")}
+                                        {step === 'basics' ? "Préparer l'Univers" : step === 'roadmap' ? "Vers le Casting" : (isEdit ? "Mettre à jour" : "Lancer la Saga")}
                                         <ChevronRight className="h-4 w-4" />
                                     </>
                                 )}
@@ -749,6 +792,21 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                         </div>
                     </form>
                 </div>
+                {zoomImage && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-zinc-950/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={() => setZoomImage(null)}>
+                        <button
+                            className="absolute top-8 right-8 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95"
+                            onClick={() => setZoomImage(null)}
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                        <img
+                            src={zoomImage}
+                            alt="Zoom"
+                            className="max-w-full max-h-full object-contain rounded-3xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-500 shadow-blue-500/10"
+                        />
+                    </div>
+                )}
             </DialogContent >
         </Dialog >
     );

@@ -2,7 +2,7 @@
 
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
-import { Sparkles, RefreshCw, Zap, BookOpen, ChevronUp, ChevronDown } from "lucide-react";
+import { Sparkles, RefreshCw, Zap, BookOpen, ChevronUp, ChevronDown, Crown } from "lucide-react";
 import { useStudioStore } from "../store";
 import { useEffect, useState } from "react";
 import { seriesService, type Series } from "@/src/services/series-service";
@@ -50,6 +50,27 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
             console.error("Failed to regenerate character image:", error);
         } finally {
             setRegeneratingChar(null);
+        }
+    };
+
+    const [promoting, setPromoting] = useState<string | null>(null);
+
+    const handlePromote = async (name: string, type: 'character' | 'location') => {
+        if (!series?.id || !activeScene?.thumbnailUrl) return;
+        setPromoting(name);
+        try {
+            await seriesService.promote(series.id, {
+                type,
+                name,
+                thumbnailUrl: activeScene.thumbnailUrl
+            });
+            await refreshSeries();
+            alert(`"${name}" a été promu avec cette image.`);
+        } catch (error) {
+            console.error("Failed to promote item:", error);
+            alert("Erreur lors de la promotion.");
+        } finally {
+            setPromoting(null);
         }
     };
 
@@ -160,15 +181,28 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                                                     <span className="text-[13px] font-bold text-zinc-900 truncate tracking-tight">{name}</span>
                                                     <span className="text-[11px] text-zinc-400 line-clamp-1 italic">{char.description}</span>
                                                 </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleRegenerateChar(name)}
-                                                    disabled={!!regeneratingChar}
-                                                    className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zinc-100 text-zinc-400 hover:text-emerald-500"
-                                                >
-                                                    <RefreshCw className={cn("h-3.5 w-3.5", regeneratingChar === name && "animate-spin")} />
-                                                </Button>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handlePromote(name, 'character')}
+                                                        disabled={!!promoting || !activeScene?.thumbnailUrl}
+                                                        title="Promouvoir l'image actuelle comme portrait"
+                                                        className="h-8 w-8 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-amber-500"
+                                                    >
+                                                        {promoting === name ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Crown className="h-3.5 w-3.5" />}
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleRegenerateChar(name)}
+                                                        disabled={!!regeneratingChar}
+                                                        title="Régénérer le portrait (IA)"
+                                                        className="h-8 w-8 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-emerald-500"
+                                                    >
+                                                        <RefreshCw className={cn("h-3.5 w-3.5", regeneratingChar === name && "animate-spin")} />
+                                                    </Button>
+                                                </div>
                                             </div>
                                         ))
                                     ) : (
