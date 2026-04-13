@@ -154,6 +154,38 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                                 )}
                             </div>
 
+                            {/* Roadmap Collapsible (V16) */}
+                            {series.plannedEpisodes && series.plannedEpisodes.length > 0 && (
+                                <div className="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="px-4 py-2.5 border-b border-zinc-50 flex items-center justify-between bg-zinc-50/30">
+                                        <div className="flex items-center gap-2">
+                                            <Zap className="h-3.5 w-3.5 text-amber-500" />
+                                            <span className="text-[11px] font-black text-zinc-900 uppercase tracking-tight">Plan d'Arc (Roadmap)</span>
+                                        </div>
+                                        <span className="text-[9px] font-black bg-zinc-100 text-zinc-400 px-1.5 py-0.5 rounded uppercase">{series.plannedEpisodes.length} Épisodes</span>
+                                    </div>
+                                    <div className="p-3 space-y-2 max-h-[200px] overflow-y-auto scrollbar-hide">
+                                        {series.plannedEpisodes.map((ep) => (
+                                            <div key={ep.number} className={cn(
+                                                "p-2 rounded-lg border flex flex-col gap-0.5 transition-all",
+                                                Number(series.lastEpisodeNumber || 0) + 1 === ep.number
+                                                    ? "bg-blue-50/50 border-blue-100 ring-1 ring-blue-100"
+                                                    : "bg-white border-zinc-100 opacity-60"
+                                            )}>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase text-zinc-400">Épisode {ep.number}</span>
+                                                    {Number(series.lastEpisodeNumber || 0) + 1 === ep.number && (
+                                                        <span className="text-[9px] font-black text-blue-500 uppercase">En cours</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-[11px] font-bold text-zinc-900 leading-tight">{ep.title}</div>
+                                                <div className="text-[10px] text-zinc-400 italic line-clamp-1">{ep.hook}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Casting List */}
                             <div className="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
                                 <div className="px-4 py-2.5 border-b border-zinc-50 flex items-center gap-2 bg-zinc-50/30">
@@ -178,8 +210,16 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col min-w-0 flex-1">
-                                                    <span className="text-[13px] font-bold text-zinc-900 truncate tracking-tight">{name}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[13px] font-bold text-zinc-900 truncate tracking-tight">{name}</span>
+                                                        {char.personalGoal && (
+                                                            <div className="h-1 w-1 rounded-full bg-amber-400" title={`Objectif: ${char.personalGoal}`} />
+                                                        )}
+                                                    </div>
                                                     <span className="text-[11px] text-zinc-400 line-clamp-1 italic">{char.description}</span>
+                                                    {char.backstory && (
+                                                        <span className="text-[9px] text-zinc-300 font-medium line-clamp-1 mt-0.5">Origin: {char.backstory}</span>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Button
@@ -212,6 +252,45 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                                     )}
                                 </div>
                             </div>
+
+                            {/* Environment & Style Stats (V13/V15) */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-white border border-zinc-200/60 rounded-xl p-3 shadow-sm flex flex-col gap-1">
+                                    <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Météo / Temps</div>
+                                    <div className="text-[11px] font-bold text-zinc-900">{series.weatherState || "Standard"}</div>
+                                    <div className="text-[10px] text-zinc-400 italic">{series.timeOfDay || "Jour"}</div>
+                                </div>
+                                <div className="bg-white border border-zinc-200/60 rounded-xl p-3 shadow-sm flex flex-col gap-1">
+                                    <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Identité Visuelle</div>
+                                    <div className="text-[11px] font-bold text-zinc-900 truncate">{series.colorPalette || "Cinématique"}</div>
+                                    <div className="text-[10px] text-zinc-400 italic line-clamp-1">{series.cameraStyle || "Statique"}</div>
+                                </div>
+                            </div>
+
+                            {/* Asset Registry (V14) */}
+                            {series.assetRegistry && Object.keys(series.assetRegistry).length > 0 && (
+                                <div className="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="px-4 py-2.5 border-b border-zinc-50 flex items-center gap-2 bg-zinc-50/30">
+                                        <Zap className="h-3.5 w-3.5 text-blue-500" />
+                                        <span className="text-[11px] font-black text-zinc-900 uppercase tracking-tight">Objets & Entités</span>
+                                    </div>
+                                    <div className="p-2 space-y-1">
+                                        {Object.entries(series.assetRegistry).map(([name, asset]: [string, any]) => (
+                                            <div key={name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 transition-colors group">
+                                                <div className="flex flex-col min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[12px] font-bold text-zinc-900 truncate tracking-tight">{name}</span>
+                                                        <span className="text-[9px] font-black bg-zinc-100 text-zinc-400 px-1 rounded uppercase tracking-tighter">Asset</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-zinc-400 italic line-clamp-1">
+                                                        {series.assetEvolution?.[name] || asset.description}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className="bg-zinc-50 border border-dashed border-zinc-200 rounded-xl p-4 flex items-center justify-center">

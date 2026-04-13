@@ -158,6 +158,33 @@ export function SSEProgressOverlay() {
                     </div>
                 )}
 
+                {/* PROJECT SEQUEL: CREDIT INFO & BACKGROUND SYNC VALUE */}
+                {state.credits && (
+                    <div className="mb-6 p-4 rounded-2xl bg-zinc-50 border border-zinc-100/50">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <Calculator className="h-3.5 w-3.5 text-zinc-400" />
+                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t("credit_total_label") || "Coût de génération"}</span>
+                            </div>
+                            <span className="text-xs font-bold text-zinc-600 tabular-nums">{state.credits.totalCost} crédits</span>
+                        </div>
+
+                        {state.credits.includedBackgroundServices && state.credits.includedBackgroundServices.length > 0 && (
+                            <div className="space-y-1.5 border-t border-zinc-200/50 pt-3">
+                                <p className="text-[9px] text-zinc-400 font-medium uppercase tracking-tight mb-1">{t("included_services_label") || "Synchronisations offertes"}</p>
+                                <div className="grid grid-cols-1 gap-1.5">
+                                    {state.credits.includedBackgroundServices.map((service) => (
+                                        <div key={service} className="flex items-center gap-2 text-[10px] text-zinc-500">
+                                            <div className="h-1 w-1 rounded-full bg-[#1D9E75]" />
+                                            <span className="capitalize">{service.replace(/_/g, ' ')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* ACTION */}
                 <div className="border-t border-zinc-100 pt-4">
                     {isDone ? (

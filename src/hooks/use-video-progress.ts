@@ -5,7 +5,7 @@ export interface ProgressState {
     progress: number;
     message: string;
     step: string;
-    status: "draft" | "queued" | "processing" | "completed" | "failed" | "cancelled" | "narration_generated" | "scenes_generated";
+    status: "draft" | "queued" | "pre_sync" | "processing" | "completed" | "failed" | "cancelled" | "narration_generated" | "scenes_generated";
     videoId?: string;
     videoUrl?: string;
     thumbnailUrl?: string;
@@ -16,6 +16,11 @@ export interface ProgressState {
     promptsUrl?: string;
     options?: any;
     totalScenes?: number;
+    credits?: {
+        totalCost: number;
+        isSaga: boolean;
+        includedBackgroundServices: string[];
+    };
 }
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
@@ -141,6 +146,7 @@ export function useVideoProgress(jobId?: string) {
                         promptsUrl: data.promptsUrl || prev.promptsUrl,
                         options: data.options || prev.options,
                         totalScenes: data.totalScenes || prev.totalScenes,
+                        credits: data.credits || prev.credits,
                     };
                 });
             });

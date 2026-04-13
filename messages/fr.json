@@ -16,7 +16,10 @@
         "step_3_audio_prep": "[Étape 3/3] Préparation audio : Scène {index}...",
         "step_3_narration": "[Étape 3/3] Assemblage de la narration finale...",
         "step_3_assembly": "[Étape 3/3] Assemblage du montage vidéo...",
-        "step_3_whisper": "[Étape 3/3] Synchronisation des paroles (Whisper AI)..."
+        "step_3_whisper": "[Étape 3/3] Synchronisation des paroles (Whisper AI)...",
+        "analyzing_assets": "Analyse des personnages et décors...",
+        "assets_locked": "Identités visuelles verrouillées",
+        "script_ready": "Storyboard prêt (Contenu narratif généré)"
     },
     "progress": {
         "initializing": "Initialisation...",
@@ -38,6 +41,8 @@
         "status_reconnecting": "Reconnexion...",
         "close_hint": "Fermer (laisse la génération tourner en arrière-plan)",
         "cancel": "Annuler la génération",
-        "ready": "Prêt pour visualisation"
+        "ready": "Prêt pour visualisation",
+        "credit_total_label": "Coût de la génération",
+        "included_services_label": "Services inclus (Bible Saga)"
     }
 }

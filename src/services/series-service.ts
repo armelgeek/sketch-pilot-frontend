@@ -7,6 +7,10 @@ export interface Series {
     description?: string;
     globalContext?: string;
     characterRegistry?: Record<string, any>;
+    locationRegistry?: Record<string, any>;
+    assetRegistry?: Record<string, any>;
+    visualEvolution?: Record<string, any>;
+    assetEvolution?: Record<string, any>;
     previousEpisodesContext?: string;
 
     totalEpisodes?: string;
@@ -41,7 +45,7 @@ export interface CreateSeriesDTO {
     plannedEpisodes?: { number: number; title: string; hook: string }[];
 }
 
-export type UpdateSeriesDTO = Partial<CreateSeriesDTO>;
+export type UpdateSeriesDTO = Partial<CreateSeriesDTO> & { status?: string };
 
 
 export class SeriesService extends BaseService<Series> {
@@ -85,7 +89,7 @@ export class SeriesService extends BaseService<Series> {
         return response.data;
     }
 
-    async prepare(data: { title: string; description?: string; language?: string; promptId?: string }): Promise<{ globalContext: string; characterRegistry: Record<string, any>; videoGenre: string; totalEpisodes?: number; suggestedTitles?: string[]; suggestedEpisodes: any[] }> {
+    async prepare(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean }): Promise<any> {
         const response = await this.apiFetch<any>(`${this.endpoint}/prepare`, {
             method: "POST",
             body: JSON.stringify(data),
@@ -93,13 +97,19 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    getPrepareStreamUrl(data: { title: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string }): string {
+    getPrepareStreamUrl(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; roadmapOnly?: boolean }): string {
         const params = new URLSearchParams();
         params.append("title", data.title);
+        if (data.seriesId) params.append("seriesId", data.seriesId);
         if (data.description) params.append("description", data.description);
         if (data.language) params.append("language", data.language);
         if (data.promptId) params.append("promptId", data.promptId);
         if (data.visualStyleModelId) params.append("visualStyleModelId", data.visualStyleModelId);
+        if (data.videoGenre) params.append("videoGenre", data.videoGenre);
+        if (data.totalEpisodes) params.append("totalEpisodes", data.totalEpisodes.toString());
+        // @ts-ignore - planned parameter
+        if (data.skipPortraits) params.append("skipPortraits", "true");
+        if (data.roadmapOnly) params.append("roadmapOnly", "true");
 
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
         return `${baseUrl}${this.endpoint}/prepare/stream?${params.toString()}`;

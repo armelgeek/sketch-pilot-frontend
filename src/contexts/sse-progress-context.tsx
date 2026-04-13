@@ -26,6 +26,11 @@ interface SSEProgressState {
     status?: string;
     videoId?: string;
     overlayVisible: boolean;
+    credits?: {
+        totalCost: number;
+        isSaga: boolean;
+        includedBackgroundServices: string[];
+    };
 }
 
 interface SSEProgressContextValue {
@@ -121,6 +126,7 @@ export function SSEProgressProvider({ children }: { children: React.ReactNode })
                 lastSceneIndex: sse.lastSceneIndex,
                 status: sse.status,
                 videoId: sse.videoId || prev.videoId,
+                credits: sse.credits || prev.credits,
             }));
         }
 

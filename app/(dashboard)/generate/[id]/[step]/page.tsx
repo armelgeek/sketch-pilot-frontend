@@ -144,7 +144,7 @@ export default function StudioPage({ params }: StudioPageProps) {
                 if (cancelled) return;
 
                 const hasScenes = (video.scenes?.length ?? 0) > 0 || (video.script?.scenes?.length ?? 0) > 0;
-                const isGeneratingScript = video.status === 'queued' || video.status === 'processing';
+                const isGeneratingScript = ['queued', 'processing', 'script_generation', 'pre_sync'].includes(video.status);
 
                 // CRITICAL: Determine if visuals are already generated to show "Next" instead of "Generate"
                 const hasActuallyGeneratedScenes = (video.scenes?.length || 0) > 0;
@@ -162,8 +162,8 @@ export default function StudioPage({ params }: StudioPageProps) {
                 setVisualsGenerated(!!hasVisuals);
                 setLists(voices || [], models.data || [], music || []);
 
-                // If scenes are empty and we are still in a state that suggests generation, poll every 2s
-                if (!hasScenes && (isGeneratingScript || video.status === 'draft') && !cancelled) {
+                // If scenes are empty and we are still in a state that suggests generation or a recent transition, poll every 2s
+                if (!hasScenes && (isGeneratingScript || ['draft', 'script_generated'].includes(video.status)) && !cancelled) {
                     setTimeout(() => doLoad(), 2000);
                 }
             } catch (err) {
@@ -182,7 +182,7 @@ export default function StudioPage({ params }: StudioPageProps) {
 
 
     if (!activeVideo || (!activeVideo.scenes?.length && !activeVideo.script?.scenes?.length)) {
-        const isGenerating = activeVideo?.status === 'queued' || activeVideo?.status === 'processing';
+        const isGenerating = ['queued', 'processing', 'script_generation', 'pre_sync'].includes(activeVideo?.status || '');
 
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-white gap-6 p-8 text-center">

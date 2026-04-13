@@ -33,6 +33,9 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
     const [episodes, setEpisodes] = useState<Video[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isExtending, setIsExtending] = useState(false);
+    const [extensionProgress, setExtensionProgress] = useState<number | null>(null);
+    const [extensionMessage, setExtensionMessage] = useState<string>("");
     const [generatedVideoId, setGeneratedVideoId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [selectedCharacter, setSelectedCharacter] = useState<{ name: string; data: any } | null>(null);
@@ -48,7 +51,8 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
 
     const { progress, message, step, status } = useVideoProgress(trackingJobId || undefined);
 
-    const isPrepared = !!(series?.globalContext && Object.keys(series?.characterRegistry || {}).length > 0);
+    const isPrepared = !!((series?.globalContext || series?.description) && Object.keys(series?.characterRegistry || {}).length > 0);
+    const isRoadmapFinished = episodes.length >= Number(series?.totalEpisodes || 0);
 
     // Dynamic redirection effect
     useEffect(() => {
@@ -97,6 +101,98 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
         }
     };
 
+    const handleExtendRoadmap = async () => {
+        if (!series || isExtending) return;
+
+        setIsExtending(true);
+        setExtensionProgress(0);
+        setExtensionMessage("Brainstorming de la nouvelle saison...");
+        setError(null);
+
+        try {
+            const streamUrl = seriesService.getPrepareStreamUrl({
+                seriesId: series.id,
+                title: series.title,
+                description: series.description || series.globalContext,
+                language: series.language || 'fr',
+                promptId: series.promptId,
+                visualStyleModelId: series.visualStyleModelId,
+                videoGenre: series.videoGenre,
+                totalEpisodes: 10 // Extend by 10 more episodes
+            });
+
+            const es = new EventSource(streamUrl, { withCredentials: true });
+
+            const tempCharacterRegistry = { ...(series.characterRegistry || {}) };
+
+            es.addEventListener("progress", (event: any) => {
+                const data = JSON.parse(event.data);
+                if (data.progress !== undefined) setExtensionProgress(data.progress);
+                if (data.status) {
+                     const messages: Record<string, string> = {
+                         'analyzing': "Analyse du cliffhanger...",
+                         'generating_characters': "Mise à jour du casting...",
+                         'finalizing': "Finalisation de la roadmap..."
+                     };
+                     setExtensionMessage(messages[data.status] || data.status);
+                }
+            });
+
+            es.addEventListener("character_portrait", (event: any) => {
+                const data = JSON.parse(event.data);
+                if (tempCharacterRegistry[data.name]) {
+                    tempCharacterRegistry[data.name].thumbnailUrl = data.imageUrl;
+                } else {
+                    tempCharacterRegistry[data.name] = { 
+                        thumbnailUrl: data.imageUrl,
+                        isNew: true
+                    };
+                }
+            });
+
+            es.addEventListener("final", async (event: any) => {
+                const data = JSON.parse(event.data);
+                
+                // Merge character registry from final payload (which includes descriptions) 
+                // and temp registry for portraits
+                const mergedRegistry = { ...(series.characterRegistry || {}), ...(data.characterRegistry || {}) };
+                Object.keys(tempCharacterRegistry).forEach(name => {
+                    if (mergedRegistry[name]) {
+                        mergedRegistry[name].thumbnailUrl = tempCharacterRegistry[name].thumbnailUrl;
+                    }
+                });
+
+                const newPlannedEpisodes = [...(series.plannedEpisodes || []), ...(data.suggestedEpisodes || [])];
+                
+                await seriesService.update(series.id, {
+                    plannedEpisodes: newPlannedEpisodes,
+                    totalEpisodes: (Number(series.totalEpisodes || 0) + (data.suggestedEpisodes?.length || 10)).toString(),
+                    characterRegistry: mergedRegistry,
+                    description: data.globalContext || series.description // Store bible in description too as requested
+                });
+
+                queryClient.invalidateQueries({ queryKey: ["series"] });
+                
+                es.close();
+                setIsExtending(false);
+                setExtensionProgress(null);
+                alert("La roadmap de la saga a été étendue ! Nouvelle saison prête.");
+            });
+
+            es.addEventListener("error", (event: any) => {
+                setError("L'IA n'a pas pu étendre la saga.");
+                es.close();
+                setIsExtending(false);
+                setExtensionProgress(null);
+            });
+
+        } catch (err) {
+            setError("Erreur de connexion lors de l'extension.");
+            setIsExtending(false);
+            setExtensionProgress(null);
+        }
+    };
+
     const handleGenerateNext = async () => {
         if (!series || isGenerating) return;
 
@@ -113,10 +209,8 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
             if (response.jobId) {
                 setGeneratedVideoId(response.videoId);
                 setTrackingJobId(response.jobId);
-                // The useEffect will handle redirection when status becomes "completed"
             }
         } catch (err) {
-            console.error("Failed to generate next episode:", err);
             alert("Erreur lors de la génération de la suite.");
             setIsGenerating(false);
         }
@@ -128,13 +222,11 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
         try {
             const result = await seriesService.regenerateCharacterImage(series.id, selectedCharacter.name);
             if (result.success && result.thumbnailUrl) {
-                // Update local state so image refreshes immediately without page reload
                 setSelectedCharacter(prev => prev ? { ...prev, data: { ...prev.data, thumbnailUrl: result.thumbnailUrl } } : null);
             } else {
                 alert(result.error || "Erreur lors de la régénération de l'image.");
             }
         } catch (err) {
-            console.error("Failed to regenerate character image:", err);
             alert("Erreur lors de la régénération de l'image.");
         } finally {
             setIsRegenerating(false);
@@ -157,7 +249,6 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
         }
     };
 
-
     if (!series) return null;
 
     return (
@@ -173,21 +264,38 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                         <DialogHeader className="mb-6 text-left">
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="px-2 py-0.5 rounded bg-blue-500 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-blue-500/20">Saga Narrative</span>
-                                <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">• {episodes.length} Épisodes</span>
+                                <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">• {episodes.length} / {series.totalEpisodes || '?'} Épisodes</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <DialogTitle className="text-3xl font-black tracking-tight leading-tight">
                                     {series.title}
                                 </DialogTitle>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="h-8 px-3 text-[10px] font-bold text-red-400 hover:text-red-500 hover:bg-red-500/10 uppercase tracking-widest transition-colors rounded-xl border border-red-500/20"
-                                >
-                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                                    Supprimer la Saga
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    {isRoadmapFinished && !isExtending && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                if (confirm("Étendre la saga coûte 5 crédits pour le brainstorming IA et la mise à jour des personnages. Voulez-vous continuer ?")) {
+                                                    handleExtendRoadmap();
+                                                }
+                                            }}
+                                            className="h-8 px-3 text-[10px] font-bold text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 uppercase tracking-widest transition-colors rounded-xl border border-amber-500/20 shadow-lg shadow-amber-500/10"
+                                        >
+                                            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                                            Étendre la Saga (5 crédits)
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="h-8 px-3 text-[10px] font-bold text-red-400 hover:text-red-500 hover:bg-red-500/10 uppercase tracking-widest transition-colors rounded-xl border border-red-500/20"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                        Supprimer
+                                    </Button>
+                                </div>
                             </div>
                             <div className="flex items-center gap-4 mt-1">
                                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -389,7 +497,24 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                         </div>
                     )}
 
-                    {isPrepared && series.plannedEpisodes && series.plannedEpisodes.find((p: any) => p.number === episodes.length + 1) && (
+                    {(isExtending) && (
+                        <div className="mt-2 p-4 rounded-2xl bg-amber-50 border border-amber-100 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">
+                                    {extensionMessage || "Brainstorming en cours..."}
+                                </span>
+                                <span className="text-[10px] font-bold text-amber-400">{extensionProgress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-amber-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-amber-500 transition-all duration-500 ease-out"
+                                    style={{ width: `${extensionProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {isPrepared && !isRoadmapFinished && series.plannedEpisodes && series.plannedEpisodes.find((p: any) => p.number === episodes.length + 1) && (
                         <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100/50 space-y-2 animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="h-3 w-3 text-blue-500" />
@@ -406,21 +531,43 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                             })()}
                         </div>
                     )}
+
+                    {isRoadmapFinished && !isExtending && (
+                         <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100/50 space-y-2 animate-in fade-in slide-in-from-bottom-2 text-center">
+                             <div className="flex items-center justify-center gap-2">
+                                 <AlertCircle className="h-3 w-3 text-amber-500" />
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">Fin de la Roadmap</span>
+                             </div>
+                             <p className="text-[10px] text-stone-500 font-medium italic">Vous avez atteint la fin de la saison prévue. Voulez-vous que l'IA brainstorme la suite ?</p>
+                         </div>
+                    )}
+
                     <div className="flex justify-between gap-3">
                         <Button onClick={onClose} variant="secondary" className="rounded-xl px-8 font-bold">Fermer</Button>
-                        <Button
-                            onClick={handleGenerateNext}
-                            disabled={isGenerating || !isPrepared}
-                            className={cn(
-                                "rounded-xl px-8 font-black uppercase tracking-widest gap-2 transition-all",
-                                isPrepared
-                                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
-                                    : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                        <div className="flex gap-2">
+                            {isRoadmapFinished && !isExtending && (
+                                <Button
+                                    onClick={handleExtendRoadmap}
+                                    className="rounded-xl px-8 font-black uppercase tracking-widest gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200"
+                                >
+                                    <Sparkles className="h-4 w-4" />
+                                    Continuer la Saga
+                                </Button>
                             )}
-                        >
-                            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                            {isGenerating ? "Génération..." : `Générer l'épisode ${episodes.length + 1}`}
-                        </Button>
+                            <Button
+                                onClick={handleGenerateNext}
+                                disabled={isGenerating || isExtending || !isPrepared || isRoadmapFinished}
+                                className={cn(
+                                    "rounded-xl px-8 font-black uppercase tracking-widest gap-2 transition-all",
+                                    isPrepared && !isRoadmapFinished
+                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
+                                        : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                                )}
+                            >
+                                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                                {isGenerating ? "Génération..." : `Générer l'épisode ${episodes.length + 1}`}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Progress feedback when generating */}

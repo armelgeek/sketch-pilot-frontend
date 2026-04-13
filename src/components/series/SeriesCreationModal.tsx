@@ -186,7 +186,9 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 description: form.description,
                 language: form.language,
                 promptId: form.promptId,
-                visualStyleModelId: form.visualStyleModelId
+                visualStyleModelId: form.visualStyleModelId,
+                videoGenre: form.videoGenre,
+                totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : undefined
             });
 
             const es = new EventSource(streamUrl, { withCredentials: true });
@@ -404,7 +406,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between ml-1">
                                         <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 dark:text-zinc-500">
-                                            Nom de la Saga
+                                            Concept / Prompt de la Saga
                                         </Label>
                                         <Button
                                             type="button"
@@ -418,12 +420,12 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                                         </Button>
                                     </div>
                                     <div className="relative flex gap-2">
-                                        <Input
+                                        <Textarea
                                             id="title"
-                                            placeholder="ex: Les Chroniques de l'Ombre"
+                                            placeholder="Décrivez votre idée de saga (ex: Un voyageur temporel samouraï coincé dans le futur...)"
                                             value={form.title}
                                             onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                            className="bg-stone-50 dark:bg-zinc-900/50 border-stone-200 dark:border-zinc-800 text-stone-900 dark:text-white placeholder:text-stone-300 dark:placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-blue-500/20 h-14 rounded-2xl text-base px-5 transition-all shadow-inner font-bold flex-1"
+                                            className="bg-stone-50 dark:bg-zinc-900/50 border-stone-200 dark:border-zinc-800 text-stone-900 dark:text-white placeholder:text-stone-300 dark:placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-blue-500/20 min-h-[100px] rounded-2xl text-base px-5 py-4 transition-all shadow-inner font-bold flex-1 resize-none customize-scrollbar"
                                             required
                                         />
                                     </div>

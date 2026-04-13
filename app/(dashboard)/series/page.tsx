@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { seriesService, Series } from "@/src/services/series-service";
-import { SeriesEpisodesDialog } from "@/src/components/series/SeriesEpisodesDialog";
 import {
     Film,
     Sparkles,
@@ -68,7 +67,7 @@ export default function SeriesPage() {
                         />
                     </div>
                     <Button
-                        onClick={() => router.push("/dashboard?mode=series&create=true")}
+                        onClick={() => router.push("/series/create")}
                         className="h-11 rounded-xl bg-zinc-900 text-white font-bold px-6 gap-2 hover:bg-zinc-800 transition-all"
                     >
                         <Plus className="h-4 w-4" /> Nouvelle Saga
@@ -85,7 +84,7 @@ export default function SeriesPage() {
                     <h3 className="text-xl font-bold text-zinc-900 mb-2">Aucune saga trouvée</h3>
                     <p className="text-zinc-500 max-w-xs mx-auto mb-8">Commencez par créer votre premier univers narratif pour lancer votre série de vidéos.</p>
                     <Button
-                        onClick={() => router.push("/dashboard?mode=series&create=true")}
+                        onClick={() => router.push("/series/create")}
                         variant="outline"
                         className="rounded-xl px-10 h-12 font-bold"
                     >
@@ -97,7 +96,7 @@ export default function SeriesPage() {
                     {filteredSeries.map((series) => (
                         <div
                             key={series.id}
-                            onClick={() => setSelectedSeries(series)}
+                            onClick={() => router.push(`/series/${series.id}`)}
                             className="group relative flex flex-col bg-white rounded-[2rem] border border-zinc-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
                         >
                             {/* Visual background element */}
@@ -122,7 +121,7 @@ export default function SeriesPage() {
                             </div>
 
                             <div className="flex-1 space-y-3 relative z-10">
-                                <h3 className="text-xl font-black text-zinc-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                                <h3 className="text-xl font-black text-zinc-900 tracking-tight group-hover:text-blue-600 transition-colors line-clamp-2">
                                     {series.title}
                                 </h3>
                                 <p className="text-zinc-500 text-sm line-clamp-2 leading-relaxed font-medium">
@@ -134,7 +133,9 @@ export default function SeriesPage() {
                                 <div className="flex items-center gap-4">
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Épisodes</span>
-                                        <span className="text-sm font-bold text-zinc-900">{(series as any).lastEpisodeNumber || 0}</span>
+                                        <span className="text-sm font-bold text-zinc-900">
+                                            {series.lastEpisodeNumber || 0} <span className="text-zinc-300 font-medium">/ {series.totalEpisodes || "?"}</span>
+                                        </span>
                                     </div>
                                     <div className="h-6 w-[1px] bg-zinc-100" />
                                     <div className="flex flex-col">
@@ -154,12 +155,6 @@ export default function SeriesPage() {
                 </div>
             )}
 
-            {/* Episode Modal */}
-            <SeriesEpisodesDialog
-                series={selectedSeries}
-                isOpen={!!selectedSeries}
-                onClose={() => setSelectedSeries(null)}
-            />
         </div>
     );
 }

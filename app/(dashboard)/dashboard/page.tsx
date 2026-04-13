@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const [selectedPromptId, setSelectedPromptId] = useState<string>("");
   const [duration, setDuration] = useState<string>("60");
   const [aspectRatio, setAspectRatio] = useState<string>("16:9");
-  const [language, setLanguage] = useState<string>("fr-FR");
+  const [language, setLanguage] = useState<string>("fr");
   const [suggesting, setSuggesting] = useState(false);
   const [generatingScript, setGeneratingScript] = useState(false);
   const [suggestions, setSuggestions] = useState<VideoIdea[] | null>(null);
@@ -64,7 +64,7 @@ export default function DashboardPage() {
   const [recentVideos, setRecentVideos] = useState<Video[]>([]);
 
   // Series state
-  const [generationMode, setGenerationMode] = useState<'standalone' | 'series' | 'quotes'>('standalone');
+  const [generationMode, setGenerationMode] = useState<'standalone' | 'series'>('standalone');
   const [seriesList, setSeriesList] = useState<Series[]>([]);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
@@ -115,7 +115,6 @@ export default function DashboardPage() {
     const mode = searchParams.get("mode");
     if (mode === "series") setGenerationMode("series");
     if (mode === "standalone") setGenerationMode("standalone");
-    if (mode === "quotes") setGenerationMode("quotes");
     if (sId) setSelectedSeriesId(sId);
   }, [searchParams]);
 
@@ -182,8 +181,7 @@ export default function DashboardPage() {
         videoGenre: (selectedPrompt?.category || "").toLowerCase().includes("storytelling") ? "storytelling" : "general",
         characterModelId: selectedCharacterId || session?.user?.defaultCharacterId || undefined,
         type: generationMode,
-        seriesId: generationMode === 'series' ? selectedSeriesId : undefined,
-        isQuotes: generationMode === 'quotes'
+        seriesId: generationMode === 'series' ? selectedSeriesId : undefined
       };
 
       const response = await videosService.generate(finalScript, options);
@@ -269,15 +267,9 @@ export default function DashboardPage() {
   const currentCharacter = [...characterModels, ...personalModels].find(c => c.id === selectedCharacterId);
 
   return (
-    <div className={cn(
-      "min-h-[calc(100vh-3.5rem)] bg-stone-50 -m-6 p-6 flex flex-col items-center justify-center transition-all duration-700",
-      generationMode === 'series' && "bg-blue-50/20"
-    )}>
+    <div className="min-h-[calc(100vh-3.5rem)] bg-stone-50 -m-6 p-6 flex flex-col items-center justify-center transition-all duration-700">
 
       <div className="w-full max-w-xl space-y-6 mb-16 relative">
-        {generationMode === 'series' && (
-          <div className="absolute -inset-10 bg-blue-500/[0.03] blur-[100px] rounded-full -z-10 animate-pulse" />
-        )}
 
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">
@@ -288,30 +280,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Mode Selector - More prominent */}
-        <div className="flex items-center justify-center">
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-stone-100/50 border border-stone-200/40 shadow-inner">
-            {[
-              { id: 'standalone', label: 'Solo', icon: Zap },
-              { id: 'series', label: 'Série', icon: Sparkles },
-              { id: 'quotes', label: 'Citations', icon: Globe }
-            ].map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => setGenerationMode(mode.id as any)}
-                className={cn(
-                  "flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                  generationMode === mode.id
-                    ? "bg-white text-stone-900 shadow-md ring-1 ring-stone-200/50"
-                    : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
-                )}
-              >
-                <mode.icon className={cn("h-3.5 w-3.5", mode.id === 'series' && "text-blue-500", mode.id === 'standalone' && "text-amber-500")} />
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="flex items-center justify-center gap-2 flex-wrap">
           <Select value={selectedPromptId} onValueChange={(val) => handleUpdatePreference({ defaultPromptId: val })}>
@@ -349,11 +317,11 @@ export default function DashboardPage() {
 
           <Select value={language} onValueChange={(val) => handleUpdatePreference({ language: val })}>
             <SelectTrigger className="h-8 text-xs font-medium bg-white border border-stone-200 rounded-lg px-3 gap-1.5 shadow-none focus:ring-0 w-auto">
-              <span>{language === "fr-FR" ? "🇫🇷 FR" : "🇺🇸 EN"}</span>
+              <span>{language === "fr" ? "🇫🇷 FR" : "🇺🇸 EN"}</span>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-stone-100 shadow-xl">
-              <SelectItem value="fr-FR" className="text-xs">🇫🇷 Français</SelectItem>
-              <SelectItem value="en-US" className="text-xs">🇺🇸 English</SelectItem>
+              <SelectItem value="fr" className="text-xs">🇫🇷 Français</SelectItem>
+              <SelectItem value="en" className="text-xs">🇺🇸 English</SelectItem>
             </SelectContent>
           </Select>
 
@@ -361,17 +329,14 @@ export default function DashboardPage() {
         </div>
 
 
-        <Card className={cn(
-          "rounded-2xl border transition-all duration-500 bg-white overflow-hidden",
-          generationMode === 'series' ? "border-blue-200 shadow-lg shadow-blue-500/5 ring-4 ring-blue-500/[0.02]" : "border-stone-200 shadow-sm"
-        )}>
+        <Card className="rounded-3xl border border-stone-200 shadow-sm bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-500">
           <CardContent className="p-0">
-            <div className="relative px-5 pt-5 pb-3">
+            <div className="relative px-6 pt-6 pb-4">
               <TextareaAutosize
                 placeholder="Ex : Les 5 erreurs que font les débutants en bourse…"
                 className={cn(
-                  "min-h-[100px] w-full resize-none border-none focus-visible:ring-0 shadow-none outline-none",
-                  "bg-transparent text-base font-light text-stone-800 placeholder:text-stone-300",
+                  "min-h-[120px] w-full resize-none border-none focus-visible:ring-0 shadow-none outline-none",
+                  "bg-transparent text-lg font-light text-stone-800 placeholder:text-stone-300",
                   "leading-relaxed p-0"
                 )}
                 value={script}
@@ -384,24 +349,24 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="h-px bg-stone-100 mx-4" />
+            <div className="h-px bg-stone-100 mx-6" />
 
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl">
                   {["30", "60", "300"].map((d) => (
                     <button key={d} type="button" onClick={() => setDuration(d)}
-                      className={cn("px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+                      className={cn("px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all",
                         duration === d ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600"
                       )}>
                       {d === "300" ? "5 min" : d === "60" ? "1 min" : "30s"}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg">
+                <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl">
                   {[{ val: "16:9", label: "YouTube" }, { val: "9:16", label: "TikTok" }].map((f) => (
                     <button key={f.val} type="button" onClick={() => setAspectRatio(f.val)}
-                      className={cn("px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+                      className={cn("px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all",
                         aspectRatio === f.val ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600"
                       )}>
                       {f.label}
@@ -409,65 +374,30 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {script.trim() && !generating && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-semibold text-stone-400">
-                    <Zap className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                  <span className="flex items-center gap-1 text-[11px] font-black text-amber-500 uppercase tracking-widest">
+                    <Zap className="h-3 w-3 fill-amber-500" />
                     {CREDIT_COSTS.SCRIPT_GENERATION} cr.
                   </span>
                 )}
-                {generationMode === 'series' && !script.trim() && selectedSeriesId ? (
-                  <Button
-                    type="button"
-                    onClick={handleGenerate}
-                    disabled={generating}
-                    className="h-9 px-5 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-black uppercase tracking-[0.15em] text-[10px] transition-all active:scale-95 group/btn"
-                  >
-                    {generating ? (
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-2" />
-                    ) : (
-                      <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-200 group-hover/btn:rotate-12 transition-transform" />
-                    )}
-                    Générer l'épisode suivant
-                  </Button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleGenerate}
-                    disabled={(!script.trim() && (generationMode !== 'series' || !selectedSeriesId)) || generating}
-                    title={generationMode === 'series' && !script.trim() ? "Continuer la saga automatiquement" : `Générer — ${CREDIT_COSTS.SCRIPT_GENERATION} crédits`}
-                    className={cn("h-9 w-9 rounded-full flex items-center justify-center transition-all",
-                      (script.trim() || (generationMode === 'series' && selectedSeriesId)) && !generating
-                        ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95 shadow-md"
-                        : "bg-stone-100 text-stone-300 cursor-not-allowed"
-                    )}>
-                    {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  </button>
-                )}
-
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!script.trim() || generating}
+                  className={cn("h-11 w-11 rounded-full flex items-center justify-center transition-all",
+                    script.trim() && !generating
+                      ? "bg-stone-900 text-white hover:bg-stone-700 active:scale-95 shadow-lg shadow-stone-200"
+                      : "bg-stone-100 text-stone-300 cursor-not-allowed"
+                  )}>
+                  {generating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
+                </button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Series Selection (Only if mode is series) */}
-        {generationMode === 'series' && (
-          <div className="w-full max-w-xl animate-in fade-in slide-in-from-top-4 duration-700">
-            <SeriesSelector
-              seriesList={seriesList}
-              selectedId={selectedSeriesId}
-              onSelect={setSelectedSeriesId}
-              onAdd={() => {
-                setSeriesToEdit(null);
-                setShowSeriesModal(true);
-              }}
-              onEdit={(s) => {
-                setSeriesToEdit(s);
-                setShowSeriesModal(true);
-              }}
-            />
-          </div>
-        )}
+        {/* Series Selection (Only if mode is series - simplified or removed as per user request) */}
 
         {/* Topics / Recent Topics (existing list) */}
         <div className="w-full max-w-3xl flex flex-col gap-6">
