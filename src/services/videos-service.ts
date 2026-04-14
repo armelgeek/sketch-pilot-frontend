@@ -130,9 +130,10 @@ export class VideosService extends BaseService<Video> {
         });
     }
 
-    async generateScenes(id: string): Promise<JobResponse> {
+    async generateScenes(id: string, options: { force?: boolean } = {}): Promise<JobResponse> {
         return this.apiFetch<JobResponse>(`${this.endpoint}/${id}/generate-scenes`, {
             method: "POST",
+            body: JSON.stringify(options),
         });
     }
 

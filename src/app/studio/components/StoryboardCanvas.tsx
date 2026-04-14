@@ -86,8 +86,15 @@ export function StoryboardCanvas({ currentSceneIndex, repromptIndex }: Storyboar
                 )}
 
                 {/* Simple Badge */}
-                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest z-30">
-                    {activeSceneIndex + 1} / {displayScenes.length}
+                <div className="absolute top-4 left-4 flex items-center gap-2 z-30">
+                    <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                        {activeSceneIndex + 1} / {displayScenes.length}
+                    </div>
+                    {activeScene.locationId && (
+                        <div className="bg-blue-600/60 backdrop-blur-md text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border border-blue-400/30">
+                            {activeScene.locationId}
+                        </div>
+                    )}
                 </div>
 
                 {/* Navigation Chevrons (Refined) */}

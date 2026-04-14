@@ -56,8 +56,11 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState("");
     const [regeneratingChars, setRegeneratingChars] = useState<Record<string, boolean>>({});
-    const [promotingFor, setPromotingFor] = useState<{ type: 'character' | 'location', name: string } | null>(null);
+    const [regeneratingLocs, setRegeneratingLocs] = useState<Record<string, boolean>>({});
+    const [regeneratingAssets, setRegeneratingAssets] = useState<Record<string, boolean>>({});
+    const [promotingFor, setPromotingFor] = useState<{ type: 'character' | 'location' | 'asset', name: string } | null>(null);
     const [isPromoting, setIsPromoting] = useState(false);
+    const [isRegeneratingAll, setIsRegeneratingAll] = useState(false);
 
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -276,6 +279,52 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
         }
     };
 
+    const handleRegenerateLocation = async (locName: string) => {
+        if (!series || regeneratingLocs[locName]) return;
+        
+        setRegeneratingLocs(prev => ({ ...prev, [locName]: true }));
+        try {
+            const res = await seriesService.regenerateLocationImage(series.id, locName);
+            if (res.success && res.thumbnailUrl) {
+                const updatedRegistry = { ...(series.locationRegistry || {}) };
+                if (updatedRegistry[locName]) {
+                    updatedRegistry[locName].thumbnailUrl = res.thumbnailUrl;
+                    setSeries({ ...series, locationRegistry: updatedRegistry });
+                }
+                alert(`Décor régénéré pour ${locName} !`);
+            } else {
+                setError(res.error || "Échec de la génération.");
+            }
+        } catch (err) {
+            setError("Erreur lors de la génération du décor.");
+        } finally {
+            setRegeneratingLocs(prev => ({ ...prev, [locName]: false }));
+        }
+    };
+
+    const handleRegenerateAsset = async (assetName: string) => {
+        if (!series || regeneratingAssets[assetName]) return;
+        
+        setRegeneratingAssets(prev => ({ ...prev, [assetName]: true }));
+        try {
+            const res = await seriesService.regenerateAssetImage(series.id, assetName);
+            if (res.success && res.thumbnailUrl) {
+                const updatedRegistry = { ...(series.assetRegistry || {}) };
+                if (updatedRegistry[assetName]) {
+                    updatedRegistry[assetName].thumbnailUrl = res.thumbnailUrl;
+                    setSeries({ ...series, assetRegistry: updatedRegistry });
+                }
+                alert(`Objet régénéré pour ${assetName} !`);
+            } else {
+                setError(res.error || "Échec de la génération.");
+            }
+        } catch (err) {
+            setError("Erreur lors de la génération de l'objet.");
+        } finally {
+            setRegeneratingAssets(prev => ({ ...prev, [assetName]: false }));
+        }
+    };
+
     const handlePromoteScene = async (imageUrl: string) => {
         if (!series || !promotingFor || isPromoting) return;
         
@@ -295,6 +344,34 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             setError("L'association de l'image a échoué.");
         } finally {
             setIsPromoting(false);
+        }
+    };
+    
+    const handleRegenerateAllVisuals = async () => {
+        if (!series || isRegeneratingAll) return;
+        
+        if (!confirm("Voulez-vous régénérer TOUS les visuels de référence (Portraits, Lieux, Objets) ? \nCela utilisera vos paramètres de style actuels pour harmoniser toute la saga.")) return;
+        
+        setIsRegeneratingAll(true);
+        setError(null);
+        
+        try {
+            const res = await seriesService.regenerateAllVisuals(series.id);
+            if (res.success) {
+                setSeries({
+                    ...series,
+                    characterRegistry: res.characterRegistry,
+                    locationRegistry: res.locationRegistry,
+                    assetRegistry: res.assetRegistry
+                });
+                alert("Tous les visuels de référence ont été régénérés avec succès !");
+            } else {
+                setError("Échec de la régénération globale.");
+            }
+        } catch (err) {
+            setError("Erreur lors de la régénération globale.");
+        } finally {
+            setIsRegeneratingAll(false);
         }
     };
 
@@ -378,32 +455,45 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {isRoadmapFinished && !isExtending && (
+                    <div className="flex items-center gap-3">
                         <Button
-                            onClick={handleStartBrainstorming}
-                            className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl h-12 px-6 shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-105"
+                            onClick={handleRegenerateAllVisuals}
+                            disabled={isRegeneratingAll}
+                            variant="outline"
+                            className="rounded-xl h-12 px-4 border-zinc-200 text-zinc-600 hover:bg-zinc-50 gap-2"
+                            title="Régénérer tous les visuels de la Saga"
                         >
-                            <Sparkles className="h-4 w-4" /> Étendre la Saga (5 cr.)
+                            <RefreshCw className={cn("h-4 w-4", isRegeneratingAll && "animate-spin")} />
+                            <span className="hidden sm:inline">Régénérer toute la Saga</span>
                         </Button>
-                    )}
-                    <Button
-                        variant="ghost"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="rounded-xl h-12 px-4 text-red-400 hover:text-red-500 hover:bg-red-50"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
+                        {isRoadmapFinished && !isExtending && (
+                            <Button
+                                onClick={handleStartBrainstorming}
+                                className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl h-12 px-6 shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-105"
+                            >
+                                <Sparkles className="h-4 w-4" /> Étendre la Saga (5 cr.)
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="rounded-xl h-12 px-4 text-red-400 hover:text-red-500 hover:bg-red-50"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
             </div>
 
             <Tabs defaultValue="episodes" className="w-full">
-                <TabsList className="bg-zinc-100 p-1 rounded-2xl h-12 w-full max-w-md mb-8">
+                <TabsList className="bg-zinc-100 p-1 rounded-2xl h-12 w-full max-w-lg mb-8">
                     <TabsTrigger value="episodes" className="rounded-xl flex-1 font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         Épisodes
                     </TabsTrigger>
                     <TabsTrigger value="characters" className="rounded-xl flex-1 font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         Casting & Bible
+                    </TabsTrigger>
+                    <TabsTrigger value="locations" className="rounded-xl flex-1 font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Lieux & Objets
                     </TabsTrigger>
                 </TabsList>
 
@@ -555,93 +645,6 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                                     })}
                                 </div>
                              </div>
-
-                             {/* Locations Section */}
-                             <div className="p-8 rounded-[2rem] bg-white border border-zinc-100 shadow-sm space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <MapPin className="h-5 w-5 text-emerald-500" />
-                                    <h3 className="text-xl font-black text-zinc-900 tracking-tight">Lieux & Décors</h3>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {Object.entries(series.locationRegistry || {}).map(([name, data]: [string, any]) => {
-                                        const evolution = series.visualEvolution?.[name.toLowerCase()];
-                                        const stateStr = evolution?.state || evolution;
-
-                                        return (
-                                            <div key={name} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 hover:border-blue-200 transition-colors cursor-pointer group">
-                                                 <div className="h-16 w-16 rounded-2xl border-2 border-white shadow-md bg-white flex items-center justify-center overflow-hidden shrink-0">
-                                                    {data.thumbnailUrl ? (
-                                                        <img src={data.thumbnailUrl} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <MapPin className="h-6 w-6 text-zinc-200" />
-                                                    )}
-                                                 </div>
-                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="font-bold text-zinc-900 truncate">{name}</h4>
-                                                        {stateStr && (
-                                                            <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-[8px] font-black text-emerald-600 uppercase">
-                                                                {stateStr}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{data.description}</p>
-                                                 </div>
-                                                 <Button 
-                                                    size="sm" 
-                                                    variant="ghost" 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setPromotingFor({ type: 'location', name });
-                                                    }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-100 shadow-sm"
-                                                 >
-                                                    <ImageIcon className="h-3 w-3 text-emerald-500" />
-                                                 </Button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                             </div>
-
-                             {/* Assets Section */}
-                             {series.assetRegistry && Object.keys(series.assetRegistry).length > 0 && (
-                                <div className="p-8 rounded-[2rem] bg-white border border-zinc-100 shadow-sm space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <Package className="h-5 w-5 text-amber-500" />
-                                        <h3 className="text-xl font-black text-zinc-900 tracking-tight">Objets & Reliques</h3>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {Object.entries(series.assetRegistry).map(([name, data]: [string, any]) => {
-                                            const evolution = series.assetEvolution?.[name.toLowerCase()];
-                                            const stateStr = evolution?.state || evolution;
-
-                                            return (
-                                                <div key={name} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 hover:border-blue-200 transition-colors cursor-pointer group">
-                                                    <div className="h-16 w-16 rounded-2xl border-2 border-white shadow-md bg-white flex items-center justify-center overflow-hidden shrink-0">
-                                                        {data.thumbnailUrl ? (
-                                                            <img src={data.thumbnailUrl} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <Package className="h-6 w-6 text-zinc-200" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <h4 className="font-bold text-zinc-900 truncate">{name}</h4>
-                                                            {stateStr && (
-                                                                <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-[8px] font-black text-amber-600 uppercase">
-                                                                    {stateStr}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{data.description}</p>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                             )}
                         </div>
 
                         <div className="space-y-8">
@@ -652,6 +655,154 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                                 </p>
                              </div>
                         </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="locations" className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                         {/* Locations Section */}
+                         <div className="p-8 rounded-[2rem] bg-white border border-zinc-100 shadow-sm space-y-6">
+                            <div className="flex items-center gap-3">
+                                <MapPin className="h-5 w-5 text-emerald-500" />
+                                <h3 className="text-xl font-black text-zinc-900 tracking-tight">Lieux & Décors</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {Object.entries(series.locationRegistry || {}).map(([name, data]: [string, any]) => {
+                                    const evolution = series.visualEvolution?.[name.toLowerCase()];
+                                    const stateStr = evolution?.state || evolution;
+
+                                    return (
+                                        <div key={name} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 hover:border-blue-200 transition-colors cursor-pointer group">
+                                             <div className="h-16 w-16 rounded-2xl border-2 border-white shadow-md bg-white flex items-center justify-center overflow-hidden shrink-0">
+                                                {data.thumbnailUrl ? (
+                                                    <img src={data.thumbnailUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <MapPin className="h-6 w-6 text-zinc-200" />
+                                                )}
+                                             </div>
+                                             <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-zinc-900 truncate">{name}</h4>
+                                                    {stateStr && (
+                                                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-[8px] font-black text-emerald-600 uppercase">
+                                                            {stateStr}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{data.description}</p>
+                                             </div>
+                                             <div className="flex items-center gap-1">
+                                                 <Button 
+                                                    size="sm" 
+                                                    variant="ghost" 
+                                                    disabled={regeneratingLocs[name]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRegenerateLocation(name);
+                                                    }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-100 shadow-sm relative overflow-visible"
+                                                    title="Générer un nouveau décor (2 crédits)"
+                                                 >
+                                                    {regeneratingLocs[name] ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />
+                                                    ) : (
+                                                        <RefreshCw className="h-3 w-3 text-emerald-500" />
+                                                    )}
+                                                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        2 CR
+                                                    </span>
+                                                 </Button>
+                                                 <Button 
+                                                    size="sm" 
+                                                    variant="ghost" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setPromotingFor({ type: 'location', name });
+                                                    }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-100 shadow-sm"
+                                                    title="Promouvoir une image d'épisode (Gratuit)"
+                                                 >
+                                                    <ImageIcon className="h-3 w-3 text-emerald-500" />
+                                                 </Button>
+                                             </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                         </div>
+
+                         {/* Assets Section */}
+                         {series.assetRegistry && Object.keys(series.assetRegistry).length > 0 && (
+                            <div className="p-8 rounded-[2rem] bg-white border border-zinc-100 shadow-sm space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <Package className="h-5 w-5 text-amber-500" />
+                                    <h3 className="text-xl font-black text-zinc-900 tracking-tight">Objets & Reliques</h3>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {Object.entries(series.assetRegistry).map(([name, data]: [string, any]) => {
+                                        const evolution = series.assetEvolution?.[name.toLowerCase()];
+                                        const stateStr = evolution?.state || evolution;
+
+                                        return (
+                                            <div key={name} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 hover:border-blue-200 transition-colors cursor-pointer group">
+                                                <div className="h-16 w-16 rounded-2xl border-2 border-white shadow-md bg-white flex items-center justify-center overflow-hidden shrink-0">
+                                                    {data.thumbnailUrl ? (
+                                                        <img src={data.thumbnailUrl} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Package className="h-6 w-6 text-zinc-200" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-bold text-zinc-900 truncate">{name}</h4>
+                                                        {stateStr && (
+                                                            <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-[8px] font-black text-amber-600 uppercase">
+                                                                {stateStr}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{data.description}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Button 
+                                                       size="sm" 
+                                                       variant="ghost" 
+                                                       disabled={regeneratingAssets[name]}
+                                                       onClick={(e) => {
+                                                           e.stopPropagation();
+                                                           handleRegenerateAsset(name);
+                                                       }}
+                                                       className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-100 shadow-sm relative overflow-visible"
+                                                       title="Générer un nouvel objet (2 crédits)"
+                                                    >
+                                                       {regeneratingAssets[name] ? (
+                                                           <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+                                                       ) : (
+                                                           <RefreshCw className="h-3 w-3 text-amber-500" />
+                                                       )}
+                                                       <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                           2 CR
+                                                       </span>
+                                                    </Button>
+                                                    <Button 
+                                                       size="sm" 
+                                                       variant="ghost" 
+                                                       onClick={(e) => {
+                                                           e.stopPropagation();
+                                                           setPromotingFor({ type: 'asset', name });
+                                                       }}
+                                                       className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-100 shadow-sm"
+                                                       title="Promouvoir une image d'épisode (Gratuit)"
+                                                    >
+                                                       <ImageIcon className="h-3 w-3 text-amber-500" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                         )}
                     </div>
                 </TabsContent>
             </Tabs>

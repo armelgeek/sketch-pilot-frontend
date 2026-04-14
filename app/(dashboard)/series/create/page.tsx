@@ -43,8 +43,9 @@ export default function SeriesCreatePage() {
     const [preparationMessage, setPreparationMessage] = useState<string>("");
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [generatingCharacters, setGeneratingCharacters] = useState<Record<string, boolean>>({});
+    const [generatingLocations, setGeneratingLocations] = useState<Record<string, boolean>>({});
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'basics' | 'universe' | 'casting' | 'roadmap'>('basics');
+    const [step, setStep] = useState<'basics' | 'universe' | 'casting' | 'locations' | 'roadmap'>('basics');
     const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
 
     const [prompts, setPrompts] = useState<any[]>([]);
@@ -56,6 +57,7 @@ export default function SeriesCreatePage() {
         globalContext: "",
         totalEpisodes: "10",
         characterRegistry: {} as Record<string, any>,
+        locationRegistry: {} as Record<string, any>,
         language: "fr",
         aspectRatio: "16:9",
         duration: "60",
@@ -98,20 +100,25 @@ export default function SeriesCreatePage() {
             seriesService.getById(id).then(s => {
                 if (s) {
                     setSeriesId(s.id);
-                    setForm({
+                    setForm(prev => ({
+                        ...prev,
                         title: s.title,
                         description: s.description || '',
                         globalContext: s.globalContext || '',
                         characterRegistry: (s.characterRegistry as any) || {},
+                        locationRegistry: (s.locationRegistry as any) || {},
                         visualStyleModelId: s.visualStyleModelId || 'natural-clay',
                         language: s.language || 'fr',
                         videoGenre: s.videoGenre || 'Horreur Historique',
                         totalEpisodes: s.totalEpisodes ? s.totalEpisodes.toString() : "5",
-                        suggestedTitles: s.plannedEpisodes?.map(ep => ep.title) || [],
-                        suggestedEpisodes: s.plannedEpisodes || []
-                    });
+                        plannedEpisodes: s.plannedEpisodes || []
+                    }));
+                    if (s.plannedEpisodes) {
+                        setSuggestedTitles(s.plannedEpisodes.map(ep => ep.title));
+                    }
                     // Skip to roadmap if already has episodes, else casting, else universe
                     if (s.plannedEpisodes?.length) setStep('roadmap');
+                    else if (Object.keys(s.locationRegistry || {}).length) setStep('locations');
                     else if (Object.keys(s.characterRegistry || {}).length) setStep('casting');
                     else setStep('universe');
                 }
@@ -200,6 +207,7 @@ export default function SeriesCreatePage() {
                         title: newTitle,
                         globalContext: data.globalContext || prev.globalContext,
                         characterRegistry: data.characterRegistry || prev.characterRegistry,
+                        locationRegistry: data.locationRegistry || prev.locationRegistry,
                         videoGenre: data.videoGenre || prev.videoGenre,
                         totalEpisodes: data.totalEpisodes ? data.totalEpisodes.toString() : prev.totalEpisodes,
                         plannedEpisodes: data.suggestedEpisodes || data.plannedEpisodes || prev.plannedEpisodes
@@ -266,6 +274,41 @@ export default function SeriesCreatePage() {
         }
     };
 
+    const handleGenerateAllLocations = () => {
+        Object.entries(form.locationRegistry).forEach(([name, data]: [string, any]) => {
+            if (!data.thumbnailUrl) handleGenerateLocation(name);
+        });
+    };
+
+    const handleGenerateLocation = async (locName: string) => {
+        const loc = form.locationRegistry[locName];
+        if (!loc || !form.visualStyleModelId || !loc.description) return;
+        if (generatingLocations[locName]) return;
+
+        try {
+            setGeneratingLocations(prev => ({ ...prev, [locName]: true }));
+            // Use character image gen but for locations (landscape)
+            const result = await adminService.generateCharacterImage(form.visualStyleModelId, `Landscape orientation, cinematic master shot of: ${loc.description}`);
+            if (result.success && result.imageUrl) {
+                const newRegistry = {
+                    ...form.locationRegistry,
+                    [locName]: { ...form.locationRegistry[locName], thumbnailUrl: result.imageUrl }
+                };
+                setForm(prev => ({
+                    ...prev,
+                    locationRegistry: newRegistry
+                }));
+
+                // Auto-sync if draft exists
+                if (seriesId) {
+                    await seriesService.update(seriesId, { locationRegistry: newRegistry });
+                }
+            }
+        } catch (err) { } finally {
+            setGeneratingLocations(prev => ({ ...prev, [locName]: false }));
+        }
+    };
+
     const updateEpisode = async (index: number, field: string, value: string) => {
         const newEpisodes = form.plannedEpisodes.map((ep, i) => 
             i === index ? { ...ep, [field]: value } : ep
@@ -317,6 +360,10 @@ export default function SeriesCreatePage() {
             return;
         }
         if (step === 'casting') {
+            setStep('locations');
+            return;
+        }
+        if (step === 'locations') {
             setStep('roadmap');
             return;
         }
@@ -341,6 +388,7 @@ export default function SeriesCreatePage() {
         { id: 'basics', label: 'Identité' },
         { id: 'universe', label: 'Univers' },
         { id: 'casting', label: 'Casting' },
+        { id: 'locations', label: 'Lieux' },
         { id: 'roadmap', label: 'Planning' }
     ];
 
@@ -662,6 +710,58 @@ export default function SeriesCreatePage() {
                             </div>
                         )}
 
+                        {step === 'locations' && (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-700 p-10 space-y-10">
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between px-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Atmosphère / Lieux & Décors</Label>
+                                        <button 
+                                            onClick={handleGenerateAllLocations}
+                                            className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 gap-2 flex items-center transition-colors px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100"
+                                        >
+                                            <Globe className="h-3 w-3" /> Lancer la génération des Décors
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {Object.entries(form.locationRegistry).map(([name, data]: [string, any]) => (
+                                            <div key={name} className="p-4 rounded-[1.5rem] bg-stone-50 border border-stone-100 hover:border-stone-200 transition-all flex gap-4 group">
+                                                <div className="relative shrink-0">
+                                                    <div className={cn(
+                                                        "h-16 w-32 rounded-2xl border-2 border-white shadow-md overflow-hidden bg-white transition-all duration-1000 flex items-center justify-center",
+                                                        generatingLocations[name] && "opacity-40 scale-95 grayscale"
+                                                    )}>
+                                                        {data.thumbnailUrl ? (
+                                                            <img src={data.thumbnailUrl} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="text-stone-200">
+                                                                {generatingLocations[name] ? <Loader2 className="h-6 w-6 animate-spin" /> : <Globe className="h-6 w-6" />}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => handleGenerateLocation(name)}
+                                                        disabled={generatingLocations[name]}
+                                                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-lg bg-stone-900 border border-stone-800 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 hover:border-emerald-500 transition-all"
+                                                    >
+                                                        {generatingLocations[name] ? <RefreshCw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                                                    </button>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-black text-stone-900 text-[11px] truncate uppercase tracking-tight">
+                                                            {name}
+                                                        </h4>
+                                                    </div>
+                                                    <p className="text-[10px] text-stone-400 leading-snug line-clamp-2 mt-1 italic font-medium">{data.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {step === 'roadmap' && (
                             <div className="animate-in fade-in slide-in-from-right-4 duration-700 p-10 space-y-10 relative">
                                 {isRegeneratingRoadmap && (
@@ -747,7 +847,8 @@ export default function SeriesCreatePage() {
                                 <div className="flex items-center gap-4">
                                     {step === 'basics' ? "Préparer l'Univers (5 cr.)" : 
                                      step === 'universe' ? "Valider la Bible" : 
-                                     step === 'casting' ? "Valider le Casting" : "Lancer la Saga"}
+                                     step === 'casting' ? "Valider le Casting" : 
+                                     step === 'locations' ? "Valider les Lieux" : "Lancer la Saga"}
                                     <ChevronRight className="h-4 w-4" />
                                 </div>
                             )}

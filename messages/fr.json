@@ -19,7 +19,13 @@
         "step_3_whisper": "[Étape 3/3] Synchronisation des paroles (Whisper AI)...",
         "analyzing_assets": "Analyse des personnages et décors...",
         "assets_locked": "Identités visuelles verrouillées",
-        "script_ready": "Storyboard prêt (Contenu narratif généré)"
+        "script_ready": "Storyboard prêt (Contenu narratif généré)",
+        "network_timeout_retry": "Délai réseau dépassé. Nouvelle tentative...",
+        "network_error_retry": "Erreur réseau détectée. Nouvelle tentative...",
+        "network_retry": "Problème de connexion. Nouvelle tentative...",
+        "composition_retry": "Erreur de composition. Nouvelle tentative...",
+        "generating_master_location": "Génération du décor de référence : {index}...",
+        "generating_master_character": "Génération du portrait de référence : {index}..."
     },
     "progress": {
         "initializing": "Initialisation...",

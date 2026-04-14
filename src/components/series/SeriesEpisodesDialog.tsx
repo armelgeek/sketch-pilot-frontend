@@ -168,6 +168,8 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                     plannedEpisodes: newPlannedEpisodes,
                     totalEpisodes: (Number(series.totalEpisodes || 0) + (data.suggestedEpisodes?.length || 10)).toString(),
                     characterRegistry: mergedRegistry,
+                    locationRegistry: data.locationRegistry || series.locationRegistry,
+                    visualStyleGuide: data.visualStyleGuide || series.visualStyleGuide,
                     description: data.globalContext || series.description // Store bible in description too as requested
                 });
 
@@ -333,6 +335,10 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                                     <Users className="h-3.5 w-3.5 mr-2" />
                                     Casting
                                 </TabsTrigger>
+                                <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 font-bold uppercase tracking-widest text-[10px] h-9">
+                                    <Maximize2 className="h-3.5 w-3.5 mr-2" />
+                                    Lieux
+                                </TabsTrigger>
                             </TabsList>
                         </div>
 
@@ -398,12 +404,47 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-                                    <div className="h-16 w-16 rounded-3xl bg-zinc-100 flex items-center justify-center text-zinc-300">
-                                        <Users className="h-8 w-8" />
-                                    </div>
+                                    <Users className="h-8 w-8" />
                                     <div className="space-y-1">
                                         <h3 className="text-zinc-900 font-bold uppercase tracking-tight">Casting vide</h3>
                                         <p className="text-zinc-500 text-[11px] font-medium italic">Préparez votre saga pour générer les personnages.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="locations" className="mt-0 outline-none">
+                            {series.locationRegistry && Object.keys(series.locationRegistry).length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    {Object.entries(series.locationRegistry as Record<string, any>).map(([name, data], idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex gap-5 p-5 rounded-3xl bg-white border border-zinc-100 shadow-sm items-center group hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500"
+                                        >
+                                            <div className="relative shrink-0 w-24 aspect-video rounded-2xl border-2 border-zinc-100 shadow-inner overflow-hidden group-hover:scale-105 transition-transform duration-700">
+                                                {data.thumbnailUrl ? (
+                                                    <img src={data.thumbnailUrl} className="h-full w-full object-cover" alt={name} />
+                                                ) : (
+                                                    <div className="h-full w-full bg-zinc-50 flex items-center justify-center text-zinc-300">
+                                                        <Maximize2 className="h-6 w-6" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <h4 className="text-base font-black text-zinc-900 truncate uppercase tracking-tighter group-hover:text-blue-600 transition-colors">{name}</h4>
+                                                <p className="text-[11px] text-zinc-500 leading-relaxed italic line-clamp-2 font-medium">{data.description}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+                                    <div className="h-16 w-16 rounded-3xl bg-zinc-100 flex items-center justify-center text-zinc-300">
+                                        <Maximize2 className="h-8 w-8" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-zinc-900 font-bold uppercase tracking-tight">Aucun lieu</h3>
+                                        <p className="text-zinc-500 text-[11px] font-medium italic">Les lieux découverts apparaîtront ici pour assurer la continuité visuelle.</p>
                                     </div>
                                 </div>
                             )}

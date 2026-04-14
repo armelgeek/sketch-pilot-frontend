@@ -123,6 +123,26 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
                 </div>
             </div>
 
+            {/* 2b. Location Info */}
+            {activeScene.locationId && (
+                <div className="shrink-0 bg-white border border-zinc-200/60 rounded-xl flex flex-col shadow-sm overflow-hidden text-zinc-900">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-zinc-50/30">
+                        <div className="flex items-center gap-2">
+                             <div className="h-2 w-2 rounded-sm bg-blue-500" />
+                             <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest leading-none">Location: {activeScene.locationId}</span>
+                        </div>
+                    </div>
+                    {series?.locationRegistry?.[activeScene.locationId] && (
+                        <div className="p-4 bg-gradient-to-br from-white to-blue-50/10">
+                            <div className="text-[13px] font-bold text-zinc-900 mb-1">{series.locationRegistry[activeScene.locationId].name}</div>
+                            <div className="text-[11px] text-zinc-500 italic leading-relaxed line-clamp-3">
+                                {series.locationRegistry[activeScene.locationId].description}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* 3. Series Context (Always show if it's a series video) */}
             {(series || activeVideo?.seriesId) && (
                 <div className="shrink-0 flex flex-col gap-3 pb-6 border-t border-zinc-100 pt-6 mt-2">

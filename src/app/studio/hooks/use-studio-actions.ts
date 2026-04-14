@@ -163,12 +163,35 @@ export function useStudioActions() {
             setGenerating(false);
         }
     }, [activeVideo, setVideo, setIsInserting, setNewNarration, setGenerating, setError]);
+    
+    const handleRegenerateVideo = useCallback(async () => {
+        if (!activeVideo) return;
+        try {
+            setGenerating(true);
+            startProgress({
+                title: "Régénération des visuels",
+                onCancel: () => {
+                    if (cancelVideo && activeVideo) cancelVideo(activeVideo.id);
+                    setGenerating(false);
+                    stopProgress();
+                },
+            });
+            const response = await videosService.generateScenes(activeVideo.id, { force: true });
+            updateProgress(0, "Démarrage de la régénération...", response.jobId);
+            return response.jobId;
+        } catch (err: any) {
+            setError(err.message || "Erreur lors du démarrage de la régénération");
+            setGenerating(false);
+            stopProgress();
+        }
+    }, [activeVideo, setGenerating, startProgress, updateProgress, stopProgress, setError]);
 
     return {
         handleSaveScript,
         handleAnimate,
         handleRegenerateImage,
         handleAssemble,
-        handleInsertScene
+        handleInsertScene,
+        handleRegenerateVideo
     };
 }

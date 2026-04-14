@@ -51,6 +51,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
         globalContext: "",
         totalEpisodes: "",
         characterRegistry: {} as Record<string, any>,
+        locationRegistry: {} as Record<string, any>,
+        visualStyleGuide: "",
         language: "fr",
         aspectRatio: "9:16",
         duration: "60",
@@ -71,6 +73,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 globalContext: seriesToEdit.globalContext || "",
                 totalEpisodes: seriesToEdit.totalEpisodes || "",
                 characterRegistry: seriesToEdit.characterRegistry || {},
+                locationRegistry: seriesToEdit.locationRegistry || {},
+                visualStyleGuide: seriesToEdit.visualStyleGuide || "",
                 language: seriesToEdit.language || "fr",
                 aspectRatio: seriesToEdit.aspectRatio || "9:16",
                 duration: seriesToEdit.duration || "60",
@@ -87,6 +91,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 globalContext: "",
                 totalEpisodes: "",
                 characterRegistry: {},
+                locationRegistry: {},
+                visualStyleGuide: "",
                 language: "fr",
                 aspectRatio: "9:16",
                 duration: "60",
@@ -188,7 +194,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 promptId: form.promptId,
                 visualStyleModelId: form.visualStyleModelId,
                 videoGenre: form.videoGenre,
-                totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : undefined
+                totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : undefined,
+                aspectRatio: form.aspectRatio
             });
 
             const es = new EventSource(streamUrl, { withCredentials: true });
@@ -221,6 +228,8 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                     ...prev,
                     globalContext: data.globalContext,
                     characterRegistry: data.characterRegistry || prev.characterRegistry,
+                    locationRegistry: data.locationRegistry || prev.locationRegistry || {},
+                    visualStyleGuide: data.visualStyleGuide || prev.visualStyleGuide,
                     videoGenre: data.videoGenre || prev.videoGenre,
                     totalEpisodes: data.totalEpisodes ? data.totalEpisodes.toString() : prev.totalEpisodes,
                     plannedEpisodes: data.suggestedEpisodes || []
@@ -265,7 +274,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
 
         try {
             setGeneratingCharacters(prev => ({ ...prev, [charName]: true }));
-            const result = await adminService.generateCharacterImage(effectiveModelId, char.portraitPrompt);
+            const result = await adminService.generateCharacterImage(effectiveModelId, char.portraitPrompt, form.visualStyleGuide);
             if (result.success && result.imageUrl) {
                 handleUpdateCharacter(charName, charName, { ...char, thumbnailUrl: result.imageUrl });
             } else {

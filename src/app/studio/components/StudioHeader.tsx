@@ -8,6 +8,11 @@ import { useStudioStore, StudioTab } from "../store";
 import { useSubscriptionManager } from "@/src/hooks/use-subscription-manager";
 import { CreditsWidget } from "@/src/components/organisms/credits-widget";
 import { useState, useRef, useEffect } from "react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { seriesService } from "@/src/services/series-service";
+import { videosService } from "@/src/services/videos-service";
+import { useQueryClient } from "@tanstack/react-query";
+import { useStudioActions } from "../hooks/use-studio-actions";
 
 
 interface StudioHeaderProps {
@@ -36,10 +41,13 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
         activeVideo,
         setVideo
     } = useStudioStore();
+    const queryClient = useQueryClient();
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(activeVideo?.title || activeVideo?.topic || "Projet sans titre");
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const [isRegeneratingAll, setIsRegeneratingAll] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const bestTitle = activeVideo?.title || activeVideo?.topic || "Projet sans titre";
@@ -67,6 +75,52 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
         if (e.key === "Escape") {
             setTitleValue(activeVideo?.title || activeVideo?.topic || "Projet sans titre");
             setIsEditingTitle(false);
+        }
+    };
+
+    const handleRegenerateSagaVisuals = async () => {
+        if (!activeVideo?.seriesId || isRegeneratingAll) return;
+        
+        if (!confirm("Voulez-vous régénérer TOUS les visuels de référence de la Saga ? \nCela harmonisera l'esthétique de cet épisode avec le style guide actuel.")) return;
+        
+        if (!activeVideo?.seriesId) return;
+        const confirmed = confirm(
+            "Voulez-vous vraiment régénérer tous les visuels de Master (Personnages et Lieux) pour TOUTE la saga ?\n\nCela affectera l'identité visuelle de tous les épisodes passés et futurs."
+        );
+        if (!confirmed) return;
+
+        try {
+            setIsRegeneratingAll(true);
+            await seriesService.regenerateAllVisuals(activeVideo.seriesId);
+            alert('Régénération de la Saga lancée');
+        } catch (error) {
+            console.error('Failed to regenerate saga visuals:', error);
+            alert('Erreur lors de la régénération de la saga');
+        } finally {
+            setIsRegeneratingAll(false);
+        }
+    };
+
+    const { handleRegenerateVideo } = useStudioActions();
+
+    const handleRegenerateVideoVisuals = async () => {
+        if (!activeVideo?.id) return;
+        const confirmed = confirm(
+            "Voulez-vous vraiment régénérer TOUTES les scènes de cet épisode ?\n\nLes images actuelles seront remplacées par de nouvelles versions basées sur le script."
+        );
+        if (!confirmed) return;
+
+        try {
+            setIsRegeneratingAll(true);
+            const jobId = await handleRegenerateVideo();
+            if (jobId) {
+                queryClient.invalidateQueries({ queryKey: ['video', activeVideo.id] });
+            }
+        } catch (error) {
+            console.error('Failed to regenerate video visuals:', error);
+            alert('Erreur lors de la régénération de l\'épisode');
+        } finally {
+            setIsRegeneratingAll(false);
         }
     };
 
@@ -168,6 +222,34 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
                         })}
                     </div>
                 </div>
+                {activeTab === 'storyboard' && (
+                    <div className="flex items-center gap-1">
+                        <Button
+                            onClick={handleRegenerateVideoVisuals}
+                            disabled={isRegeneratingAll}
+                            variant="ghost"
+                            className="h-10 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-xl px-2 flex items-center gap-2 group transition-all"
+                            title="Régénérer TOUTES les scènes de cet épisode"
+                        >
+                            {isRegeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />}
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">Tout Régénérer</span>
+                        </Button>
+
+                        {activeVideo?.seriesId && (
+                            <Button
+                                onClick={handleRegenerateSagaVisuals}
+                                disabled={isRegeneratingAll}
+                                variant="ghost"
+                                className="h-10 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl px-2 flex items-center gap-2 group transition-all"
+                                title="Régénérer toute la Saga (Style Guide)"
+                            >
+                                <Wand2 className="h-4 w-4" />
+                                <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">Style Saga</span>
+                            </Button>
+                        )}
+                    </div>
+                )}
+
                 <div>
                     <Button
                         onClick={() => setShowProductionModal(true)}

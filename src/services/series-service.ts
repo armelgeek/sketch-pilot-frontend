@@ -25,6 +25,11 @@ export interface Series {
     videoGenre?: string;
     promptId?: string;
     visualStyleModelId?: string;
+    visualStyleGuide?: string;
+    weatherState?: string;
+    timeOfDay?: string;
+    colorPalette?: string;
+    cameraStyle?: string;
     plannedEpisodes?: { number: number; title: string; hook: string }[];
 }
 
@@ -33,6 +38,8 @@ export interface CreateSeriesDTO {
     description?: string;
     globalContext?: string;
     characterRegistry?: Record<string, any>;
+    locationRegistry?: Record<string, any>;
+    visualStyleGuide?: string;
 
     totalEpisodes?: string;
     language?: string;
@@ -42,6 +49,10 @@ export interface CreateSeriesDTO {
     videoGenre?: string;
     promptId?: string;
     visualStyleModelId?: string;
+    weatherState?: string;
+    timeOfDay?: string;
+    colorPalette?: string;
+    cameraStyle?: string;
     plannedEpisodes?: { number: number; title: string; hook: string }[];
 }
 
@@ -89,7 +100,7 @@ export class SeriesService extends BaseService<Series> {
         return response.data;
     }
 
-    async prepare(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean }): Promise<any> {
+    async prepare(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; aspectRatio?: string }): Promise<any> {
         const response = await this.apiFetch<any>(`${this.endpoint}/prepare`, {
             method: "POST",
             body: JSON.stringify(data),
@@ -97,7 +108,7 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    getPrepareStreamUrl(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; roadmapOnly?: boolean }): string {
+    getPrepareStreamUrl(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; roadmapOnly?: boolean; aspectRatio?: string }): string {
         const params = new URLSearchParams();
         params.append("title", data.title);
         if (data.seriesId) params.append("seriesId", data.seriesId);
@@ -110,6 +121,7 @@ export class SeriesService extends BaseService<Series> {
         // @ts-ignore - planned parameter
         if (data.skipPortraits) params.append("skipPortraits", "true");
         if (data.roadmapOnly) params.append("roadmapOnly", "true");
+        if (data.aspectRatio) params.append("aspectRatio", data.aspectRatio);
 
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
         return `${baseUrl}${this.endpoint}/prepare/stream?${params.toString()}`;
@@ -128,6 +140,30 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
+    async regenerateLocationImage(seriesId: string, locationName: string): Promise<{ success: boolean; thumbnailUrl?: string; error?: string }> {
+        const response = await this.apiFetch<any>(
+            `${this.endpoint}/${seriesId}/locations/${encodeURIComponent(locationName)}/regenerate-image`,
+            { method: 'POST' }
+        );
+        return response;
+    }
+
+    async regenerateAssetImage(seriesId: string, assetName: string): Promise<{ success: boolean; thumbnailUrl?: string; error?: string }> {
+        const response = await this.apiFetch<any>(
+            `${this.endpoint}/${seriesId}/assets/${encodeURIComponent(assetName)}/regenerate-image`,
+            { method: 'POST' }
+        );
+        return response;
+    }
+
+    async regenerateAllVisuals(seriesId: string): Promise<{ success: boolean; characterRegistry: any; locationRegistry: any; assetRegistry: any }> {
+        const response = await this.apiFetch<any>(
+            `${this.endpoint}/${seriesId}/regenerate-visuals`,
+            { method: 'POST' }
+        );
+        return response;
+    }
+
     async generateNextEpisode(id: string): Promise<{ success: boolean; jobId: string; videoId: string }> {
         const response = await this.apiFetch<any>(`${this.endpoint}/${id}/generate-next`, {
             method: "POST",
@@ -135,7 +171,7 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    async promote(id: string, data: { type: 'character' | 'location', name: string, thumbnailUrl: string }): Promise<{ success: boolean }> {
+    async promote(id: string, data: { type: 'character' | 'location' | 'asset', name: string, thumbnailUrl: string }): Promise<{ success: boolean }> {
         const response = await this.apiFetch<any>(`${this.endpoint}/${id}/promote`, {
             method: "POST",
             body: JSON.stringify(data),
