@@ -125,16 +125,30 @@ export function StoryboardSidebar({ onRegenerateImage }: StoryboardSidebarProps)
 
             {/* 2b. Location Info */}
             {activeScene.locationId && (
-                <div className="shrink-0 bg-white border border-zinc-200/60 rounded-xl flex flex-col shadow-sm overflow-hidden text-zinc-900">
+                <div className="shrink-0 bg-white border border-zinc-200/60 rounded-xl flex flex-col shadow-sm overflow-hidden text-zinc-900 group/loc">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-zinc-50/30">
                         <div className="flex items-center gap-2">
                              <div className="h-2 w-2 rounded-sm bg-blue-500" />
-                             <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest leading-none">Location: {activeScene.locationId}</span>
+                             <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest leading-none">Location: {activeScene.locationId.replace(/^@/, '')}</span>
+                        </div>
+                        <div className="opacity-0 group-hover/loc:opacity-100 transition-opacity">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handlePromote(activeScene.locationId, 'location')}
+                                disabled={!!promoting}
+                                title="Promouvoir cette image comme décor de référence"
+                                className="h-6 w-6 rounded-md hover:bg-zinc-100 text-zinc-400 hover:text-blue-500"
+                            >
+                                {promoting === activeScene.locationId ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Crown className="h-3 w-3" />}
+                            </Button>
                         </div>
                     </div>
                     {series?.locationRegistry?.[activeScene.locationId] && (
                         <div className="p-4 bg-gradient-to-br from-white to-blue-50/10">
-                            <div className="text-[13px] font-bold text-zinc-900 mb-1">{series.locationRegistry[activeScene.locationId].name}</div>
+                            <div className="text-[13px] font-bold text-zinc-900 mb-1">
+                                {series.locationRegistry[activeScene.locationId].name || activeScene.locationId.replace(/^@/, '')}
+                            </div>
                             <div className="text-[11px] text-zinc-500 italic leading-relaxed line-clamp-3">
                                 {series.locationRegistry[activeScene.locationId].description}
                             </div>

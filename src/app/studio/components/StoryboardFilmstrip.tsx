@@ -76,10 +76,19 @@ function SortableSceneItem({ scene, index, vertical, aspectRatio }: { scene: any
                     </div>
                 )}
                 <div className={cn(
-                    "absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-colors",
-                    isAct ? "bg-emerald-500 text-white" : "bg-black/60 text-white group-hover:bg-black/80"
+                    "absolute bottom-1.5 left-1.5 flex flex-col items-start gap-1"
                 )}>
-                    {String(index + 1).padStart(2, "0")}
+                    {scene.locationId && (
+                        <div className="bg-blue-600/90 text-white text-[8px] font-black px-1 py-0.5 rounded leading-none uppercase tracking-tighter">
+                            {scene.locationId.replace(/^@/, '')}
+                        </div>
+                    )}
+                    <div className={cn(
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-colors",
+                        isAct ? "bg-emerald-500 text-white" : "bg-black/60 text-white group-hover:bg-black/80"
+                    )}>
+                        {String(index + 1).padStart(2, "0")}
+                    </div>
                 </div>
                 {scene.imageUrl && (
                     <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)] animate-pulse" />
@@ -114,10 +123,19 @@ function SortableSceneItem({ scene, index, vertical, aspectRatio }: { scene: any
                     </div>
                 )}
                 <div className={cn(
-                    "absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors",
-                    isAct ? "bg-emerald-500 text-white" : "bg-black/50 text-white"
+                    "absolute bottom-1.5 left-1.5 flex flex-col items-start gap-1"
                 )}>
-                    {String(index + 1).padStart(2, "0")}
+                    {scene.locationId && (
+                        <div className="bg-blue-600 border border-blue-400/30 text-white text-[8px] font-black px-1 py-0.5 rounded leading-none uppercase tracking-tighter shadow-sm">
+                            {scene.locationId.replace(/^@/, '')}
+                        </div>
+                    )}
+                    <div className={cn(
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors",
+                        isAct ? "bg-emerald-500 text-white" : "bg-black/50 text-white"
+                    )}>
+                        {String(index + 1).padStart(2, "0")}
+                    </div>
                 </div>
                 {scene.imageUrl && (
                     <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />

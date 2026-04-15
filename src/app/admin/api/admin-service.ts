@@ -311,10 +311,10 @@ export class AdminService extends BaseService<any> {
         });
     }
 
-    async generateCharacterImage(baseModelId: string, prompt: string, visualStyleGuide?: string): Promise<{ success: boolean; imageUrl: string; error?: string }> {
+    async generateCharacterImage(baseModelId: string, prompt: string, options: { visualStyleGuide?: string, visualStyleDNA?: string, seriesThumbnailUrl?: string } = {}): Promise<{ success: boolean; imageUrl?: string; thumbnailUrl?: string; creditsRequired?: number; error?: string; insufficientCredits?: boolean }> {
         return this.apiFetch<any>("/v1/characters/generate", {
             method: "POST",
-            body: JSON.stringify({ baseModelId, prompt, visualStyleGuide }),
+            body: JSON.stringify({ baseModelId, prompt, ...options }),
         });
     }
 

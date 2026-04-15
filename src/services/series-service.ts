@@ -100,7 +100,19 @@ export class SeriesService extends BaseService<Series> {
         return response.data;
     }
 
-    async prepare(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; aspectRatio?: string }): Promise<any> {
+    async prepare(data: {
+        title: string;
+        seriesId?: string;
+        description?: string;
+        language?: string;
+        promptId?: string;
+        visualStyleModelId?: string;
+        videoGenre?: string;
+        totalEpisodes?: number;
+        skipPortraits?: boolean;
+        aspectRatio?: string;
+        visualStyleGuide?: string;
+    }): Promise<any> {
         const response = await this.apiFetch<any>(`${this.endpoint}/prepare`, {
             method: "POST",
             body: JSON.stringify(data),
@@ -108,7 +120,20 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    getPrepareStreamUrl(data: { title: string; seriesId?: string; description?: string; language?: string; promptId?: string; visualStyleModelId?: string; videoGenre?: string; totalEpisodes?: number; skipPortraits?: boolean; roadmapOnly?: boolean; aspectRatio?: string }): string {
+    getPrepareStreamUrl(data: {
+        title: string;
+        seriesId?: string;
+        description?: string;
+        language?: string;
+        promptId?: string;
+        visualStyleModelId?: string;
+        videoGenre?: string;
+        totalEpisodes?: number;
+        skipPortraits?: boolean;
+        roadmapOnly?: boolean;
+        aspectRatio?: string;
+        visualStyleGuide?: string;
+    }): string {
         const params = new URLSearchParams();
         params.append("title", data.title);
         if (data.seriesId) params.append("seriesId", data.seriesId);
@@ -122,6 +147,7 @@ export class SeriesService extends BaseService<Series> {
         if (data.skipPortraits) params.append("skipPortraits", "true");
         if (data.roadmapOnly) params.append("roadmapOnly", "true");
         if (data.aspectRatio) params.append("aspectRatio", data.aspectRatio);
+        if (data.visualStyleGuide) params.append("visualStyleGuide", data.visualStyleGuide);
 
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000") + "/api";
         return `${baseUrl}${this.endpoint}/prepare/stream?${params.toString()}`;
@@ -132,28 +158,22 @@ export class SeriesService extends BaseService<Series> {
         return response;
     }
 
-    async regenerateCharacterImage(seriesId: string, characterName: string): Promise<{ success: boolean; thumbnailUrl?: string; error?: string }> {
-        const response = await this.apiFetch<any>(
-            `${this.endpoint}/${seriesId}/characters/${encodeURIComponent(characterName)}/regenerate-image`,
-            { method: 'POST' }
-        );
-        return response;
+    async regenerateCharacterImage(id: string, characterName: string): Promise<{ success: boolean; imageUrl?: string; thumbnailUrl?: string; error?: string; insufficientCredits?: boolean }> {
+        return this.apiFetch<any>(`${this.endpoint}/${id}/characters/${encodeURIComponent(characterName)}/regenerate-image`, {
+            method: 'POST'
+        });
     }
 
-    async regenerateLocationImage(seriesId: string, locationName: string): Promise<{ success: boolean; thumbnailUrl?: string; error?: string }> {
-        const response = await this.apiFetch<any>(
-            `${this.endpoint}/${seriesId}/locations/${encodeURIComponent(locationName)}/regenerate-image`,
-            { method: 'POST' }
-        );
-        return response;
+    async regenerateLocationImage(id: string, locationName: string): Promise<{ success: boolean; imageUrl?: string; thumbnailUrl?: string; error?: string; insufficientCredits?: boolean }> {
+        return this.apiFetch<any>(`${this.endpoint}/${id}/locations/${encodeURIComponent(locationName)}/regenerate-image`, {
+            method: 'POST'
+        });
     }
 
-    async regenerateAssetImage(seriesId: string, assetName: string): Promise<{ success: boolean; thumbnailUrl?: string; error?: string }> {
-        const response = await this.apiFetch<any>(
-            `${this.endpoint}/${seriesId}/assets/${encodeURIComponent(assetName)}/regenerate-image`,
-            { method: 'POST' }
-        );
-        return response;
+    async regenerateAssetImage(id: string, assetName: string): Promise<{ success: boolean; imageUrl?: string; thumbnailUrl?: string; error?: string; insufficientCredits?: boolean }> {
+        return this.apiFetch<any>(`${this.endpoint}/${id}/assets/${encodeURIComponent(assetName)}/regenerate-image`, {
+            method: 'POST'
+        });
     }
 
     async regenerateAllVisuals(seriesId: string): Promise<{ success: boolean; characterRegistry: any; locationRegistry: any; assetRegistry: any }> {

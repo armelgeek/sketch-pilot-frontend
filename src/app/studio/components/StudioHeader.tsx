@@ -78,29 +78,6 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
         }
     };
 
-    const handleRegenerateSagaVisuals = async () => {
-        if (!activeVideo?.seriesId || isRegeneratingAll) return;
-        
-        if (!confirm("Voulez-vous régénérer TOUS les visuels de référence de la Saga ? \nCela harmonisera l'esthétique de cet épisode avec le style guide actuel.")) return;
-        
-        if (!activeVideo?.seriesId) return;
-        const confirmed = confirm(
-            "Voulez-vous vraiment régénérer tous les visuels de Master (Personnages et Lieux) pour TOUTE la saga ?\n\nCela affectera l'identité visuelle de tous les épisodes passés et futurs."
-        );
-        if (!confirmed) return;
-
-        try {
-            setIsRegeneratingAll(true);
-            await seriesService.regenerateAllVisuals(activeVideo.seriesId);
-            alert('Régénération de la Saga lancée');
-        } catch (error) {
-            console.error('Failed to regenerate saga visuals:', error);
-            alert('Erreur lors de la régénération de la saga');
-        } finally {
-            setIsRegeneratingAll(false);
-        }
-    };
-
     const { handleRegenerateVideo } = useStudioActions();
 
     const handleRegenerateVideoVisuals = async () => {
@@ -234,19 +211,6 @@ export function StudioHeader({ onNext, promptsUrl, onAssemble }: StudioHeaderPro
                             {isRegeneratingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />}
                             <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">Tout Régénérer</span>
                         </Button>
-
-                        {activeVideo?.seriesId && (
-                            <Button
-                                onClick={handleRegenerateSagaVisuals}
-                                disabled={isRegeneratingAll}
-                                variant="ghost"
-                                className="h-10 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl px-2 flex items-center gap-2 group transition-all"
-                                title="Régénérer toute la Saga (Style Guide)"
-                            >
-                                <Wand2 className="h-4 w-4" />
-                                <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">Style Saga</span>
-                            </Button>
-                        )}
                     </div>
                 )}
 

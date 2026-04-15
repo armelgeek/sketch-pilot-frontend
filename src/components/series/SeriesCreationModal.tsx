@@ -40,7 +40,6 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
     const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
     const [zoomImage, setZoomImage] = useState<string | null>(null);
 
-    const [isBatchGeneratingPortraits, setIsBatchGeneratingPortraits] = useState(false);
 
     // Models for casting
     const [models, setModels] = useState<any[]>([]);
@@ -195,7 +194,9 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                 visualStyleModelId: form.visualStyleModelId,
                 videoGenre: form.videoGenre,
                 totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : undefined,
-                aspectRatio: form.aspectRatio
+                aspectRatio: form.aspectRatio,
+                visualStyleGuide: form.visualStyleGuide,
+                skipPortraits: true
             });
 
             const es = new EventSource(streamUrl, { withCredentials: true });
@@ -274,9 +275,24 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
 
         try {
             setGeneratingCharacters(prev => ({ ...prev, [charName]: true }));
-            const result = await adminService.generateCharacterImage(effectiveModelId, char.portraitPrompt, form.visualStyleGuide);
-            if (result.success && result.imageUrl) {
-                handleUpdateCharacter(charName, charName, { ...char, thumbnailUrl: result.imageUrl });
+            
+            let result;
+            if (seriesToEdit?.id) {
+                // Si on a déjà une série (édition ou après création initiale), on utilise le service de série 
+                // qui gère le Verrou ADN Visuel (Hardening V45)
+                result = await seriesService.regenerateCharacterImage(seriesToEdit.id, charName);
+            } else {
+                // Mode création pure : on utilise le service admin générique
+                const effectiveModelId = char.modelId || form.visualStyleModelId || "stickman";
+                result = await adminService.generateCharacterImage(effectiveModelId, char.portraitPrompt, {
+                    visualStyleGuide: form.visualStyleGuide,
+                });
+            }
+
+            // Standardized response now has both thumbnailUrl and imageUrl
+            const generatedUrl = result.thumbnailUrl || result.imageUrl;
+            if (result.success && generatedUrl) {
+                handleUpdateCharacter(charName, charName, { ...char, thumbnailUrl: generatedUrl });
             } else {
                 alert(result.error || "Échec de la génération du portrait.");
             }
@@ -288,19 +304,6 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
         }
     };
 
-    const handleGenerateAllPortraits = async () => {
-        const charactersToGenerate = Object.entries(form.characterRegistry).filter(
-            ([_, char]) => form.visualStyleModelId && char.portraitPrompt && !char.thumbnailUrl
-        );
-
-        if (charactersToGenerate.length === 0) return;
-
-        setIsBatchGeneratingPortraits(true);
-        for (const [name, _] of charactersToGenerate) {
-            await handleGeneratePortrait(name);
-        }
-        setIsBatchGeneratingPortraits(false);
-    };
 
     // Auto-generation is now handled by the backend
     /*
@@ -333,12 +336,6 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
 
         if (step === 'roadmap') {
             setStep('casting');
-            return;
-        }
-
-        const isMissingPortraits = Object.values(form.characterRegistry).some(char => !char.thumbnailUrl);
-        if (isMissingPortraits) {
-            setError("Veuillez générer les portraits de tous vos personnages avant de lancer la saga.");
             return;
         }
 
@@ -675,16 +672,6 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                                         >
                                             {isPreparing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                                             Casting Magique (5 pts)
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={handleGenerateAllPortraits}
-                                            disabled={isPreparing || Object.keys(form.characterRegistry).length === 0}
-                                            className="h-8 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 text-[10px] font-black uppercase tracking-widest gap-2"
-                                        >
-                                            <Sparkles className="h-3 w-3" />
-                                            Tout générer (5 pts / char)
                                         </Button>
                                         <Button
                                             type="button"
