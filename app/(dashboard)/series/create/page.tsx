@@ -64,6 +64,7 @@ export default function SeriesCreatePage() {
         videoGenre: "",
         promptId: "",
         visualStyleModelId: "",
+        referenceStyleImage: "",
         plannedEpisodes: [] as { number: number; title: string; hook: string }[],
     });
 
@@ -155,218 +156,131 @@ export default function SeriesCreatePage() {
         }
     };
 
-    const handleAIPrepare = async (roadmapOnly: boolean = false) => {
+    // ─── STEP 1: Draft (basics → universe) ─────────────────────────────────
+    const handleDraft = async () => {
         if (!form.title.trim()) {
             setError("Veuillez entrer une idée pour lancer la préparation.");
             return;
         }
-
-        if (roadmapOnly) setIsRegeneratingRoadmap(true);
-        else setIsPreparing(true);
-
-        setPreparationProgress(0);
-        setPreparationMessage(roadmapOnly ? "Réécriture des épisodes..." : "Écriture de l'univers...");
+        setIsPreparing(true);
+        setPreparationProgress(10);
+        setPreparationMessage("Rédaction du script et des épisodes...");
         setError(null);
-
         try {
-            const streamUrl = seriesService.getPrepareStreamUrl({
+            const result = await seriesService.prepareDraft({
                 title: form.title,
                 seriesId: seriesId || undefined,
                 description: form.description,
                 language: form.language,
-                promptId: form.promptId,
-                visualStyleModelId: form.visualStyleModelId,
-                videoGenre: form.videoGenre,
-                totalEpisodes: parseInt(form.totalEpisodes, 10),
-                skipPortraits: true,
-                roadmapOnly
+                totalEpisodes: parseInt(form.totalEpisodes, 10) || 5,
+                referenceStyleImage: form.referenceStyleImage || undefined,
             });
-
-            const es = new EventSource(streamUrl, { withCredentials: true });
-
-            es.addEventListener("progress", (event: any) => {
-                const data = JSON.parse(event.data);
-                if (data.progress !== undefined) setPreparationProgress(data.progress);
-                if (data.message) setPreparationMessage(data.message);
-            });
-
-            es.addEventListener("series_id", (event: any) => {
-                const data = JSON.parse(event.data);
-                setSeriesId(data.id);
-            });
-
-            es.addEventListener("final", (event: any) => {
-                const data = JSON.parse(event.data);
-                setForm(prev => {
-                    const newTitle = (data.suggestedTitles?.length && prev.title.length > 50) 
-                        ? data.suggestedTitles[0] 
-                        : prev.title;
-                        
-                    return {
-                        ...prev,
-                        title: newTitle,
-                        globalContext: data.globalContext || prev.globalContext,
-                        characterRegistry: data.characterRegistry || prev.characterRegistry,
-                        locationRegistry: data.locationRegistry || prev.locationRegistry,
-                        videoGenre: data.videoGenre || prev.videoGenre,
-                        totalEpisodes: data.totalEpisodes ? data.totalEpisodes.toString() : prev.totalEpisodes,
-                        plannedEpisodes: data.suggestedEpisodes || data.plannedEpisodes || prev.plannedEpisodes
-                    };
-                });
-                if (data.suggestedTitles) {
-                    setSuggestedTitles(data.suggestedTitles);
-                    // Sync title back to DB if it changed
-                    if (seriesId && data.suggestedTitles[0] && form.title.length > 50) {
-                        seriesService.update(seriesId, { title: data.suggestedTitles[0] });
-                    }
-                }
-                es.close();
+            if (!result.success) throw new Error(result.error || "Échec de la rédaction.");
+            setSeriesId(result.seriesId);
+            setForm(prev => ({
+                ...prev,
+                globalContext: result.script,
+                plannedEpisodes: result.episodes || [],
+            }));
+            setPreparationProgress(100);
+            setTimeout(() => {
                 setIsPreparing(false);
-                setIsRegeneratingRoadmap(false);
                 setPreparationProgress(null);
-                if (!roadmapOnly) setStep('universe');
-            });
-
-            es.addEventListener("error", () => {
-                setError("L'IA n'a pas pu préparer la saga.");
-                es.close();
-                setIsPreparing(false);
-                setIsRegeneratingRoadmap(false);
-            });
+                setStep('universe');
+            }, 400);
         } catch (err: any) {
-            setError("Erreur de connexion.");
+            setError(err.message || "L'IA n'a pas pu rédiger la saga.");
             setIsPreparing(false);
+            setPreparationProgress(null);
+        }
+    };
+
+    // ─── STEP 2: Enrich (universe → casting) ────────────────────────────────
+    const handleEnrich = async () => {
+        if (!seriesId) { setError("Lancez d'abord l'étape 1."); return; }
+        setIsPreparing(true);
+        setPreparationProgress(10);
+        setPreparationMessage("Analyse des personnages et des lieux...");
+        setError(null);
+        try {
+            const result = await seriesService.prepareEnrich(seriesId, form.globalContext);
+            if (!result.success) throw new Error(result.error || "Échec de l'analyse.");
+            setForm(prev => ({
+                ...prev,
+                characterRegistry: result.characterRegistry || prev.characterRegistry,
+                locationRegistry: result.locationRegistry || prev.locationRegistry,
+            }));
+            setPreparationProgress(100);
+            setTimeout(() => {
+                setIsPreparing(false);
+                setPreparationProgress(null);
+                setStep('casting');
+            }, 400);
+        } catch (err: any) {
+            setError(err.message || "L'IA n'a pas pu analyser la saga.");
+            setIsPreparing(false);
+            setPreparationProgress(null);
+        }
+    };
+
+    // ─── STEP 3: Portraits (casting → locations) ────────────────────────────
+    const handlePortraits = async () => {
+        if (!seriesId) { setError("Lancez d'abord l'étape 2."); return; }
+        setIsPreparing(true);
+        setPreparationProgress(10);
+        setPreparationMessage("Création des portraits visuels...");
+        setError(null);
+        try {
+            const result = await seriesService.preparePortraits(seriesId, form.visualStyleModelId || undefined);
+            if (!result.success) throw new Error(result.error || "Échec des portraits.");
+            setForm(prev => ({
+                ...prev,
+                characterRegistry: result.characterRegistry || prev.characterRegistry,
+            }));
+            setPreparationProgress(100);
+            setTimeout(() => {
+                setIsPreparing(false);
+                setPreparationProgress(null);
+                setStep('locations');
+            }, 400);
+        } catch (err: any) {
+            setError(err.message || "L'IA n'a pas pu créer les portraits.");
+            setIsPreparing(false);
+            setPreparationProgress(null);
+        }
+    };
+
+    // ─── Regenerate roadmap only ─────────────────────────────────────────────
+    const handleRegenerateRoadmap = async () => {
+        if (!seriesId) return;
+        setIsRegeneratingRoadmap(true);
+        setError(null);
+        try {
+            const result = await seriesService.prepareDraft({
+                title: form.title,
+                seriesId,
+                description: form.description,
+                language: form.language,
+                totalEpisodes: parseInt(form.totalEpisodes, 10) || 5,
+            });
+            if (!result.success) throw new Error(result.error || "Échec.");
+            setForm(prev => ({
+                ...prev,
+                globalContext: result.script,
+                plannedEpisodes: result.episodes || [],
+            }));
+        } catch (err: any) {
+            setError(err.message || "Échec de la régénération.");
+        } finally {
             setIsRegeneratingRoadmap(false);
         }
     };
 
-    const handleGenerateAllPortraits = () => {
-        Object.entries(form.characterRegistry).forEach(([name, char]: [string, any]) => {
-            if (!char.thumbnailUrl) handleGeneratePortrait(name);
-        });
-    };
-
-    const handleGeneratePortrait = async (charName: string) => {
-        const char = form.characterRegistry[charName];
-        if (!char || !form.visualStyleModelId || !char.portraitPrompt) return;
-        if (generatingCharacters[charName]) return;
-
-        try {
-            setGeneratingCharacters(prev => ({ ...prev, [charName]: true }));
-            const result = await adminService.generateCharacterImage(form.visualStyleModelId, char.portraitPrompt);
-            if (result.success && result.imageUrl) {
-                const newRegistry = {
-                    ...form.characterRegistry,
-                    [charName]: { ...form.characterRegistry[charName], thumbnailUrl: result.imageUrl }
-                };
-                setForm(prev => ({
-                    ...prev,
-                    characterRegistry: newRegistry
-                }));
-
-                // Auto-sync if draft exists
-                if (seriesId) {
-                    await seriesService.update(seriesId, { characterRegistry: newRegistry });
-                }
-            }
-        } catch (err) { } finally {
-            setGeneratingCharacters(prev => ({ ...prev, [charName]: false }));
-        }
-    };
-
-    const handleGenerateAllLocations = () => {
-        Object.entries(form.locationRegistry).forEach(([name, data]: [string, any]) => {
-            if (!data.thumbnailUrl) handleGenerateLocation(name);
-        });
-    };
-
-    const handleGenerateLocation = async (locName: string) => {
-        const loc = form.locationRegistry[locName];
-        if (!loc || !form.visualStyleModelId || !loc.description) return;
-        if (generatingLocations[locName]) return;
-
-        try {
-            setGeneratingLocations(prev => ({ ...prev, [locName]: true }));
-            // Use character image gen but for locations (landscape)
-            const result = await adminService.generateCharacterImage(form.visualStyleModelId, `Landscape orientation, cinematic master shot of: ${loc.description}`);
-            if (result.success && result.imageUrl) {
-                const newRegistry = {
-                    ...form.locationRegistry,
-                    [locName]: { ...form.locationRegistry[locName], thumbnailUrl: result.imageUrl }
-                };
-                setForm(prev => ({
-                    ...prev,
-                    locationRegistry: newRegistry
-                }));
-
-                // Auto-sync if draft exists
-                if (seriesId) {
-                    await seriesService.update(seriesId, { locationRegistry: newRegistry });
-                }
-            }
-        } catch (err) { } finally {
-            setGeneratingLocations(prev => ({ ...prev, [locName]: false }));
-        }
-    };
-
-    const updateEpisode = async (index: number, field: string, value: string) => {
-        const newEpisodes = form.plannedEpisodes.map((ep, i) => 
-            i === index ? { ...ep, [field]: value } : ep
-        );
-        setForm(prev => ({
-            ...prev,
-            plannedEpisodes: newEpisodes
-        }));
-
-        if (seriesId) {
-            await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
-        }
-    };
-
-    const addEpisode = async () => {
-        const newEpisodes = [
-            ...form.plannedEpisodes,
-            { number: form.plannedEpisodes.length + 1, title: "Nouvel épisode", hook: "Décrivez l'intrigue..." }
-        ];
-        setForm(prev => ({
-            ...prev,
-            plannedEpisodes: newEpisodes
-        }));
-
-        if (seriesId) {
-            await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
-        }
-    };
-
-    const removeEpisode = async (index: number) => {
-        const newEpisodes = form.plannedEpisodes.filter((_, i) => i !== index).map((ep, i) => ({ ...ep, number: i + 1 }));
-        setForm(prev => ({
-            ...prev,
-            plannedEpisodes: newEpisodes
-        }));
-
-        if (seriesId) {
-            await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
-        }
-    };
-
     const handleSubmit = async () => {
-        if (step === 'basics') {
-            await handleAIPrepare();
-            return;
-        }
-        if (step === 'universe') {
-            setStep('casting');
-            return;
-        }
-        if (step === 'casting') {
-            setStep('locations');
-            return;
-        }
-        if (step === 'locations') {
-            setStep('roadmap');
-            return;
-        }
+        if (step === 'basics') { await handleDraft(); return; }
+        if (step === 'universe') { await handleEnrich(); return; }
+        if (step === 'casting') { await handlePortraits(); return; }
+        if (step === 'locations') { setStep('roadmap'); return; }
 
         setLoading(true);
         try {
@@ -384,7 +298,74 @@ export default function SeriesCreatePage() {
         }
     };
 
+
+
+    const handleGenerateAllPortraits = () => {
+        Object.entries(form.characterRegistry).forEach(([name, char]: [string, any]) => {
+            if (!char.thumbnailUrl) handleGeneratePortrait(name);
+        });
+    };
+
+    const handleGeneratePortrait = async (charName: string) => {
+        const char = form.characterRegistry[charName];
+        if (!char || !form.visualStyleModelId || !char.portraitPrompt) return;
+        if (generatingCharacters[charName]) return;
+        try {
+            setGeneratingCharacters(prev => ({ ...prev, [charName]: true }));
+            const result = await adminService.generateCharacterImage(form.visualStyleModelId, char.portraitPrompt);
+            if (result.success && result.imageUrl) {
+                const newRegistry = { ...form.characterRegistry, [charName]: { ...form.characterRegistry[charName], thumbnailUrl: result.imageUrl } };
+                setForm(prev => ({ ...prev, characterRegistry: newRegistry }));
+                if (seriesId) await seriesService.update(seriesId, { characterRegistry: newRegistry });
+            }
+        } catch (err) { } finally {
+            setGeneratingCharacters(prev => ({ ...prev, [charName]: false }));
+        }
+    };
+
+    const handleGenerateAllLocations = () => {
+        Object.entries(form.locationRegistry).forEach(([name, data]: [string, any]) => {
+            if (!data.thumbnailUrl) handleGenerateLocation(name);
+        });
+    };
+
+    const handleGenerateLocation = async (locName: string) => {
+        const loc = form.locationRegistry[locName];
+        if (!loc || !form.visualStyleModelId || !loc.description) return;
+        if (generatingLocations[locName]) return;
+        try {
+            setGeneratingLocations(prev => ({ ...prev, [locName]: true }));
+            const result = await adminService.generateCharacterImage(form.visualStyleModelId, `Landscape orientation, cinematic master shot of: ${loc.description}`);
+            if (result.success && result.imageUrl) {
+                const newRegistry = { ...form.locationRegistry, [locName]: { ...form.locationRegistry[locName], thumbnailUrl: result.imageUrl } };
+                setForm(prev => ({ ...prev, locationRegistry: newRegistry }));
+                if (seriesId) await seriesService.update(seriesId, { locationRegistry: newRegistry });
+            }
+        } catch (err) { } finally {
+            setGeneratingLocations(prev => ({ ...prev, [locName]: false }));
+        }
+    };
+
+    const updateEpisode = async (index: number, field: string, value: string) => {
+        const newEpisodes = form.plannedEpisodes.map((ep, i) => i === index ? { ...ep, [field]: value } : ep);
+        setForm(prev => ({ ...prev, plannedEpisodes: newEpisodes }));
+        if (seriesId) await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
+    };
+
+    const addEpisode = async () => {
+        const newEpisodes = [...form.plannedEpisodes, { number: form.plannedEpisodes.length + 1, title: "Nouvel épisode", hook: "Décrivez l'intrigue..." }];
+        setForm(prev => ({ ...prev, plannedEpisodes: newEpisodes }));
+        if (seriesId) await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
+    };
+
+    const removeEpisode = async (index: number) => {
+        const newEpisodes = form.plannedEpisodes.filter((_, i) => i !== index).map((ep, i) => ({ ...ep, number: i + 1 }));
+        setForm(prev => ({ ...prev, plannedEpisodes: newEpisodes }));
+        if (seriesId) await seriesService.update(seriesId, { plannedEpisodes: newEpisodes });
+    };
+
     const steps = [
+
         { id: 'basics', label: 'Identité' },
         { id: 'universe', label: 'Univers' },
         { id: 'casting', label: 'Casting' },
@@ -616,7 +597,7 @@ export default function SeriesCreatePage() {
                                             <BookOpen className="h-4 w-4 text-amber-500" /> La Bible de l'Univers
                                         </Label>
                                         <button 
-                                            onClick={() => handleAIPrepare(true)}
+                                            onClick={() => handleRegenerateRoadmap()}
                                             disabled={isPreparing}
                                             className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 gap-2 flex items-center transition-colors px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100"
                                         >
@@ -777,7 +758,7 @@ export default function SeriesCreatePage() {
                                             <Zap className="h-4 w-4 text-amber-500" /> Planning des Épisodes ({form.plannedEpisodes.length})
                                         </Label>
                                         <button 
-                                            onClick={() => handleAIPrepare(true)}
+                                            onClick={() => handleRegenerateRoadmap()}
                                             disabled={isRegeneratingRoadmap}
                                             className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 gap-2 flex items-center transition-colors px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100"
                                         >

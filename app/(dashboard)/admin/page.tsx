@@ -156,6 +156,7 @@ export default function AdminOverviewPage() {
                             { label: "Éditer les prompts", href: "/admin/prompts" },
                             { label: "Gérer les modèles", href: "/admin/models" },
                             { label: "Gérer les tarifs", href: "/admin/pricing" },
+                            { label: "Cerveau Vimax (AI)", href: "/admin/vimax" },
                         ].map((link) => (
                             <Link
                                 key={link.href}

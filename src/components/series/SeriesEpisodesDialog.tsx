@@ -105,91 +105,51 @@ export function SeriesEpisodesDialog({ series, isOpen, onClose }: SeriesEpisodes
         if (!series || isExtending) return;
 
         setIsExtending(true);
-        setExtensionProgress(0);
-        setExtensionMessage("Brainstorming de la nouvelle saison...");
+        setExtensionProgress(10);
+        setExtensionMessage("Étape 1/3 : Expansion de la roadmap narrative...");
         setError(null);
 
         try {
-            const streamUrl = seriesService.getPrepareStreamUrl({
+            // STEP 1: Draft (Extension)
+            const draftResult = await seriesService.prepareDraft({
                 seriesId: series.id,
                 title: series.title,
                 description: series.description || series.globalContext,
                 language: series.language || 'fr',
-                promptId: series.promptId,
-                visualStyleModelId: series.visualStyleModelId,
-                videoGenre: series.videoGenre,
-                totalEpisodes: 10 // Extend by 10 more episodes
+                totalEpisodes: (Number(series.totalEpisodes || 0) + 10) // Extend by 10
             });
 
-            const es = new EventSource(streamUrl, { withCredentials: true });
+            if (!draftResult.success) throw new Error(draftResult.error || "Échec de l'extension narrative.");
 
-            const tempCharacterRegistry = { ...(series.characterRegistry || {}) };
+            // STEP 2: Enrichment
+            setExtensionProgress(40);
+            setExtensionMessage("Étape 2/3 : Analyse des nouveaux enjeux...");
+            
+            const enrichResult = await seriesService.prepareEnrich(series.id, draftResult.script);
+            
+            if (!enrichResult.success) throw new Error(enrichResult.error || "Échec de l'analyse.");
 
-            es.addEventListener("progress", (event: any) => {
-                const data = JSON.parse(event.data);
-                if (data.progress !== undefined) setExtensionProgress(data.progress);
-                if (data.status) {
-                     const messages: Record<string, string> = {
-                         'analyzing': "Analyse du cliffhanger...",
-                         'generating_characters': "Mise à jour du casting...",
-                         'finalizing': "Finalisation de la roadmap..."
-                     };
-                     setExtensionMessage(messages[data.status] || data.status);
-                }
-            });
+            // STEP 3: Portraits
+            setExtensionProgress(70);
+            setExtensionMessage("Étape 3/3 : Génération des nouveaux portraits...");
 
-            es.addEventListener("character_portrait", (event: any) => {
-                const data = JSON.parse(event.data);
-                if (tempCharacterRegistry[data.name]) {
-                    tempCharacterRegistry[data.name].thumbnailUrl = data.imageUrl;
-                } else {
-                    tempCharacterRegistry[data.name] = { 
-                        thumbnailUrl: data.imageUrl,
-                        isNew: true
-                    };
-                }
-            });
+            const portraitResult = await seriesService.preparePortraits(series.id, series.visualStyleModelId);
+            
+            if (!portraitResult.success) throw new Error(portraitResult.error || "Échec de la création des portraits.");
 
-            es.addEventListener("final", async (event: any) => {
-                const data = JSON.parse(event.data);
-                
-                // Merge character registry from final payload (which includes descriptions) 
-                // and temp registry for portraits
-                const mergedRegistry = { ...(series.characterRegistry || {}), ...(data.characterRegistry || {}) };
-                Object.keys(tempCharacterRegistry).forEach(name => {
-                    if (mergedRegistry[name]) {
-                        mergedRegistry[name].thumbnailUrl = tempCharacterRegistry[name].thumbnailUrl;
-                    }
-                });
+            setExtensionProgress(100);
+            setExtensionMessage("Nouvelle saison prête !");
+            
+            queryClient.invalidateQueries({ queryKey: ["series"] });
 
-                const newPlannedEpisodes = [...(series.plannedEpisodes || []), ...(data.suggestedEpisodes || [])];
-                
-                await seriesService.update(series.id, {
-                    plannedEpisodes: newPlannedEpisodes,
-                    totalEpisodes: (Number(series.totalEpisodes || 0) + (data.suggestedEpisodes?.length || 10)).toString(),
-                    characterRegistry: mergedRegistry,
-                    locationRegistry: data.locationRegistry || series.locationRegistry,
-                    visualStyleGuide: data.visualStyleGuide || series.visualStyleGuide,
-                    description: data.globalContext || series.description // Store bible in description too as requested
-                });
-
-                queryClient.invalidateQueries({ queryKey: ["series"] });
-                
-                es.close();
+            setTimeout(() => {
                 setIsExtending(false);
                 setExtensionProgress(null);
                 alert("La roadmap de la saga a été étendue ! Nouvelle saison prête.");
-            });
+            }, 600);
 
-            es.addEventListener("error", (event: any) => {
-                setError("L'IA n'a pas pu étendre la saga.");
-                es.close();
-                setIsExtending(false);
-                setExtensionProgress(null);
-            });
-
-        } catch (err) {
-            setError("Erreur de connexion lors de l'extension.");
+        } catch (err: any) {
+            setError(err.message || "L'IA n'a pas pu étendre la saga.");
             setIsExtending(false);
             setExtensionProgress(null);
         }

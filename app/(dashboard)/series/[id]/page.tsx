@@ -124,8 +124,15 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             setError(null);
             const response = await seriesService.generateNextEpisode(series.id);
             if (response.success) {
-                if (response.jobId) setTrackingJobId(response.jobId);
                 setGeneratedVideoId(response.videoId);
+                if (response.jobId) {
+                    setTrackingJobId(response.jobId);
+                } else {
+                    // Manual mode (Vimax Decoupled): the script is ready immediately
+                    setIsGenerating(false);
+                    // Redirect to the preparation view (Script step)
+                    router.push(`/generate/${response.videoId}/script`);
+                }
             }
         } catch (err) {
             setError("Le lancement de la génération a échoué.");

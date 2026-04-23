@@ -181,84 +181,67 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
         }
 
         setIsPreparing(true);
-        setPreparationProgress(0);
-        setPreparationMessage("Connexion au cerveau créatif...");
+        setPreparationProgress(10);
+        setPreparationMessage("Étape 1/3 : Rédaction du script et des épisodes...");
         setError(null);
 
         try {
-            const streamUrl = seriesService.getPrepareStreamUrl({
+            // STEP 1: Draft
+            const draftResult = await seriesService.prepareDraft({
                 title: form.title,
                 description: form.description,
                 language: form.language,
-                promptId: form.promptId,
-                visualStyleModelId: form.visualStyleModelId,
-                videoGenre: form.videoGenre,
-                totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : undefined,
-                aspectRatio: form.aspectRatio,
-                visualStyleGuide: form.visualStyleGuide,
-                skipPortraits: true
+                totalEpisodes: form.totalEpisodes ? parseInt(form.totalEpisodes, 10) : 5
             });
 
-            const es = new EventSource(streamUrl, { withCredentials: true });
+            if (!draftResult.success) throw new Error(draftResult.error || "Échec de la rédaction.");
 
-            es.addEventListener("progress", (event: any) => {
-                const data = JSON.parse(event.data);
-                if (data.progress !== undefined) setPreparationProgress(data.progress);
-                if (data.message) setPreparationMessage(data.message);
-            });
+            // Update form with initial structure
+            setForm(prev => ({
+                ...prev,
+                globalContext: draftResult.script,
+                plannedEpisodes: draftResult.episodes || []
+            }));
+            
+            // STEP 2: Enrichment
+            setPreparationProgress(40);
+            setPreparationMessage("Étape 2/3 : Analyse des personnages et lieux...");
+            
+            const enrichResult = await seriesService.prepareEnrich(draftResult.seriesId, draftResult.script);
+            
+            if (!enrichResult.success) throw new Error(enrichResult.error || "Échec de l'analyse.");
 
-            es.addEventListener("character_portrait", (event: any) => {
-                const data = JSON.parse(event.data);
-                // Partial update of a single character portrait
-                setForm(prev => ({
-                    ...prev,
-                    characterRegistry: {
-                        ...prev.characterRegistry,
-                        [data.name]: {
-                            ...prev.characterRegistry[data.name],
-                            thumbnailUrl: data.imageUrl
-                        }
-                    }
-                }));
-            });
+            setForm(prev => ({
+                ...prev,
+                characterRegistry: enrichResult.characterRegistry || prev.characterRegistry,
+                locationRegistry: enrichResult.locationRegistry || prev.locationRegistry || {},
+            }));
 
-            es.addEventListener("final", (event: any) => {
-                const data = JSON.parse(event.data);
+            // STEP 3: Portraits
+            setPreparationProgress(70);
+            setPreparationMessage("Étape 3/3 : Création des portraits visuels...");
 
-                setForm(prev => ({
-                    ...prev,
-                    globalContext: data.globalContext,
-                    characterRegistry: data.characterRegistry || prev.characterRegistry,
-                    locationRegistry: data.locationRegistry || prev.locationRegistry || {},
-                    visualStyleGuide: data.visualStyleGuide || prev.visualStyleGuide,
-                    videoGenre: data.videoGenre || prev.videoGenre,
-                    totalEpisodes: data.totalEpisodes ? data.totalEpisodes.toString() : prev.totalEpisodes,
-                    plannedEpisodes: data.suggestedEpisodes || []
-                }));
-                setSuggestedTitles(data.suggestedTitles || []);
+            const portraitResult = await seriesService.preparePortraits(draftResult.seriesId, form.visualStyleModelId);
+            
+            if (!portraitResult.success) throw new Error(portraitResult.error || "Échec de la création des portraits.");
 
-                es.close();
+            // Final Update
+            setForm(prev => ({
+                ...prev,
+                characterRegistry: portraitResult.characterRegistry || prev.characterRegistry,
+            }));
+
+            setPreparationProgress(100);
+            setPreparationMessage("Saga prête !");
+            
+            setTimeout(() => {
                 setIsPreparing(false);
                 setPreparationProgress(null);
                 setStep('roadmap');
-            });
-
-            es.addEventListener("error", (event: any) => {
-                let errorMsg = "L'IA n'a pas pu préparer la saga.";
-                if (event.data) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        errorMsg = data.error || errorMsg;
-                    } catch (e) { }
-                }
-                setError(errorMsg);
-                es.close();
-                setIsPreparing(false);
-                setPreparationProgress(null);
-            });
+            }, 600);
 
         } catch (err: any) {
-            setError("Erreur de connexion au service de narration.");
+            setError(err.message || "L'IA n'a pas pu préparer la saga.");
             setIsPreparing(false);
             setPreparationProgress(null);
         }
@@ -324,7 +307,10 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (step === 'basics') {
-            if (!form.title) return;
+            if (!form.title) {
+                setError("Veuillez entrer un concept ou une idée de saga avant de continuer.");
+                return;
+            }
             setLoading(true);
             try {
                 await handleAIPrepare();
@@ -800,7 +786,7 @@ export function SeriesCreationModal({ isOpen, onClose, onCreated, seriesToEdit }
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={loading || !form.title || (step === 'casting' && Object.values(form.characterRegistry).some(char => !char.thumbnailUrl))}
+                                disabled={loading || (step === 'casting' && Object.values(form.characterRegistry).some(char => !char.thumbnailUrl))}
                                 className={cn(
                                     "flex-[2] text-white font-black uppercase tracking-[0.2em] transition-all shadow-xl rounded-2xl h-14 text-[11px] gap-2 active:scale-95",
                                     step === 'basics' ? "bg-stone-900 shadow-stone-900/20" : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20",

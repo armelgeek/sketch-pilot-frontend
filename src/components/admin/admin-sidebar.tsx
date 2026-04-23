@@ -11,7 +11,8 @@ import {
     Mic2,
     Music,
     ArrowLeft,
-    CreditCard
+    CreditCard,
+    Brain
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -21,6 +22,7 @@ const menuItems = [
     { icon: Video, label: "Vidéos", href: "/admin/videos" },
     { icon: MessageSquare, label: "Prompts", href: "/admin/prompts" },
     { icon: Layout, label: "Modèles", href: "/admin/models" },
+    { icon: Brain, label: "Intelligence Vimax", href: "/admin/vimax" },
     { icon: Mic2, label: "Voix", href: "/admin/assets?type=voices" },
     { icon: Music, label: "Musique", href: "/admin/assets?type=music" },
     { icon: CreditCard, label: "Tarification", href: "/admin/pricing" },

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Video, Zap, ChevronLeft, ChevronRight,
   LogOut, Plus, Settings, LifeBuoy, Search, ChevronsUpDown, User, CreditCard,
-  Wand2, Sparkles, Film
+  Wand2, Sparkles, Film, Brain, ShieldAlert
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { useSession, signOut } from "@/src/lib/auth-client";
@@ -23,7 +23,9 @@ const navItems = [
   { href: "/dashboard", label: "Nouvelle video", icon: Plus },
   { href: "/videos", label: "Mes Vidéos", icon: Video },
   { href: "/series", label: "Mes Sagas", icon: Film },
-  { href: "/characters", label: "Mes Personnages", icon: Wand2 }
+  { href: "/characters", label: "Mes Personnages", icon: Wand2 },
+  { href: "/admin", label: "Admin Panel", icon: ShieldAlert, adminOnly: true },
+  { href: "/admin/vimax", label: "Vimax Brain", icon: Brain, adminOnly: true }
 ];
 
 const secondaryNavItems = [
@@ -86,7 +88,7 @@ export function DashboardSidebar() {
               </h3>
             )}
             <nav className="space-y-1">
-              {navItems.map((item) => {
+              {navItems.filter(item => !item.adminOnly || (session?.user as any)?.isAdmin).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
                 const Icon = item.icon;
                 return (
